@@ -15,7 +15,7 @@
         .metric-val { font-size: 2.2rem; font-weight: 700; color: var(--pico-primary); }
         .glossary-section { background: #1c222d; padding: 2rem; border-radius: 8px; border-top: 4px solid var(--pico-primary); margin-top: 2rem; }
         progress { display: none; }
-        table { font-size: 0.9rem; }
+        .leverage-badge { padding: 2px 8px; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -37,7 +37,7 @@
             <div class="grid">
                 <article>
                     <header><h4 id="compName">Company Name</h4></header>
-                    <label>EV / EBITDA (TTM)</label>
+                    <label>EV / EBITDA (Latest)</label>
                     <div class="metric-val" id="multiple">-</div>
                     
                     <table role="grid" style="margin-top:1.5rem;">
@@ -50,7 +50,11 @@
                         <tbody>
                             <tr>
                                 <td>Net Debt / EBITDA</td>
-                                <td align="right" id="leverage" style="font-weight:bold; color:#e9967a;">-</td>
+                                <td align="right"><span id="leverage" class="leverage-badge">-</span></td>
+                            </tr>
+                            <tr>
+                                <td>Enterprise Value</td>
+                                <td align="right" id="entValue">-</td>
                             </tr>
                             <tr>
                                 <td>Market Cap</td>
@@ -70,21 +74,21 @@
                         <canvas id="historyChart"></canvas>
                     </div>
                     <footer>
-                        <small>Data Source: Financial Modeling Prep (Stable API)</small>
+                        <small id="dataDate">Fiscal Year: ---</small>
                     </footer>
                 </article>
             </div>
 
             <section class="glossary-section">
-                <h3>Analysis Framework</h3>
+                <h3>Financial Analysis Framework</h3>
                 <div class="grid">
                     <div>
                         <strong>Enterprise Multiple (EV/EBITDA)</strong>
-                        <p>This ratio acts as a normalized valuation metric. Unlike P/E, it accounts for debt levels, which is vital in the energy sector where companies carry heavy infrastructure-related debt.</p>
+                        <p>This ratio measures how many years of cash profit it would take to buy the entire business (Equity + Debt - Cash). It is more comprehensive than P/E because it ignores differences in how companies are taxed or financed.</p>
                     </div>
                     <div>
-                        <strong>Leverage Context</strong>
-                        <p>The Net Debt/EBITDA ratio indicates how many years of cash flow are needed to pay off all debt. A low EV/EBITDA paired with a low Net Debt/EBITDA often highlights a resilient, undervalued business.</p>
+                        <strong>Leverage Context (Net Debt/EBITDA)</strong>
+                        <p>This is a solvency check. It tells us how many years of current earnings would be required to pay off all debt. In the Energy sector, a ratio below 2.0x is generally considered very strong.</p>
                     </div>
                 </div>
             </section>
@@ -103,39 +107,55 @@
             document.getElementById('output').style.display = 'none';
 
             try {
+                // Fetching Stable endpoints for consistency
                 const [pRes, mRes, hRes] = await Promise.all([
                     fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=${ticker}&apikey=${API_KEY}`),
+                    fetch(`https://financialmodelingprep.com/stable/key-metrics?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}&apikey=${API_KEY}`)
                 ]);
 
                 const profile = (await pRes.json())[0];
-                const metrics = (await mRes.json())[0];
+                const metricsList = await mRes.json();
                 const rawHistory = await hRes.json();
+
+                // Select the most recent metrics object from the array
+                const metrics = metricsList[0];
 
                 if (!profile || !metrics) throw new Error("Missing Data");
 
-                // 1. Text & Table Updates
+                // 1. Text & Table Updates using your exact API keys
                 document.getElementById('compName').innerText = profile.companyName;
-                document.getElementById('multiple').innerText = metrics.evToEBITDA ? `${metrics.evToEBITDA.toFixed(2)}x` : 'N/A';
-                document.getElementById('leverage').innerText = metrics.netDebtToEBITDA ? `${metrics.netDebtToEBITDA.toFixed(2)}x` : 'N/A';
+                document.getElementById('dataDate').innerText = `Data as of Fiscal Year: ${metrics.fiscalYear}`;
+                
+                // Primary Multiples
+                const evEbitda = metrics.evToEBITDA;
+                document.getElementById('multiple').innerText = evEbitda ? `${evEbitda.toFixed(2)}x` : 'N/A';
+                
+                const netDebtEbitda = metrics.netDebtToEBITDA;
+                const levElement = document.getElementById('leverage');
+                levElement.innerText = netDebtEbitda ? `${netDebtEbitda.toFixed(2)}x` : 'N/A';
+                
+                // Logic-based coloring for Leverage (Practical Skill)
+                levElement.style.color = netDebtEbitda > 3 ? '#ff4d4d' : '#00e676';
+
+                // Financial Totals
+                document.getElementById('entValue').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(2)}B`;
                 document.getElementById('mktCap').innerText = `$${(profile.marketCap / 1e9).toFixed(2)}B`;
                 document.getElementById('priceDisplay').innerText = `$${profile.price.toFixed(2)}`;
 
-                // 2. Charting Logic (Mapped to your specific API response)
+                // 2. 7-Day Charting Logic (Mapping d.price)
                 const ctxH = document.getElementById('historyChart').getContext('2d');
                 if (historyChart) historyChart.destroy();
                 
-                // We use your response structure: list of objects with "price" and "date"
                 const history = (rawHistory.historical || rawHistory).slice(0, 7).reverse();
                 
                 historyChart = new Chart(ctxH, {
                     type: 'line',
                     data: {
-                        labels: history.map(d => d.date.split('-').slice(1).join('/')), // Formats to MM/DD
+                        labels: history.map(d => d.date.split('-').slice(1).join('/')),
                         datasets: [{
                             label: 'Closing Price',
-                            data: history.map(d => d.price), // Corrected from 'close' to 'price'
+                            data: history.map(d => d.price),
                             borderColor: '#00a8e8',
                             backgroundColor: 'rgba(0, 168, 232, 0.1)',
                             fill: true,
@@ -156,7 +176,7 @@
 
                 document.getElementById('output').style.display = 'block';
             } catch (e) {
-                alert("Technical Error: Ensure the API response matches expected structure.");
+                alert("Technical Error: Verify ticker and connection.");
                 console.error(e);
             } finally {
                 document.getElementById('loader').style.display = 'none';
