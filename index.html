@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>Global Equity Pulse</title>
+    <title>Understanding Valuation as a Beginner 🤔</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -12,19 +12,25 @@
             --pico-card-background-color: #151921;
             --pico-spacing: 0.75rem;
         }
-        /* Alignment Fix */
         .dashboard-grid { display: flex; gap: var(--pico-spacing); align-items: stretch; }
         .dashboard-grid > article { flex: 1; display: flex; flex-direction: column; margin-bottom: 0 !important; }
         .chart-wrapper { flex-grow: 1; min-height: 250px; position: relative; }
-        
         .metric-val { font-size: 2.2rem; font-weight: 700; color: var(--pico-primary); }
         .sub-header { color: #888; font-size: 0.85rem; display: block; margin-top: -5px; }
-        .glossary-section { background: #1c222d; padding: 1rem; border-radius: 8px; border-top: 4px solid var(--pico-primary); margin-top: 1rem; }
-        
         progress { display: none; margin: 10px 0; }
-        table { margin: 0; }
+        table { margin: 0; font-size: 0.9rem; }
         footer { margin-top: auto; padding-top: 8px; border-top: 1px solid #2a313d; }
-        .fy-label { font-size: 0.75rem; color: #ffcc00; font-weight: bold; text-transform: uppercase; }
+        .fy-label { font-size: 0.75rem; color: #ffcc00; font-weight: bold; }
+        
+        /* Learning Section Styling */
+        .learning-hub { 
+            background: #1c222d; 
+            padding: 1.5rem; 
+            border-radius: 8px; 
+            border-left: 4px solid var(--pico-primary); 
+            margin-top: 1.5rem; 
+        }
+        .learning-hub h3 { border-bottom: 1px solid #2a313d; padding-bottom: 0.5rem; }
     </style>
 </head>
 <body>
@@ -32,11 +38,11 @@
         <header>
             <hgroup>
                 <h1>Global Equity Pulse</h1>
-                <p>Data-Driven Multi-Sector Analysis</p>
+                <p>Fundamental Analysis & Market Momentum Dashboard</p>
             </hgroup>
             
             <select id="tickerSelect" onchange="runAnalysis(this.value)">
-                <option value="" disabled selected>Select Company...</option>
+                <option value="" disabled selected>Select Company to Learn More...</option>
                 <option value="XOM">ExxonMobil (Energy)</option>
                 <option value="CVX">Chevron (Energy)</option>
                 <option value="NVDA">NVIDIA (Semiconductors)</option>
@@ -59,7 +65,7 @@
                         <span id="industryLabel" class="sub-header">Industry | TICKER</span>
                     </header>
                     <div style="padding: 0.5rem 0;">
-                        <label>EV / EBITDA</label>
+                        <label>EV / EBITDA Multiple</label>
                         <div class="metric-val" id="evEbitdaDisplay">-</div>
                     </div>
                     <table role="grid">
@@ -69,35 +75,49 @@
                             <tr><td>Market Cap</td><td align="right" id="mktCapVal">-</td></tr>
                         </tbody>
                     </table>
-                    <footer>
-                        <span class="fy-label" id="metricsFY">Audit Period: FY 2025</span>
-                    </footer>
+                    <footer><span class="fy-label" id="metricsFY">Audit Period: FY 2025</span></footer>
                 </article>
 
                 <article>
-                    <header><strong>7-Day Price Movement (2026)</strong></header>
-                    <div class="chart-wrapper">
-                        <canvas id="priceChart"></canvas>
-                    </div>
+                    <header><strong>7-Day Price Momentum (2026)</strong></header>
+                    <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
                     <footer>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <strong id="priceDisplay" style="color:var(--pico-primary);">Price: -</strong>
-                            <small style="color: #888;">Live Exchange Data</small>
+                            <small style="color: #888;">Live Market Trend</small>
                         </div>
                     </footer>
                 </article>
             </div>
 
-            <section class="glossary-section">
+            <section class="learning-hub">
+                <h3>Understanding the Valuation Framework</h3>
+                <p>This project uses <strong>Relative Valuation</strong>. Instead of guessing a stock's future, we compare what the market pays for $1 of profit across different companies.</p>
+                
                 <div class="grid">
-                    <div>
-                        <strong>1. Fundamental Logic (2025)</strong>
-                        <p style="font-size:0.8rem; margin-bottom:0;">The metrics on the left reflect the most recently audited Fiscal Year 2025 filings. This provides a stable baseline for long-term valuation.</p>
-                    </div>
-                    <div>
-                        <strong>2. Momentum Logic (2026)</strong>
-                        <p style="font-size:0.8rem; margin-bottom:0;">The chart on the right tracks real-time price action from the current 2026 trading year. We look for alignment between these two distinct timelines.</p>
-                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>Term</th><th>Practical Explanation</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>EV/EBITDA</strong></td>
+                                <td>The "Acquisition Price." It tells you how many years of cash profit it takes to pay back the cost of buying the whole company.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Net Debt/EBITDA</strong></td>
+                                <td>The "Safety Check." It shows if a company is drowning in debt. Lower is better (usually under 3.0x).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Enterprise Value</strong></td>
+                                <td>The "Real Price." It's Market Cap + Debt - Cash. It's what an acquirer actually pays.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top:1rem; padding: 1rem; background: #0b0e14; border-radius: 5px;">
+                    <strong>How to Analyze:</strong> If the <strong>Price Chart</strong> (Right) is going up while the <strong>EV/EBITDA</strong> (Left) stays low compared to peers, the company might be a "Value Gain." If the price is up but the multiple is extremely high, it may be "Overhyped."
                 </div>
             </section>
         </div>
@@ -134,7 +154,7 @@
 
                 document.getElementById('compName').innerText = profile.companyName;
                 document.getElementById('industryLabel').innerText = `${getIndustryFromUI(ticker)} | ${ticker}`;
-                document.getElementById('metricsFY').innerText = `Audit Period: FY ${metrics.fiscalYear}`;
+                document.getElementById('metricsFY').innerText = `Period: FY ${metrics.fiscalYear}`;
                 
                 document.getElementById('evEbitdaDisplay').innerText = metrics.evToEBITDA ? `${metrics.evToEBITDA.toFixed(2)}x` : 'N/A';
                 const lev = metrics.netDebtToEBITDA;
@@ -151,7 +171,6 @@
                 priceChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        // Added '26 to labels to clarify current year
                         labels: historyRaw.map(d => d.date.substring(5).replace('-', '/') + '/26'),
                         datasets: [{
                             data: historyRaw.map(d => d.price),
@@ -162,19 +181,12 @@
                             pointRadius: 4
                         }]
                     },
-                    options: { 
-                        maintainAspectRatio: false, 
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: { grid: { color: '#2a313d' }, ticks: { font: { size: 10 } } },
-                            x: { grid: { display: false }, ticks: { font: { size: 10 } } }
-                        }
-                    }
+                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
 
                 document.getElementById('dashboard').style.display = 'block';
             } catch (e) {
-                alert("Technical Error: API data mismatch.");
+                console.error(e);
             } finally {
                 document.getElementById('loader').style.display = 'none';
             }
