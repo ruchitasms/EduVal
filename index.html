@@ -4,77 +4,100 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Energy Valuation Dashboard</title>
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
-    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+
+    <style>
+        /* This prevents the code from appearing as text before the page loads */
+        script[type="py"] { display: none; }
+        .loading { padding: 20px; text-align: center; }
+    </style>
 </head>
 <body>
     <main class="container">
-        <hgroup>
+        <hgroup style="margin-top: 40px;">
             <h1>Energy Valuation Tracker</h1>
-            <h2>Turning Energy Data into Financial Value</h2>
+            <p>A Data-Driven Approach to Enterprise Value (EV)</p>
         </hgroup>
 
-        <section>
-            <input type="text" id="ticker" placeholder="Enter Ticker (e.g., XOM, NEE, CVX)">
-            <button id="run-val" py-click="calculate_valuation()">Analyze Value</button>
-        </section>
+        <article>
+            <label for="ticker">Enter Energy Ticker (e.g., XOM, CVX, NEE)</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="ticker" placeholder="XOM" style="margin-bottom: 0;">
+                <button id="analyze-btn" py-click="calculate_valuation">Analyze</button>
+            </div>
+        </article>
 
-        <section id="output-card" style="display:none;">
+        <section id="output-section" style="display:none;">
             <article>
-                <header><strong id="company-name">Company Report</strong></header>
+                <header><strong id="company-name">Analyzing...</strong></header>
                 <div id="results"></div>
-                <footer>
-                    <small>Status: <span id="logic-check">Awaiting Data...</span></small>
-                </footer>
+                <hr>
+                <p><strong>Strategic Insight:</strong> <span id="logic-check">...</span></p>
             </article>
         </section>
+
+        <div id="loading-msg" class="loading">
+            <small>Initializing Python Environment...</small>
+        </div>
 
         <py-config>
             packages = ["yfinance", "pandas"]
         </py-config>
 
-        <py-script>
+        <script type="py">
 import yfinance as yf
-from pyscript import Element
+from pyscript import display, document
 
-def calculate_valuation():
-    ticker_symbol = Element("ticker").value.upper()
-    if not ticker_symbol:
+# Hide loading message once python is ready
+document.getElementById("loading-msg").style.display = "none"
+
+def calculate_valuation(event):
+    ticker_input = document.getElementById("ticker").value.upper()
+    if not ticker_input:
         return
 
-    # Fetching the Universe
-    stock = yf.Ticker(ticker_symbol)
-    info = stock.info
-    
-    name = info.get('longName', 'Unknown')
-    ebitda = info.get('ebitda', 1) # Avoid div by zero
-    market_cap = info.get('marketCap', 0)
-    total_debt = info.get('totalDebt', 0)
-    total_cash = info.get('totalCash', 0)
-    ev = market_cap + total_debt - total_cash
-    
-    multiple = ev / ebitda
-    
-    # Update UI
-    Element("company-name").write(name)
-    Element("output-card").element.style.display = "block"
-    
-    result_html = f"""
-    <ul>
-        <li><strong>Enterprise Value (EV):</strong> ${ev/1e9:.2f}B</li>
-        <li><strong>EV/EBITDA Multiple:</strong> {multiple:.2f}x</li>
-        <li><strong>Market Cap:</strong> ${market_cap/1e9:.2f}B</li>
-    </ul>
-    """
-    Element("results").write(result_html)
-    
-    # Logic Logic
-    status = "Fairly Valued"
-    if multiple < 6: status = "Potentially Undervalued (Value Play)"
-    elif multiple > 12: status = "Premium Valuation (Growth/Transition Play)"
-    Element("logic-check").write(status)
-        </py-script>
+    # Fetch Data
+    try:
+        stock = yf.Ticker(ticker_input)
+        info = stock.info
+        
+        name = info.get('longName', 'Unknown Entity')
+        ebitda = info.get('ebitda', 1)
+        mkt_cap = info.get('marketCap', 0)
+        debt = info.get('totalDebt', 0)
+        cash = info.get('totalCash', 0)
+        
+        # The Logic: Enterprise Value (EV)
+        ev = mkt_cap + debt - cash
+        multiple = ev / ebitda if ebitda != 0 else 0
+        
+        # Update UI
+        document.getElementById("output-section").style.display = "block"
+        document.getElementById("company-name").innerText = name
+        
+        res_html = f"""
+        <div class='grid'>
+            <div><strong>EV:</strong><br>${ev/1e9:.2f}B</div>
+            <div><strong>EV/EBITDA:</strong><br>{multiple:.2f}x</div>
+            <div><strong>Cash:</strong><br>${cash/1e9:.2f}B</div>
+        </div>
+        """
+        document.getElementById("results").innerHTML = res_html
+        
+        # Leadership Logic Check
+        status = "Fair Value"
+        if multiple < 6: status = "Potentially Undervalued: Strong 'Buy' candidate for logical investigation."
+        elif multiple > 12: status = "Growth Premium: Market is pricing in a vibrant future transition."
+        
+        document.getElementById("logic-check").innerText = status
+        
+    except Exception as e:
+        document.getElementById("logic-check").innerText = "Error fetching data. Check ticker symbol."
+        </script>
     </main>
 </body>
 </html>
