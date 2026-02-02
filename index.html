@@ -6,38 +6,50 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --pico-primary: #00d4ff; --pico-background-color: #0d1117; --pico-card-background-color: #161b22; }
-        .metric-val { font-size: 2.4rem; font-weight: 800; color: var(--pico-primary); line-height: 1; }
-        .ticker-btn { padding: 4px 12px; font-size: 0.75rem; margin-right: 5px; cursor: pointer; border-radius: 20px; }
-        .chart-container { height: 280px; }
+        :root { 
+            --pico-primary: #00a8e8; 
+            --pico-background-color: #0b0e14;
+            --pico-card-background-color: #151921;
+        }
+        .chart-container { height: 300px; margin-top: 15px; }
+        .metric-val { font-size: 2.2rem; font-weight: 700; color: var(--pico-primary); }
+        .glossary-section { background: #1c222d; padding: 2rem; border-radius: 8px; border-top: 4px solid var(--pico-primary); margin-top: 2rem; }
         progress { display: none; }
-        .solvency-indicator { font-weight: bold; border-radius: 4px; padding: 2px 6px; }
+        .leverage-badge { padding: 2px 8px; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
     <main class="container">
         <hgroup style="margin-top:2rem;">
             <h1>Global Equity Pulse</h1>
-            <p>Institutional-Grade Multi-Sector Analysis</p>
+            <p>Professional Multi-Sector Fundamental Analysis</p>
         </hgroup>
 
-        <article style="padding: 1rem;">
-            <div id="quickSelect" style="margin-bottom: 1rem;">
-                <small>Quick Select:</small><br>
-                <button class="ticker-btn outline" onclick="runAnalysis('XOM')">XOM</button>
-                <button class="ticker-btn outline" onclick="runAnalysis('NFLX')">NFLX</button>
-                <button class="ticker-btn outline" onclick="runAnalysis('NVDA')">NVDA</button>
-                <button class="ticker-btn outline" onclick="runAnalysis('MSFT')">MSFT</button>
-                <button class="ticker-btn outline" onclick="runAnalysis('GOOGL')">GOOGL</button>
-                <button class="ticker-btn outline" onclick="runAnalysis('CVX')">CVX</button>
-                <button class="ticker-btn outline" onclick="runAnalysis('TSLA')">TSLA</button>
-                <button class="ticker-btn outline" onclick="runAnalysis('DIS')">DIS</button>
-                <button class="ticker-btn outline" onclick="runAnalysis('INTC')">INTC</button>
-                <button class="ticker-btn outline" onclick="runAnalysis('SOFI')">SOFI</button>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="tickerInput" placeholder="Enter Ticker..." style="margin-bottom:0;">
-                <button onclick="runAnalysis(document.getElementById('tickerInput').value)">Analyze</button>
+        <article>
+            <div class="grid">
+                <div>
+                    <label for="tickerSelect">Select Featured Ticker</label>
+                    <select id="tickerSelect" onchange="runAnalysis(this.value)">
+                        <option value="" disabled selected>Choose a company...</option>
+                        <option value="XOM">ExxonMobil (Energy)</option>
+                        <option value="CVX">Chevron (Energy)</option>
+                        <option value="NVDA">NVIDIA (Semiconductors)</option>
+                        <option value="MSFT">Microsoft (Software)</option>
+                        <option value="GOOGL">Alphabet (Tech)</option>
+                        <option value="NFLX">Netflix (Entertainment)</option>
+                        <option value="TSLA">Tesla (Automotive/Energy)</option>
+                        <option value="DIS">Disney (Entertainment)</option>
+                        <option value="INTC">Intel (Semiconductors)</option>
+                        <option value="SOFI">SoFi (Fintech)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="tickerInput">Or Search Custom Ticker</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="tickerInput" placeholder="e.g. AAPL" style="margin-bottom:0;">
+                        <button onclick="runAnalysis(document.getElementById('tickerInput').value)">Analyze</button>
+                    </div>
+                </div>
             </div>
             <progress id="loader"></progress>
         </article>
@@ -45,38 +57,62 @@
         <div id="dashboard" style="display:none;">
             <div class="grid">
                 <article>
-                    <header><h4 id="compName">---</h4></header>
-                    <label>Enterprise Multiple (EV/EBITDA)</label>
+                    <header><h4 id="compName">Company Name</h4></header>
+                    <label>EV / EBITDA (Latest Fiscal)</label>
                     <div class="metric-val" id="evEbitdaDisplay">-</div>
-                    <hr>
-                    <table role="grid">
-                        <tr>
-                            <td>Net Debt / EBITDA</td>
-                            <td align="right"><span id="leverageVal" class="solvency-indicator">-</span></td>
-                        </tr>
-                        <tr>
-                            <td>Enterprise Value</td>
-                            <td align="right" id="evVal">-</td>
-                        </tr>
+                    
+                    <table role="grid" style="margin-top:1.5rem;">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th align="right">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Net Debt / EBITDA</td>
+                                <td align="right"><span id="leverageVal" class="leverage-badge">-</span></td>
+                            </tr>
+                            <tr>
+                                <td>Enterprise Value</td>
+                                <td align="right" id="evVal">-</td>
+                            </tr>
+                            <tr>
+                                <td>Market Cap</td>
+                                <td align="right" id="mktCapVal">-</td>
+                            </tr>
+                            <tr>
+                                <td>Current Price</td>
+                                <td align="right" id="priceDisplay">-</td>
+                            </tr>
+                        </tbody>
                     </table>
-                    <footer>
-                        <small>A debt-neutral valuation metric used to compare companies across different capital structures.</small>
-                    </footer>
                 </article>
 
                 <article>
-                    <header><h4>7-Day Price Momentum</h4></header>
+                    <header><h4>7-Day Price Movement</h4></header>
                     <div class="chart-container">
                         <canvas id="priceChart"></canvas>
                     </div>
-                    <table role="grid" style="margin-top: 10px;">
-                        <tr>
-                            <td>Current Market Cap</td>
-                            <td align="right" id="mktCapVal">-</td>
-                        </tr>
-                    </table>
+                    <footer>
+                        <small id="dataDate">Data as of Fiscal Year: ---</small>
+                    </footer>
                 </article>
             </div>
+
+            <section class="glossary-section">
+                <h3>Analysis Framework</h3>
+                <div class="grid">
+                    <div>
+                        <strong>Enterprise Multiple (EV/EBITDA)</strong>
+                        <p>This ratio measures how many years of cash profit (EBITDA) it would take to pay back the cost of acquiring the entire business. It is a sector-agnostic way to find value across different industries.</p>
+                    </div>
+                    <div>
+                        <strong>Leverage Context (Net Debt/EBITDA)</strong>
+                        <p>This is a fundamental "Health Check." It represents a company's ability to handle its debt load. In high-growth tech (NVDA), this is often near zero; in capital-heavy sectors (XOM), stability is key.</p>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
 
@@ -86,7 +122,7 @@
 
         async function runAnalysis(ticker) {
             ticker = ticker.toUpperCase().trim();
-            if(!ticker) return;
+            if (!ticker) return;
 
             document.getElementById('loader').style.display = 'block';
             document.getElementById('dashboard').style.display = 'none';
@@ -102,7 +138,6 @@
                 const mData = await mRes.json();
                 const hData = await hRes.json();
 
-                // Normalization Logic
                 const profile = Array.isArray(pData) ? pData[0] : pData;
                 const metrics = Array.isArray(mData) ? mData[0] : mData;
                 const historyRaw = Array.isArray(hData) ? hData : (hData.historical || []);
@@ -111,16 +146,17 @@
 
                 // Update UI
                 document.getElementById('compName').innerText = profile.companyName;
-                document.getElementById('evEbitdaDisplay').innerText = metrics.evToEBITDA ? `${metrics.evToEBITDA.toFixed(1)}x` : 'N/A';
+                document.getElementById('dataDate').innerText = `Fiscal Year: ${metrics.fiscalYear || 'N/A'}`;
+                document.getElementById('evEbitdaDisplay').innerText = metrics.evToEBITDA ? `${metrics.evToEBITDA.toFixed(2)}x` : 'N/A';
                 
                 const lev = metrics.netDebtToEBITDA;
                 const levEl = document.getElementById('leverageVal');
                 levEl.innerText = lev ? `${lev.toFixed(2)}x` : 'N/A';
-                levEl.style.backgroundColor = lev > 3.5 ? 'rgba(255, 77, 77, 0.2)' : 'rgba(0, 212, 255, 0.1)';
-                levEl.style.color = lev > 3.5 ? '#ff4d4d' : '#00d4ff';
+                levEl.style.color = lev > 3 ? '#ff4d4d' : '#00e676';
 
-                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
-                document.getElementById('mktCapVal').innerText = `$${(profile.marketCap / 1e9).toFixed(1)}B`;
+                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(2)}B`;
+                document.getElementById('mktCapVal').innerText = `$${(profile.marketCap / 1e9).toFixed(2)}B`;
+                document.getElementById('priceDisplay').innerText = `$${profile.price.toFixed(2)}`;
 
                 // Charting
                 const ctx = document.getElementById('priceChart').getContext('2d');
@@ -130,27 +166,26 @@
                 priceChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: week.map(d => d.date.split('-').slice(1).join('/')),
+                        labels: week.map(d => d.date.substring(5).replace('-', '/')),
                         datasets: [{
                             data: week.map(d => d.price),
-                            borderColor: '#00d4ff',
-                            borderWidth: 3,
+                            borderColor: '#00a8e8',
+                            backgroundColor: 'rgba(0, 168, 232, 0.1)',
                             fill: true,
-                            backgroundColor: 'rgba(0, 212, 255, 0.05)',
-                            tension: 0.4,
-                            pointRadius: 0
+                            tension: 0.3,
+                            pointRadius: 4
                         }]
                     },
-                    options: {
-                        maintainAspectRatio: false,
+                    options: { 
+                        maintainAspectRatio: false, 
                         plugins: { legend: { display: false } },
-                        scales: { x: { grid: { display: false } }, y: { grid: { color: '#1f2937' } } }
+                        scales: { x: { grid: { display: false } }, y: { grid: { color: '#2a313d' } } }
                     }
                 });
 
                 document.getElementById('dashboard').style.display = 'block';
             } catch (e) {
-                alert("Technical Error: Ensure the API key and Ticker are valid.");
+                alert("Could not retrieve data for " + ticker);
             } finally {
                 document.getElementById('loader').style.display = 'none';
             }
