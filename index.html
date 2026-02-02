@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Energy Valuation & Performance</title>
+    <title>Energy Valuation Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .result-card { display: none; margin-top: 20px; }
-        .chart-container { height:250px; margin-bottom: 20px; }
+        .chart-container { height:280px; margin-bottom: 20px; }
         .pos { color: #27ae60; font-weight: bold; }
         .neg { color: #e74c3c; font-weight: bold; }
         progress { display: none; }
@@ -17,12 +17,12 @@
     <main class="container">
         <hgroup style="margin-top:40px;">
             <h1>Energy Valuation Tracker</h1>
-            <p>Method: Relative Valuation & Market Performance</p>
+            <p><strong>Method:</strong> Relative Valuation (EV/EBITDA) & Performance</p>
         </hgroup>
 
         <article>
             <div style="display: flex; gap: 10px;">
-                <input type="text" id="ticker" placeholder="Company Ticker" style="margin-bottom:0;">
+                <input type="text" id="ticker" placeholder="XOM" style="margin-bottom:0;">
                 <button onclick="getValuation()">Analyze Asset</button>
             </div>
             <progress id="loader"></progress>
@@ -32,21 +32,24 @@
             <div class="grid">
                 <article>
                     <header><h4 id="compName">Company</h4></header>
-                    <p><strong>EV/EBITDA:</strong> <span id="multiple"></span></p>
-                    <p><strong>Status:</strong> <span id="status"></span></p>
+                    <p><strong>EV/EBITDA:</strong> <span id="multiple">Calculating...</span></p>
+                    <p><strong>Status:</strong> <span id="status">...</span></p>
                     <div class="chart-container">
                         <canvas id="valChart"></canvas>
                     </div>
                 </article>
 
                 <article>
-                    <header><h4>Market Performance</h4></header>
+                    <header><h4>Performance Metrics</h4></header>
                     <table role="grid">
                         <thead>
                             <tr><th>Metric</th><th>Value</th></tr>
                         </thead>
                         <tbody id="perfBody"></tbody>
                     </table>
+                    <footer>
+                        <small>Data Source: FMP Stable API</small>
+                    </footer>
                 </article>
             </div>
         </div>
@@ -54,54 +57,63 @@
 
     <script>
         let myChart = null;
-        // REPLACE THIS WITH YOUR KEY FROM FINANCIAL MODELING PREP
+        // Using the key you found
         const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx'; 
 
         async function getValuation() {
             const ticker = document.getElementById('ticker').value.toUpperCase();
-            if(!ticker || API_KEY === '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx') {
-                alert("Please enter a ticker and ensure your API Key is pasted in the code!");
-                return;
-            }
+            if(!ticker) return;
 
             document.getElementById('loader').style.display = 'block';
             document.getElementById('output').style.display = 'none';
 
             try {
-                // Fetch Key Metrics & Price in parallel
-                const [metricRes, quoteRes] = await Promise.all([
-                    fetch(`https://financialmodelingprep.com/stable/income-statement?symbol=${ticker}&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/api/v3/quote/${ticker}?apikey=${API_KEY}`)
+                // Using the 'stable' profile endpoint and the 'key-metrics' endpoint
+                const [profileRes, metricsRes] = await Promise.all([
+                    fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`),
+                    fetch(`https://financialmodelingprep.com/api/v3/key-metrics-ttm/${ticker}?apikey=${API_KEY}`)
                 ]);
 
-                const metrics = (await metricRes.json())[0];
-                const quote = (await quoteRes.json())[0];
+                const profileData = await profileRes.json();
+                const metricsData = await metricsRes.json();
 
-                if (!metrics || !quote) throw new Error("Ticker not found");
+                if (!profileData.length) throw new Error("Ticker not found");
 
-                // Logic: Enterprise Value Calculation
-                const ev = metrics.enterpriseValueTTM;
-                const multiple = metrics.evToEbitdaTTM;
-                const mktCap = quote.marketCap;
+                const profile = profileData[0];
+                const metrics = metricsData[0] || {};
 
-                // UI Updates
-                document.getElementById('compName').innerText = quote.name;
+                // 1. Valuation Logic
+                const mktCap = profile.marketCap || 0;
+                // Enterprise Value = Market Cap + Debt - Cash
+                // We'll use the pre-calculated EV from metrics if available
+                const ev = metrics.enterpriseValueTTM || mktCap; 
+                const multiple = metrics.evToEbitdaTTM || 0;
+
+                document.getElementById('compName').innerText = profile.companyName;
                 document.getElementById('multiple').innerText = multiple ? `${multiple.toFixed(2)}x` : "N/A";
-                document.getElementById('status').innerText = multiple < 8 ? "Potential Value Play" : "Growth/Premium";
+                
+                // Relative valuation logic: Energy sector average is usually 6x-10x
+                let status = "Fair Value";
+                if(multiple > 0 && multiple < 7) status = "Potential Value Play (Undervalued)";
+                else if(multiple >= 12) status = "Growth/Premium (Mythic Potential)";
+                document.getElementById('status').innerText = status;
 
-                // Performance Table Logic
-                const change = quote.changesPercentage;
+                // 2. Performance Table
+                const change = profile.changePercentage || 0;
                 document.getElementById('perfBody').innerHTML = `
-                    <tr><td>Price</td><td>$${quote.price.toFixed(2)}</td></tr>
-                    <tr><td>% Change</td><td class="${change >= 0 ? 'pos' : 'neg'}">${change.toFixed(2)}%</td></tr>
-                    <tr><td>52W Range</td><td>$${quote.yearLow} - $${quote.yearHigh}</td></tr>
-                    <tr><td>Avg Volume</td><td>${(quote.avgVolume/1e6).toFixed(1)}M</td></tr>
+                    <tr><td>Current Price</td><td>$${profile.price}</td></tr>
+                    <tr><td>Daily Change</td><td class="${change >= 0 ? 'pos' : 'neg'}">${change.toFixed(2)}%</td></tr>
+                    <tr><td>52W Range</td><td>${profile.range}</td></tr>
+                    <tr><td>Market Cap</td><td>$${(mktCap/1e9).toFixed(2)}B</td></tr>
                 `;
 
+                // 3. Chart Logic
                 renderChart(mktCap, metrics.totalDebtTTM || 0, metrics.netCashTTM || 0);
                 document.getElementById('output').style.display = 'block';
+
             } catch (e) {
-                alert("Error: Data unavailable. Check your API key or ticker.");
+                console.error(e);
+                alert("Error fetching data. Ensure the ticker is correct.");
             } finally {
                 document.getElementById('loader').style.display = 'none';
             }
@@ -113,17 +125,19 @@
             myChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Market Cap', 'Debt', 'Cash'],
+                    labels: ['Equity (Mkt Cap)', 'Debt', 'Cash'],
                     datasets: [{
-                        data: [mkt, debt, cash],
+                        data: [mkt, debt, Math.abs(cash)],
                         backgroundColor: ['#3b4d61', '#d35400', '#27ae60']
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
             });
         }
     </script>
 </body>
 </html>
-
-
