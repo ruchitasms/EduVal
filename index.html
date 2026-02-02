@@ -8,8 +8,8 @@
     <style>
         .result-card { display: none; margin-top: 20px; }
         .chart-container { height:250px; margin-bottom: 20px; }
-        .pos { color: #27ae60; }
-        .neg { color: #e74c3c; }
+        .pos { color: #27ae60; font-weight: bold; }
+        .neg { color: #e74c3c; font-weight: bold; }
         progress { display: none; }
     </style>
 </head>
@@ -17,13 +17,13 @@
     <main class="container">
         <hgroup style="margin-top:40px;">
             <h1>Energy Valuation Tracker</h1>
-            <p>Relative Valuation & Market Performance</p>
+            <p>Method: Relative Valuation & Market Performance</p>
         </hgroup>
 
         <article>
             <div style="display: flex; gap: 10px;">
                 <input type="text" id="ticker" placeholder="XOM" style="margin-bottom:0;">
-                <button onclick="getValuation()">Analyze</button>
+                <button onclick="getValuation()">Analyze Asset</button>
             </div>
             <progress id="loader"></progress>
         </article>
@@ -43,13 +43,9 @@
                     <header><h4>Market Performance</h4></header>
                     <table role="grid">
                         <thead>
-                            <tr>
-                                <th>Metric</th>
-                                <th>Value</th>
-                            </tr>
+                            <tr><th>Metric</th><th>Value</th></tr>
                         </thead>
-                        <tbody id="perfBody">
-                            </tbody>
+                        <tbody id="perfBody"></tbody>
                     </table>
                 </article>
             </div>
@@ -58,50 +54,54 @@
 
     <script>
         let myChart = null;
+        // REPLACE THIS WITH YOUR KEY FROM FINANCIAL MODELING PREP
+        const API_KEY = 'YOUR_API_KEY_HERE'; 
 
         async function getValuation() {
             const ticker = document.getElementById('ticker').value.toUpperCase();
-            if(!ticker) return;
+            if(!ticker || API_KEY === '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx') {
+                alert("Please enter a ticker and ensure your API Key is pasted in the code!");
+                return;
+            }
 
             document.getElementById('loader').style.display = 'block';
             document.getElementById('output').style.display = 'none';
 
             try {
-                // Using a robust, CORS-friendly financial API
-                const res = await fetch(`https://api.api-ninjas.com/v1/stockprice?ticker=${ticker}`, {
-                    headers: { 'X-Api-Key': 'YOUR_FREE_API_NINJA_KEY_HERE' } 
-                });
-                
-                // ALTERNATIVE: Using the brapi mirror if you don't have a key yet
-                const response = await fetch(`https://brapi.dev/api/quote/${ticker}`);
-                const data = await response.json();
-                const stock = data.results[0];
+                // Fetch Key Metrics & Price in parallel
+                const [metricRes, quoteRes] = await Promise.all([
+                    fetch(`https://financialmodelingprep.com/api/v3/key-metrics-ttm/${ticker}?apikey=${API_KEY}`),
+                    fetch(`https://financialmodelingprep.com/api/v3/quote/${ticker}?apikey=${API_KEY}`)
+                ]);
 
-                // Calculation Logic
-                const mkt = stock.marketCap || 0;
-                const debt = stock.totalDebt || 0;
-                const cash = stock.totalCash || 0;
-                const ev = mkt + debt - cash;
-                const multiple = ev / (stock.ebitda || 1);
+                const metrics = (await metricRes.json())[0];
+                const quote = (await quoteRes.json())[0];
+
+                if (!metrics || !quote) throw new Error("Ticker not found");
+
+                // Logic: Enterprise Value Calculation
+                const ev = metrics.enterpriseValueTTM;
+                const multiple = metrics.evToEbitdaTTM;
+                const mktCap = quote.marketCap;
 
                 // UI Updates
-                document.getElementById('compName').innerText = stock.longName || ticker;
-                document.getElementById('multiple').innerText = `${multiple.toFixed(2)}x`;
-                document.getElementById('status').innerText = multiple < 8 ? "Undervalued" : "Growth/Premium";
+                document.getElementById('compName').innerText = quote.name;
+                document.getElementById('multiple').innerText = multiple ? `${multiple.toFixed(2)}x` : "N/A";
+                document.getElementById('status').innerText = multiple < 8 ? "Potential Value Play" : "Growth/Premium";
 
-                // Performance Logic
-                const change = stock.regularMarketChangePercent || 0;
+                // Performance Table Logic
+                const change = quote.changesPercentage;
                 document.getElementById('perfBody').innerHTML = `
-                    <tr><td>Daily Change</td><td class="${change >= 0 ? 'pos' : 'neg'}">${change.toFixed(2)}%</td></tr>
-                    <tr><td>52W High</td><td>$${stock.fiftyTwoWeekHigh}</td></tr>
-                    <tr><td>52W Low</td><td>$${stock.fiftyTwoWeekLow}</td></tr>
-                    <tr><td>Market Cap</td><td>$${(mkt/1e9).toFixed(2)}B</td></tr>
+                    <tr><td>Price</td><td>$${quote.price.toFixed(2)}</td></tr>
+                    <tr><td>% Change</td><td class="${change >= 0 ? 'pos' : 'neg'}">${change.toFixed(2)}%</td></tr>
+                    <tr><td>52W Range</td><td>$${quote.yearLow} - $${quote.yearHigh}</td></tr>
+                    <tr><td>Avg Volume</td><td>${(quote.avgVolume/1e6).toFixed(1)}M</td></tr>
                 `;
 
-                renderChart(mkt, debt, cash);
+                renderChart(mktCap, metrics.totalDebtTTM || 0, metrics.netCashTTM || 0);
                 document.getElementById('output').style.display = 'block';
             } catch (e) {
-                alert("API limit reached or Ticker not found. Please try again in a moment.");
+                alert("Error: Data unavailable. Check your API key or ticker.");
             } finally {
                 document.getElementById('loader').style.display = 'none';
             }
@@ -111,7 +111,7 @@
             const ctx = document.getElementById('valChart').getContext('2d');
             if(myChart) myChart.destroy();
             myChart = new Chart(ctx, {
-                type: 'doughnut', // Doughnut is great for showing "composition"
+                type: 'doughnut',
                 data: {
                     labels: ['Market Cap', 'Debt', 'Cash'],
                     datasets: [{
