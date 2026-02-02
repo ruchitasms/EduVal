@@ -2,46 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Energy Valuation Dashboard</title>
+    <title>Energy Valuation & Performance Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .result-card { display: none; margin-top: 20px; }
-        .chart-container { position: relative; height:300px; width:100%; margin-top: 20px; }
-        .loading { display: none; }
+        .chart-container { position: relative; height:250px; width:100%; }
+        .pos { color: #27ae60; font-weight: bold; }
+        .neg { color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
     <main class="container">
         <hgroup style="margin-top:40px;">
             <h1>Energy Valuation Tracker</h1>
-            <p><strong>Method:</strong> Relative Valuation (EV/EBITDA Multiples)</p>
+            <p><strong>Method:</strong> Relative Valuation & Market Performance</p>
         </hgroup>
 
         <article>
             <div style="display: flex; gap: 10px;">
                 <input type="text" id="ticker" placeholder="XOM" style="margin-bottom:0;">
-                <button onclick="getValuation()">Analyze & Chart</button>
+                <button onclick="getValuation()">Analyze Everything</button>
             </div>
-            <progress id="loader" class="loading"></progress>
         </article>
 
         <div id="output" class="result-card">
             <article>
-                <header><h3 id="compName">Company Results</h3></header>
+                <header><h3 id="compName">Results</h3></header>
                 <div class="grid">
-                    <div><strong>Enterprise Value (EV)</strong><br><span id="ev"></span></div>
-                    <div><strong>EV/EBITDA Multiple</strong><br><span id="multiple"></span></div>
-                    <div><strong>Logical Status</strong><br><span id="status"></span></div>
+                    <div><strong>Enterprise Value</strong><br><span id="ev"></span></div>
+                    <div><strong>EV/EBITDA</strong><br><span id="multiple"></span></div>
+                    <div><strong>Status</strong><br><span id="status"></span></div>
                 </div>
                 
                 <div class="chart-container">
                     <canvas id="valChart"></canvas>
                 </div>
+            </article>
 
-                <footer style="margin-top:20px;">
-                    <small><strong>Relative Valuation:</strong> Comparing the total cost to buy the business against its current operating cash flow (EBITDA).</small>
-                </footer>
+            <article>
+                <header><strong>Market Performance</strong></header>
+                <table role="grid">
+                    <thead>
+                        <tr>
+                            <th>Period</th>
+                            <th>Return %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="perfTable">
+                        </tbody>
+                </table>
             </article>
         </div>
     </main>
@@ -51,66 +61,54 @@
 
         async function getValuation() {
             const ticker = document.getElementById('ticker').value.toUpperCase();
-            const loader = document.getElementById('loader');
-            const output = document.getElementById('output');
-            
             if(!ticker) return;
-            loader.style.display = 'block';
-            output.style.display = 'none';
 
             try {
-                // Using a different public API that allows CORS (brapi.dev is great for simple lookups)
+                // Fetching from brapi.dev (CORS-friendly)
                 const response = await fetch(`https://brapi.dev/api/quote/${ticker}?modules=financialData,defaultKeyStatistics`);
                 const data = await response.json();
                 const stock = data.results[0];
 
-                // Logic: Extracting metrics from the JSON structure
+                // 1. Valuation Logic
                 const mktCap = stock.marketCap || 0;
-                const totalDebt = stock.totalDebt || 0;
-                const totalCash = stock.totalCash || 0;
-                const ebitda = stock.ebitda || 1; // Prevent div by zero
-
-                const ev = mktCap + totalDebt - totalCash;
-                const multiple = ev / ebitda;
+                const ev = mktCap + (stock.totalDebt || 0) - (stock.totalCash || 0);
+                const multiple = ev / (stock.ebitda || 1);
 
                 document.getElementById('compName').innerText = stock.longName || ticker;
                 document.getElementById('ev').innerText = `$${(ev/1e9).toFixed(2)}B`;
                 document.getElementById('multiple').innerText = `${multiple.toFixed(2)}x`;
-                
-                let status = "Fair Value";
-                if(multiple < 6) status = "Undervalued (Logic Play)";
-                else if(multiple > 12) status = "Growth (Strategic Premium)";
-                document.getElementById('status').innerText = status;
+                document.getElementById('status').innerText = multiple < 8 ? "Value Opportunity" : "Growth/Premium";
 
-                updateChart(mktCap, totalDebt, totalCash);
-                output.style.display = 'block';
+                // 2. Performance Logic (Mocking the percentage changes from current vs historical)
+                // In a real scenario, we'd fetch 'history' endpoint, but for this UI demo:
+                const change = stock.regularMarketChangePercent || 0;
+                const htmlPerf = `
+                    <tr><td>Daily Change</td><td class="${change >= 0 ? 'pos' : 'neg'}">${change.toFixed(2)}%</td></tr>
+                    <tr><td>Year High</td><td>$${stock.fiftyTwoWeekHigh || 'N/A'}</td></tr>
+                    <tr><td>Year Low</td><td>$${stock.fiftyTwoWeekLow || 'N/A'}</td></tr>
+                `;
+                document.getElementById('perfTable').innerHTML = htmlPerf;
+
+                updateChart(mktCap, stock.totalDebt || 0, stock.totalCash || 0);
+                document.getElementById('output').style.display = 'block';
             } catch (e) {
-                console.error(e);
-                alert("The API is currently busy or ticker not found. Try 'XOM' or 'CVX'.");
-            } finally {
-                loader.style.display = 'none';
+                alert("Error: Ticker not found.");
             }
         }
 
         function updateChart(mkt, debt, cash) {
             const ctx = document.getElementById('valChart').getContext('2d');
             if (myChart) { myChart.destroy(); }
-
             myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['Market Cap', 'Total Debt', 'Cash'],
+                    labels: ['Market Cap', 'Debt', 'Cash'],
                     datasets: [{
-                        label: 'Billions (USD)',
                         data: [mkt/1e9, debt/1e9, cash/1e9],
                         backgroundColor: ['#3b4d61', '#d35400', '#27ae60']
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
         }
     </script>
