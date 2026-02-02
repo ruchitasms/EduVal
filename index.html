@@ -152,7 +152,7 @@
                     type: 'line',
                     data: {
                         // Added '26 to labels to clarify current year
-                        labels: historyRaw.map(d => d.date.substring(10).replace('-', '/'),
+                        labels: historyRaw.map(d => d.date.substring(5).replace('-', '/') + '/26'),
                         datasets: [{
                             data: historyRaw.map(d => d.price),
                             borderColor: '#00a8e8',
