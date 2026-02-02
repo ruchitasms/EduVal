@@ -85,8 +85,8 @@
                 // FETCHING FROM V3 (More stable for browser JS)
                 const [profileRes, metricsRes, historyRes] = await Promise.all([
                     fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/key-metrics?symbol=${ticker}?apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}?timeseries=30&apikey=${API_KEY}`)
+                    fetch(`https://financialmodelingprep.com/stable/key-metrics?symbol=${ticker}&apikey=${API_KEY}`),
+                    fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}&apikey=${API_KEY}`)
                 ]);
 
                 const profileData = await profileRes.json();
@@ -163,3 +163,4 @@
     </script>
 </body>
 </html>
+
