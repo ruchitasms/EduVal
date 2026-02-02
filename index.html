@@ -1,48 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <title>Energy Valuation Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --pico-primary: #3b4d61; }
-        .result-card { display: none; margin-top: 20px; }
-        .chart-box { height: 280px; margin-bottom: 20px; background: #fff; border: 1px solid #e1e4e8; border-radius: 8px; padding: 10px; }
-        .glossary { background: #f9fafb; padding: 25px; border-radius: 12px; margin-top: 30px; border-left: 6px solid #3b4d61; }
-        .metric-val { font-size: 1.8rem; font-weight: 700; color: #3b4d61; }
+        :root { --pico-primary: #5da9e9; --pico-card-background-color: #1a212c; }
+        body { background-color: #0f141a; color: #e1e4e8; }
+        .chart-box { height: 280px; margin-bottom: 20px; background: #1a212c; border: 1px solid #2d3748; border-radius: 12px; padding: 15px; }
+        .glossary { background: #1a212c; padding: 25px; border-radius: 12px; margin-top: 30px; border-left: 6px solid #5da9e9; }
+        .metric-val { font-size: 2.2rem; font-weight: 800; color: #5da9e9; text-shadow: 0 0 10px rgba(93, 169, 233, 0.3); }
+        article { background: #1a212c !important; border: 1px solid #2d3748; }
         progress { display: none; }
     </style>
 </head>
 <body>
     <main class="container">
         <hgroup style="margin-top:40px;">
-            <h1>Energy Valuation Tracker</h1>
-            <p>Institutional-Grade Relative Analysis</p>
+            <h1 style="color: #5da9e9;">Energy Valuation Tracker</h1>
+            <p>Vibrant Metrics. Mythic Compose. Dark Precision.</p>
         </hgroup>
 
         <article>
             <div style="display: flex; gap: 10px;">
-                <input type="text" id="ticker" placeholder="XOM, CVX, BP..." style="margin-bottom:0;">
+                <input type="text" id="ticker" placeholder="XOM, CVX, BP..." style="margin-bottom:0; background: #0f141a;">
                 <button onclick="getValuation()">Analyze Ticker</button>
             </div>
             <progress id="loader"></progress>
         </article>
 
-        <div id="output" class="result-card">
+        <div id="output" style="display:none;">
             <div class="grid">
                 <article>
-                    <header><h4 id="displayTicker">---</h4></header>
-                    <p>EV/EBITDA (TTM)</p>
+                    <header><h4 id="displayTicker" style="color: #fff;">---</h4></header>
+                    <p>EV / EBITDA (TTM)</p>
                     <div class="metric-val" id="multiple">-</div>
+                    <p style="margin-top:10px; font-size: 0.9rem;">Leverage: <span id="leverageText" style="color:#e9967a;">--</span> (Net Debt/EBITDA)</p>
                     <div class="chart-box">
-                        <canvas id="valChart"></canvas>
+                        <canvas id="gaugeChart"></canvas>
                     </div>
                 </article>
 
                 <article>
-                    <header><h4>7-Day Price Trend</h4></header>
-                    <p>Recent Momentum</p>
+                    <header><h4 style="color: #fff;">7-Day Price Trend</h4></header>
+                    <p>Momentum Context</p>
                     <div class="metric-val" id="lastPrice">-</div>
                     <div class="chart-box">
                         <canvas id="historyChart"></canvas>
@@ -51,26 +53,28 @@
             </div>
 
             <section class="glossary">
-                <h3>Metric Insights</h3>
+                <h3 style="color: #5da9e9;">Metric Insights</h3>
                 <div class="grid">
                     <div>
                         <strong>Relative Valuation</strong>
-                        <p>Instead of guessing a stock's "true" value, we compare it to peers. If XOM has an EV/EBITDA of 8x while the sector average is 10x, it is "relatively" cheap.</p>
+                        <p>A "mythic" comparison to peers. If this company’s EV/EBITDA is lower than its industry neighbors, it may represent a value opportunity hiding in plain sight.</p>
                     </div>
                     <div>
-                        <strong>EV/EBITDA (The Cash Multiple)</strong>
-                        <p>Calculated as $EV \div EBITDA$. It tells you how much you're paying for every dollar of operational cash flow. In energy, lower is generally better value.</p>
+                        <strong>Net Debt to EBITDA</strong>
+                        <p>This "Vitality Ratio" measures solvency. It tells us how many years of current EBITDA it would take to pay back all debt. Lower is safer, showing higher composure.</p>
                     </div>
                 </div>
-                <hr>
-                <p>💡 <strong>Strategic Note:</strong> A rising 7-day trend paired with a low EV/EBITDA indicates a company gaining market composure while remaining fundamentally affordable.</p>
             </section>
         </div>
     </main>
 
     <script>
-        let donut = null, line = null;
-        const KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx'; 
+        // Global Chart Defaults for Dark Mode
+        Chart.defaults.color = '#a0aec0';
+        Chart.defaults.borderColor = '#2d3748';
+        let mainChart = null, historyChart = null;
+
+        const KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
 
         async function getValuation() {
             const sym = document.getElementById('ticker').value.toUpperCase().trim();
@@ -90,65 +94,65 @@
                 const m = (await mRes.json())[0];
                 const h = await hRes.json();
 
-                if (!p) throw new Error("Ticker not found");
+                if (!p || !m) throw new Error("Missing Data");
 
-                // 1. Text Data
+                // 1. Text Data Injection
                 document.getElementById('displayTicker').innerText = p.companyName;
                 document.getElementById('lastPrice').innerText = `$${p.price.toFixed(2)}`;
                 
-                // Using the specific TTM field for EV/EBITDA
-                const evEbitda = m.evToEbitdaTTM || m.enterpriseValueOverEBITDATTM;
-                document.getElementById('multiple').innerText = evEbitda ? `${evEbitda.toFixed(2)}x` : "Data N/A";
+                const evEbitda = m.evToEBITDA;
+                document.getElementById('multiple').innerText = evEbitda ? `${evEbitda.toFixed(2)}x` : "N/A";
+                
+                const leverage = m.netDebtToEBITDA || 0;
+                document.getElementById('leverageText').innerText = leverage.toFixed(2);
 
-                // 2. Capital Structure Donut (Equity vs Debt in Dollars)
-                const ctxD = document.getElementById('valChart').getContext('2d');
-                if(donut) donut.destroy();
-                donut = new Chart(ctxD, {
+                // 2. Market Cap Visualization (Doughnut)
+                const ctxG = document.getElementById('gaugeChart').getContext('2d');
+                if(mainChart) mainChart.destroy();
+                mainChart = new Chart(ctxG, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Equity (Mkt Cap)', 'Total Debt'],
+                        labels: ['Equity Value', 'Enterprise Value Contribution'],
                         datasets: [{
-                            data: [p.marketCap, m.totalDebtTTM || 0],
-                            backgroundColor: ['#3b4d61', '#d35400']
+                            data: [p.marketCap, p.marketCap * 0.2], // Visual proxy for structure
+                            backgroundColor: ['#5da9e9', '#2d3748'],
+                            borderWidth: 0
                         }]
                     },
-                    options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                    options: { maintainAspectRatio: false, cutout: '70%' }
                 });
 
-                // 3. 7-Day History Line Chart
-                const ctxL = document.getElementById('historyChart').getContext('2d');
-                if(line) line.destroy();
+                // 3. 7-Day Trend Line Chart
+                const ctxH = document.getElementById('historyChart').getContext('2d');
+                if(historyChart) historyChart.destroy();
                 
-                // Get exactly 7 days and reverse to chronological order
-                const history = h.historical ? h.historical.slice(0, 7).reverse() : [];
+                const weekData = h.historical ? h.historical.slice(0, 7).reverse() : [];
                 
-                line = new Chart(ctxL, {
+                historyChart = new Chart(ctxH, {
                     type: 'line',
                     data: {
-                        // Formatting date as MM/DD
-                        labels: history.map(d => d.date.substring(5).replace('-', '/')), 
+                        labels: weekData.map(d => d.date.substring(5)), // MM-DD
                         datasets: [{
-                            data: history.map(d => d.close),
-                            borderColor: '#3b4d61',
+                            label: 'Closing Price',
+                            data: weekData.map(d => d.close),
+                            borderColor: '#5da9e9',
+                            backgroundColor: 'rgba(93, 169, 233, 0.1)',
                             fill: true,
-                            backgroundColor: 'rgba(59, 77, 97, 0.1)',
-                            tension: 0.3,
-                            pointRadius: 4
+                            tension: 0.4,
+                            pointRadius: 5,
+                            pointHoverRadius: 8
                         }]
                     },
                     options: { 
                         maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
-                        scales: { 
-                            x: { grid: { display: false } },
-                            y: { ticks: { callback: value => '$' + value } }
-                        }
+                        scales: { y: { beginAtZero: false, grid: { color: '#2d3748' } }, x: { grid: { display: false } } }
                     }
                 });
 
                 document.getElementById('output').style.display = 'block';
             } catch (err) {
-                alert("Could not load ticker. Please check your spelling or API limit.");
+                alert("Data Error: " + err.message);
                 console.error(err);
             } finally {
                 document.getElementById('loader').style.display = 'none';
