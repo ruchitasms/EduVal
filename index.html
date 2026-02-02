@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>Understanding Valuation as a Beginner 🤔</title>
+    <title>Global Equity Pulse</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -15,34 +15,40 @@
         .dashboard-grid { display: flex; gap: var(--pico-spacing); align-items: stretch; }
         .dashboard-grid > article { flex: 1; display: flex; flex-direction: column; margin-bottom: 0 !important; }
         .chart-wrapper { flex-grow: 1; min-height: 250px; position: relative; }
-        .metric-val { font-size: 2.2rem; font-weight: 700; color: var(--pico-primary); }
+        .metric-val { font-size: 2.2rem; font-weight: 700; color: var(--pico-primary); transition: color 0.3s ease; }
         .sub-header { color: #888; font-size: 0.85rem; display: block; margin-top: -5px; }
         progress { display: none; margin: 10px 0; }
         table { margin: 0; font-size: 0.9rem; }
         footer { margin-top: auto; padding-top: 8px; border-top: 1px solid #2a313d; }
-        .fy-label { font-size: 0.75rem; color: #ffcc00; font-weight: bold; }
+        .fy-label { font-size: 0.75rem; font-weight: bold; border: 1px solid; padding: 2px 6px; border-radius: 4px; }
         
-        /* Learning Section Styling */
-        .learning-hub { 
+        /* Mission Section */
+        .mission-hub { 
             background: #1c222d; 
-            padding: 1.5rem; 
+            padding: 1.2rem; 
             border-radius: 8px; 
             border-left: 4px solid var(--pico-primary); 
-            margin-top: 1.5rem; 
+            margin-bottom: 1.5rem; 
+            transition: border-color 0.3s ease;
         }
-        .learning-hub h3 { border-bottom: 1px solid #2a313d; padding-bottom: 0.5rem; }
+        .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
     </style>
 </head>
 <body>
     <main class="container">
+        <section class="mission-hub" id="themeBorder">
+            <h3>Project Aim: Fundamental Reality Checks</h3>
+            <p style="font-size: 0.95rem;">This tool is designed to study the gap between <strong>market hype</strong> and <strong>audited reality</strong>. We use institutional valuation metrics to determine if a stock's 2026 momentum is backed by its 2025 profitability.</p>
+            <div class="grid" style="font-size: 0.85rem;">
+                <div><strong>1. Identify Value:</strong> Use <em>EV/EBITDA</em> to see the real price of cash flow.</div>
+                <div><strong>2. Monitor Risk:</strong> Use <em>Net Debt/EBITDA</em> to ensure composure under pressure.</div>
+                <div><strong>3. Spot Divergence:</strong> Compare the 7-day trend to the fundamental verdict.</div>
+            </div>
+        </section>
+
         <header>
-            <hgroup>
-                <h1>Global Equity Pulse</h1>
-                <p>Fundamental Analysis & Market Momentum Dashboard</p>
-            </hgroup>
-            
             <select id="tickerSelect" onchange="runAnalysis(this.value)">
-                <option value="" disabled selected>Select Company to Learn More...</option>
+                <option value="" disabled selected>Select Company to Start Analysis...</option>
                 <option value="XOM">ExxonMobil (Energy)</option>
                 <option value="CVX">Chevron (Energy)</option>
                 <option value="NVDA">NVIDIA (Semiconductors)</option>
@@ -61,8 +67,13 @@
             <div class="dashboard-grid">
                 <article>
                     <header>
-                        <h4 id="compName" style="margin:0;">Company Name</h4>
-                        <span id="industryLabel" class="sub-header">Industry | TICKER</span>
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <h4 id="compName" style="margin:0;">-</h4>
+                                <span id="industryLabel" class="sub-header">-</span>
+                            </div>
+                            <span id="verdictBadge" class="verdict-badge">-</span>
+                        </div>
                     </header>
                     <div style="padding: 0.5rem 0;">
                         <label>EV / EBITDA Multiple</label>
@@ -71,61 +82,40 @@
                     <table role="grid">
                         <tbody>
                             <tr><td>Net Debt / EBITDA</td><td align="right" id="leverageVal" style="font-weight:bold;">-</td></tr>
+                            <tr><td>52-Week Range</td><td align="right" id="rangeVal" style="font-size: 0.8rem;">-</td></tr>
                             <tr><td>Enterprise Value</td><td align="right" id="evVal">-</td></tr>
-                            <tr><td>Market Cap</td><td align="right" id="mktCapVal">-</td></tr>
                         </tbody>
                     </table>
-                    <footer><span class="fy-label" id="metricsFY">Audit Period: FY 2025</span></footer>
+                    <footer><span class="fy-label" id="metricsFY">-</span></footer>
                 </article>
 
                 <article>
-                    <header><strong>7-Day Price Momentum (2026)</strong></header>
+                    <header><strong>7-Day Momentum (Calendar 2026)</strong></header>
                     <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
                     <footer>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <strong id="priceDisplay" style="color:var(--pico-primary);">Price: -</strong>
-                            <small style="color: #888;">Live Market Trend</small>
+                            <small id="mktCapVal" style="color: #888;">Cap: -</small>
                         </div>
                     </footer>
                 </article>
             </div>
-
-            <section class="learning-hub">
-                <h3>Understanding the Valuation Framework</h3>
-                <p>This project uses <strong>Relative Valuation</strong>. Instead of guessing a stock's future, we compare what the market pays for $1 of profit across different companies.</p>
-                
-                <div class="grid">
-                    <table>
-                        <thead>
-                            <tr><th>Term</th><th>Practical Explanation</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>EV/EBITDA</strong></td>
-                                <td>The "Acquisition Price." It tells you how many years of cash profit it takes to pay back the cost of buying the whole company.</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Net Debt/EBITDA</strong></td>
-                                <td>The "Safety Check." It shows if a company is drowning in debt. Lower is better (usually under 3.0x).</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Enterprise Value</strong></td>
-                                <td>The "Real Price." It's Market Cap + Debt - Cash. It's what an acquirer actually pays.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div style="margin-top:1rem; padding: 1rem; background: #0b0e14; border-radius: 5px;">
-                    <strong>How to Analyze:</strong> If the <strong>Price Chart</strong> (Right) is going up while the <strong>EV/EBITDA</strong> (Left) stays low compared to peers, the company might be a "Value Gain." If the price is up but the multiple is extremely high, it may be "Overhyped."
-                </div>
-            </section>
         </div>
     </main>
 
     <script>
         let priceChart = null;
         const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
+
+        const sectorThemes = {
+            'Energy': '#00e676', // Green
+            'Semiconductors': '#ff9100', // Orange
+            'Software': '#00d4ff', // Cyan
+            'Tech': '#a29bfe', // Purple
+            'Entertainment': '#ff4081', // Pink
+            'Automotive': '#ffffff', // White/Silver
+            'Fintech': '#ffcc00' // Gold
+        };
 
         function getIndustryFromUI(ticker) {
             const select = document.getElementById('tickerSelect');
@@ -144,38 +134,60 @@
                     fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}&apikey=${API_KEY}`)
                 ]);
 
-                const pData = await pRes.json();
-                const mData = await mRes.json();
-                const hData = await hRes.json();
+                const profile = (await pRes.json())[0];
+                const metrics = (await mRes.json())[0];
+                const history = (await hRes.json()).slice(0, 7).reverse();
 
-                const profile = pData[0];
-                const metrics = mData[0];
-                const historyRaw = hData.slice(0, 7).reverse();
+                // 1. Dynamic UI Theming
+                const industry = getIndustryFromUI(ticker);
+                const themeColor = sectorThemes[industry] || '#00a8e8';
+                document.documentElement.style.setProperty('--pico-primary', themeColor);
+                document.getElementById('themeBorder').style.borderColor = themeColor;
 
+                // 2. Data Population
                 document.getElementById('compName').innerText = profile.companyName;
-                document.getElementById('industryLabel').innerText = `${getIndustryFromUI(ticker)} | ${ticker}`;
-                document.getElementById('metricsFY').innerText = `Period: FY ${metrics.fiscalYear}`;
+                document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
+                document.getElementById('metricsFY').innerText = `Audited: FY ${metrics.fiscalYear}`;
                 
-                document.getElementById('evEbitdaDisplay').innerText = metrics.evToEBITDA ? `${metrics.evToEBITDA.toFixed(2)}x` : 'N/A';
+                const evEbitda = metrics.evToEBITDA;
+                document.getElementById('evEbitdaDisplay').innerText = evEbitda ? `${evEbitda.toFixed(2)}x` : 'N/A';
+                
+                // 3. Valuation Verdict Logic
+                const verdict = document.getElementById('verdictBadge');
+                if (evEbitda < 10) {
+                    verdict.innerText = "Value Play";
+                    verdict.style.backgroundColor = "rgba(0, 230, 118, 0.2)";
+                    verdict.style.color = "#00e676";
+                } else if (evEbitda > 25) {
+                    verdict.innerText = "Premium Growth";
+                    verdict.style.backgroundColor = "rgba(255, 145, 0, 0.2)";
+                    verdict.style.color = "#ff9100";
+                } else {
+                    verdict.innerText = "Fair Value";
+                    verdict.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+                    verdict.style.color = "#fff";
+                }
+
+                // 4. Detailed Metrics
                 const lev = metrics.netDebtToEBITDA;
                 document.getElementById('leverageVal').innerText = lev ? `${lev.toFixed(2)}x` : 'N/A';
-                document.getElementById('leverageVal').style.color = lev > 3 ? '#ff4d4d' : '#00e676';
+                document.getElementById('leverageVal').style.color = lev > 3 ? '#ff4d4d' : themeColor;
+                document.getElementById('rangeVal').innerText = profile.range || 'N/A';
+                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
+                document.getElementById('mktCapVal').innerText = `Cap: $${(profile.marketCap / 1e9).toFixed(1)}B`;
+                document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
 
-                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(2)}B`;
-                document.getElementById('mktCapVal').innerText = `$${(profile.marketCap / 1e9).toFixed(2)}B`;
-                document.getElementById('priceDisplay').innerText = `Latest Price: $${profile.price.toFixed(2)}`;
-
+                // 5. Dynamic Chart
                 const ctx = document.getElementById('priceChart').getContext('2d');
                 if (priceChart) priceChart.destroy();
-                
                 priceChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: historyRaw.map(d => d.date.substring(5).replace('-', '/') + '/26'),
+                        labels: history.map(d => d.date.substring(5).replace('-', '/') + '/26'),
                         datasets: [{
-                            data: historyRaw.map(d => d.price),
-                            borderColor: '#00a8e8',
-                            backgroundColor: 'rgba(0, 168, 232, 0.1)',
+                            data: history.map(d => d.price),
+                            borderColor: themeColor,
+                            backgroundColor: `${themeColor}1A`,
                             fill: true,
                             tension: 0.3,
                             pointRadius: 4
@@ -185,9 +197,7 @@
                 });
 
                 document.getElementById('dashboard').style.display = 'block';
-            } catch (e) {
-                console.error(e);
-            } finally {
+            } catch (e) { alert("Data stream error."); } finally {
                 document.getElementById('loader').style.display = 'none';
             }
         }
