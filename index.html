@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Valuation Pro Dashboard</title>
+    <title>Energy Valuation & Performance</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -10,7 +10,7 @@
         .chart-container { height: 250px; margin-bottom: 20px; }
         .pos { color: #27ae60; font-weight: bold; }
         .neg { color: #e74c3c; font-weight: bold; }
-        .glossary { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 30px; border-left: 5px solid #3b4d61; }
+        .glossary { background: #f4f7f9; padding: 25px; border-radius: 12px; margin-top: 30px; border-left: 6px solid #3b4d61; }
         progress { display: none; }
     </style>
 </head>
@@ -18,13 +18,13 @@
     <main class="container">
         <hgroup style="margin-top:40px;">
             <h1>Energy Valuation Tracker</h1>
-            <p><strong>Method:</strong> Relative Valuation Dashboard</p>
+            <p><strong>Method:</strong> Relative Valuation & Trend Analysis</p>
         </hgroup>
 
         <article>
             <div style="display: flex; gap: 10px;">
-                <input type="text" id="ticker" placeholder="XOM" style="margin-bottom:0;">
-                <button onclick="getValuation()">Deep Analyze</button>
+                <input type="text" id="ticker" placeholder="Ticker" style="margin-bottom:0;">
+                <button onclick="getValuation()">Generate Report</button>
             </div>
             <progress id="loader"></progress>
         </article>
@@ -33,14 +33,14 @@
             <div class="grid">
                 <article>
                     <header><h4 id="compName">Company</h4></header>
-                    <p><strong>EV/EBITDA (TTM):</strong> <span id="multiple" style="font-size: 1.5rem; color: #3b4d61;">-</span></p>
+                    <p><strong>EV/EBITDA (TTM):</strong> <span id="multiple" style="font-size: 1.6rem; color: #3b4d61;">-</span></p>
                     <div class="chart-container">
                         <canvas id="valChart"></canvas>
                     </div>
                 </article>
 
                 <article>
-                    <header><h4>Market Context</h4></header>
+                    <header><h4>Market Momentum</h4></header>
                     <div class="chart-container">
                         <canvas id="historyChart"></canvas>
                     </div>
@@ -51,26 +51,27 @@
             </div>
 
             <section class="glossary">
-                <h3>Insights & Definitions</h3>
+                <h3>Making Sense of the Metrics</h3>
                 <div class="grid">
                     <div>
-                        <strong>Relative Valuation</strong>
-                        <p>Unlike a DCF (which guesses future cash), this method compares a company to its peers. It asks: "Is this stock cheaper or more expensive than the average Energy company right now?"</p>
+                        <strong>What is Relative Valuation?</strong>
+                        <p>It's a "market-check." Instead of guessing future cash flows (DCF), we compare what the market is currently paying for $1 of profit at this company vs. its competitors.</p>
                     </div>
                     <div>
                         <strong>EV/EBITDA (The Enterprise Multiple)</strong>
-                        <p>It shows how many years of "core cash profit" it would take to pay back the cost of buying the entire business (Price + Debt). <strong>Under 8x</strong> is often considered a "Value" entry for Energy.</p>
+                        <p>The "Total Price" (EV) divided by "Cash Profit" (EBITDA). It tells you how many years it would take for the business to pay for itself. In Energy, <strong>6x to 9x</strong> is the "Sweet Spot."</p>
                     </div>
                 </div>
                 <hr>
-                <p><em><strong>Logical Conclusion:</strong> If the line graph is trending up while the EV/EBITDA stays low, you've found a company growing efficiently without becoming "overpriced."</em></p>
+                <p>💡 <strong>Pro Tip:</strong> If the <strong>Line Chart</strong> is rising but the <strong>EV/EBITDA</strong> is lower than 8, you've likely found an undervalued company with strong upward momentum.</p>
             </section>
         </div>
     </main>
 
     <script>
         let myChart = null;
-        let historyChart = null;
+        let lineChart = null;
+        // The API key you provided
         const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx'; 
 
         async function getValuation() {
@@ -81,38 +82,44 @@
             document.getElementById('output').style.display = 'none';
 
             try {
-                // Fetch Profile, Metrics (for EV/EBITDA), and Historical Price
+                // FETCHING FROM V3 (More stable for browser JS)
                 const [profileRes, metricsRes, historyRes] = await Promise.all([
                     fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/api/v3/key-metrics-ttm/${ticker}?apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/api/v3/historical-price-full/${ticker}?timeseries=30&apikey=${API_KEY}`)
+                    fetch(`https://financialmodelingprep.com/stable/key-metrics?symbol=${ticker}?apikey=${API_KEY}`),
+                    fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}?timeseries=30&apikey=${API_KEY}`)
                 ]);
 
-                const profile = (await profileRes.json())[0];
-                const metrics = (await metricsRes.json())[0];
-                const history = await historyRes.json();
+                const profileData = await profileRes.json();
+                const metricsData = await metricsRes.json();
+                const historyData = await historyRes.json();
 
-                if (!profile) throw new Error("Not Found");
+                if (!profileData || profileData.length === 0) throw new Error("Ticker Not Found");
 
-                // Update Valuation
-                const evEbitda = metrics.evToEbitdaTTM;
+                const profile = profileData[0];
+                const metrics = metricsData[0] || {};
+                const history = historyData.historical || [];
+
+                // 1. UI Updates (Text)
                 document.getElementById('compName').innerText = profile.companyName;
+                const evEbitda = metrics.evToEbitdaTTM;
                 document.getElementById('multiple').innerText = evEbitda ? `${evEbitda.toFixed(2)}x` : "N/A";
 
-                // Update Performance Table
                 document.getElementById('perfBody').innerHTML = `
-                    <tr><td>Price</td><td>$${profile.price.toFixed(2)}</td></tr>
+                    <tr><td>Latest Price</td><td>$${profile.price.toFixed(2)}</td></tr>
                     <tr><td>Market Cap</td><td>$${(profile.marketCap/1e9).toFixed(2)}B</td></tr>
-                    <tr><td>EV</td><td>$${(metrics.enterpriseValueTTM/1e9).toFixed(2)}B</td></tr>
+                    <tr><td>Change</td><td class="${profile.changes >= 0 ? 'pos' : 'neg'}">${profile.changes.toFixed(2)}%</td></tr>
                 `;
 
-                // Render Charts
+                // 2. Render Donut Chart (Composition)
                 renderDonut(profile.marketCap, metrics.totalDebtTTM || 0, metrics.netCashTTM || 0);
-                renderLine(history.historical.reverse());
+
+                // 3. Render Line Chart (Trend)
+                renderLine(history.reverse());
 
                 document.getElementById('output').style.display = 'block';
             } catch (e) {
-                alert("Data Error. Check if ticker is valid.");
+                console.error("DEBUG ERROR:", e);
+                alert("Data issue for " + ticker + ". Try XOM or AAPL. If problem persists, FMP may have a temporary CORS block on your domain.");
             } finally {
                 document.getElementById('loader').style.display = 'none';
             }
@@ -136,18 +143,18 @@
 
         function renderLine(data) {
             const ctx = document.getElementById('historyChart').getContext('2d');
-            if(historyChart) historyChart.destroy();
-            historyChart = new Chart(ctx, {
+            if(lineChart) lineChart.destroy();
+            lineChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: data.map(d => d.date.split('-').slice(1).join('/')),
                     datasets: [{
-                        label: '30D Price Trend',
+                        label: '30D Trend',
                         data: data.map(d => d.close),
                         borderColor: '#3b4d61',
-                        tension: 0.3,
+                        backgroundColor: 'rgba(59, 77, 97, 0.1)',
                         fill: true,
-                        backgroundColor: 'rgba(59, 77, 97, 0.1)'
+                        tension: 0.3
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
