@@ -2,14 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Energy Valuation Dashboard</title>
+    <title>Valuation Pro Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .result-card { display: none; margin-top: 20px; }
-        .chart-container { height:280px; margin-bottom: 20px; }
+        .chart-container { height: 250px; margin-bottom: 20px; }
         .pos { color: #27ae60; font-weight: bold; }
         .neg { color: #e74c3c; font-weight: bold; }
+        .glossary { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 30px; border-left: 5px solid #3b4d61; }
         progress { display: none; }
     </style>
 </head>
@@ -17,13 +18,13 @@
     <main class="container">
         <hgroup style="margin-top:40px;">
             <h1>Energy Valuation Tracker</h1>
-            <p><strong>Method:</strong> Relative Valuation (EV/EBITDA) & Performance</p>
+            <p><strong>Method:</strong> Relative Valuation Dashboard</p>
         </hgroup>
 
         <article>
             <div style="display: flex; gap: 10px;">
                 <input type="text" id="ticker" placeholder="XOM" style="margin-bottom:0;">
-                <button onclick="getValuation()">Analyze Asset</button>
+                <button onclick="getValuation()">Deep Analyze</button>
             </div>
             <progress id="loader"></progress>
         </article>
@@ -32,32 +33,44 @@
             <div class="grid">
                 <article>
                     <header><h4 id="compName">Company</h4></header>
-                    <p><strong>EV/EBITDA:</strong> <span id="multiple">Calculating...</span></p>
-                    <p><strong>Status:</strong> <span id="status">...</span></p>
+                    <p><strong>EV/EBITDA (TTM):</strong> <span id="multiple" style="font-size: 1.5rem; color: #3b4d61;">-</span></p>
                     <div class="chart-container">
                         <canvas id="valChart"></canvas>
                     </div>
                 </article>
 
                 <article>
-                    <header><h4>Performance Metrics</h4></header>
+                    <header><h4>Market Context</h4></header>
+                    <div class="chart-container">
+                        <canvas id="historyChart"></canvas>
+                    </div>
                     <table role="grid">
-                        <thead>
-                            <tr><th>Metric</th><th>Value</th></tr>
-                        </thead>
                         <tbody id="perfBody"></tbody>
                     </table>
-                    <footer>
-                        <small>Data Source: FMP Stable API</small>
-                    </footer>
                 </article>
             </div>
+
+            <section class="glossary">
+                <h3>Insights & Definitions</h3>
+                <div class="grid">
+                    <div>
+                        <strong>Relative Valuation</strong>
+                        <p>Unlike a DCF (which guesses future cash), this method compares a company to its peers. It asks: "Is this stock cheaper or more expensive than the average Energy company right now?"</p>
+                    </div>
+                    <div>
+                        <strong>EV/EBITDA (The Enterprise Multiple)</strong>
+                        <p>It shows how many years of "core cash profit" it would take to pay back the cost of buying the entire business (Price + Debt). <strong>Under 8x</strong> is often considered a "Value" entry for Energy.</p>
+                    </div>
+                </div>
+                <hr>
+                <p><em><strong>Logical Conclusion:</strong> If the line graph is trending up while the EV/EBITDA stays low, you've found a company growing efficiently without becoming "overpriced."</em></p>
+            </section>
         </div>
     </main>
 
     <script>
         let myChart = null;
-        // Using the key you found
+        let historyChart = null;
         const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx'; 
 
         async function getValuation() {
@@ -68,74 +81,76 @@
             document.getElementById('output').style.display = 'none';
 
             try {
-                // Using the 'stable' profile endpoint and the 'key-metrics' endpoint
-                const [profileRes, metricsRes] = await Promise.all([
+                // Fetch Profile, Metrics (for EV/EBITDA), and Historical Price
+                const [profileRes, metricsRes, historyRes] = await Promise.all([
                     fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/api/v3/key-metrics-ttm/${ticker}?apikey=${API_KEY}`)
+                    fetch(`https://financialmodelingprep.com/api/v3/key-metrics-ttm/${ticker}?apikey=${API_KEY}`),
+                    fetch(`https://financialmodelingprep.com/api/v3/historical-price-full/${ticker}?timeseries=30&apikey=${API_KEY}`)
                 ]);
 
-                const profileData = await profileRes.json();
-                const metricsData = await metricsRes.json();
+                const profile = (await profileRes.json())[0];
+                const metrics = (await metricsRes.json())[0];
+                const history = await historyRes.json();
 
-                if (!profileData.length) throw new Error("Ticker not found");
+                if (!profile) throw new Error("Not Found");
 
-                const profile = profileData[0];
-                const metrics = metricsData[0] || {};
-
-                // 1. Valuation Logic
-                const mktCap = profile.marketCap || 0;
-                // Enterprise Value = Market Cap + Debt - Cash
-                // We'll use the pre-calculated EV from metrics if available
-                const ev = metrics.enterpriseValueTTM || mktCap; 
-                const multiple = metrics.evToEbitdaTTM || 0;
-
+                // Update Valuation
+                const evEbitda = metrics.evToEbitdaTTM;
                 document.getElementById('compName').innerText = profile.companyName;
-                document.getElementById('multiple').innerText = multiple ? `${multiple.toFixed(2)}x` : "N/A";
-                
-                // Relative valuation logic: Energy sector average is usually 6x-10x
-                let status = "Fair Value";
-                if(multiple > 0 && multiple < 7) status = "Potential Value Play (Undervalued)";
-                else if(multiple >= 12) status = "Growth/Premium (Mythic Potential)";
-                document.getElementById('status').innerText = status;
+                document.getElementById('multiple').innerText = evEbitda ? `${evEbitda.toFixed(2)}x` : "N/A";
 
-                // 2. Performance Table
-                const change = profile.changePercentage || 0;
+                // Update Performance Table
                 document.getElementById('perfBody').innerHTML = `
-                    <tr><td>Current Price</td><td>$${profile.price}</td></tr>
-                    <tr><td>Daily Change</td><td class="${change >= 0 ? 'pos' : 'neg'}">${change.toFixed(2)}%</td></tr>
-                    <tr><td>52W Range</td><td>${profile.range}</td></tr>
-                    <tr><td>Market Cap</td><td>$${(mktCap/1e9).toFixed(2)}B</td></tr>
+                    <tr><td>Price</td><td>$${profile.price.toFixed(2)}</td></tr>
+                    <tr><td>Market Cap</td><td>$${(profile.marketCap/1e9).toFixed(2)}B</td></tr>
+                    <tr><td>EV</td><td>$${(metrics.enterpriseValueTTM/1e9).toFixed(2)}B</td></tr>
                 `;
 
-                // 3. Chart Logic
-                renderChart(mktCap, metrics.totalDebtTTM || 0, metrics.netCashTTM || 0);
-                document.getElementById('output').style.display = 'block';
+                // Render Charts
+                renderDonut(profile.marketCap, metrics.totalDebtTTM || 0, metrics.netCashTTM || 0);
+                renderLine(history.historical.reverse());
 
+                document.getElementById('output').style.display = 'block';
             } catch (e) {
-                console.error(e);
-                alert("Error fetching data. Ensure the ticker is correct.");
+                alert("Data Error. Check if ticker is valid.");
             } finally {
                 document.getElementById('loader').style.display = 'none';
             }
         }
 
-        function renderChart(mkt, debt, cash) {
+        function renderDonut(mkt, debt, cash) {
             const ctx = document.getElementById('valChart').getContext('2d');
             if(myChart) myChart.destroy();
             myChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Equity (Mkt Cap)', 'Debt', 'Cash'],
+                    labels: ['Equity', 'Debt', 'Cash'],
                     datasets: [{
                         data: [mkt, debt, Math.abs(cash)],
                         backgroundColor: ['#3b4d61', '#d35400', '#27ae60']
                     }]
                 },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } }
-                }
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function renderLine(data) {
+            const ctx = document.getElementById('historyChart').getContext('2d');
+            if(historyChart) historyChart.destroy();
+            historyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.date.split('-').slice(1).join('/')),
+                    datasets: [{
+                        label: '30D Price Trend',
+                        data: data.map(d => d.close),
+                        borderColor: '#3b4d61',
+                        tension: 0.3,
+                        fill: true,
+                        backgroundColor: 'rgba(59, 77, 97, 0.1)'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
         }
     </script>
