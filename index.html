@@ -36,20 +36,30 @@
 </head>
 <body>
     <main class="container">
-        <section class="mission-hub" id="themeBorder">
-            <h3>EduVal - Let's learn Finance Together! ✨</h3>
-            <p style="font-size: 0.95rem;">Let's bridge the gap between finance theory and reality. We're exploring live company data and understand what drives value, risk, and momentum.</p>
-            <div class="grid" style="font-size: 0.85rem;">
-                <div><strong>Identify Value:</strong> Use <em>EV/EBITDA</em> Shows how expensive a company is relative to the cash it generates. Lower = cheaper; higher = pricier.</div>
-                <div><strong>Monitor Risk:</strong> Use <em>Net Debt/EBITDA</em> Measures debt risk. How many years of cash flow it would take to pay off all debt.</div>
-                <div><strong>Enterprise Value (EV):</strong> The true cost of buying the whole company — includes debt and cash.</div>
-                <div><strong>52‑Week Range:</strong> The lowest and highest price the stock traded at in the past year.</div>
-                <div><strong>7‑Day Momentum:</strong> Short‑term price trend showing recent market sentiment.</div>
-                <div><strong>Relative Valuation:</strong> Comparing a company’s value to peers to see if it’s cheap, fair, or expensive.</div>
-                <div></div>
-            </div>
-            <div> <strong>Value Labels:</strong> 1. Value Play (< 10x)<br>The Logic: You are paying less than $10 for every $1 of annual cash profit (EBITDA).Context: Often found in "mature" sectors like Energy (XOM, CVX) or Banking. These companies aren't expected to double their size overnight, so their "price tag" is lower relative to their earnings.<br><br>2. Fair Value (10x - 25x)<br>The Logic: This is the "Standard" range for healthy, established companies.Context: Most blue-chip stocks like MSFT or GOOGL often sit in or near this range. It suggests a balance between current earnings and future growth expectations.<br><br>3. Premium Growth (> 25x)<br>The Logic: The market is willing to pay a high "premium" (over $25 for every $1 of current profit).Context: This is typical for High-Tech (NVDA) or Disruptive (TSLA) companies. Investors pay more now because they expect the EBITDA to explode in the future.</div>
-        </section>
+        <details class="mission-hub" id="themeBorder" style="cursor: pointer; transition: all 0.3s ease;">
+    <summary style="font-weight: bold; font-size: 1.2rem; list-style: none;">
+        EduVal - Let's learn Finance Together! ✨ <small style="font-size: 0.7rem; color: var(--pico-primary); margin-left: 10px;">(Click to Expand Theory)</small>
+    </summary>
+    
+    <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+        <p style="font-size: 0.95rem;">This tool is designed to study the gap between <strong>market hype</strong> and <strong>audited reality</strong>. We use institutional valuation metrics to determine if a stock's 2026 momentum is backed by its 2025 profitability.</p>
+        
+        <div class="grid" style="font-size: 0.85rem; margin-bottom: 1.5rem;">
+            <div><strong>Identify Value:</strong> Use <em>EV/EBITDA</em> to see the real price of cash flow. Lower = cheaper.</div>
+            <div><strong>Monitor Risk:</strong> Use <em>Net Debt/EBITDA</em> to see how many years of profit it takes to pay debt.</div>
+            <div><strong>Relative Valuation:</strong> Comparing a company's value to its peers to see if it's fair or expensive.</div>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 4px;">
+            <h6 style="margin-bottom: 0.5rem; font-size: 0.9rem;">The Verdict Logic:</h6>
+            <ul style="font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
+                <li><strong>Value Play (< 10x):</strong> "Mature" sectors like Energy (XOM). Low price tag relative to earnings.</li>
+                <li><strong>Fair Value (10x - 25x):</strong> The "Standard" range for healthy, established blue-chips (MSFT, GOOGL).</li>
+                <li><strong>Premium Growth (> 25x):</strong> High-Tech (NVDA). Investors pay a premium expecting future profit explosions.</li>
+            </ul>
+        </div>
+    </div>
+</details>
 
         <header>
             <select id="tickerSelect" onchange="runAnalysis(this.value)">
@@ -209,6 +219,7 @@
     </script>
 </body>
 </html>
+
 
 
 
