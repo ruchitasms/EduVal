@@ -6,26 +6,35 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --pico-primary: #5da9e9; --pico-card-background-color: #1a212c; }
-        body { background-color: #0f141a; color: #e1e4e8; }
-        .chart-box { height: 280px; margin-bottom: 20px; background: #1a212c; border: 1px solid #2d3748; border-radius: 12px; padding: 15px; }
-        .glossary { background: #1a212c; padding: 25px; border-radius: 12px; margin-top: 30px; border-left: 6px solid #5da9e9; }
-        .metric-val { font-size: 2.2rem; font-weight: 800; color: #5da9e9; text-shadow: 0 0 10px rgba(93, 169, 233, 0.3); }
-        article { background: #1a212c !important; border: 1px solid #2d3748; }
+        :root { 
+            --pico-primary: #00a8e8; 
+            --pico-background-color: #0b0e14;
+            --pico-card-background-color: #151921;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container { height: 220px; margin-top: 15px; }
+        .metric-val { font-size: 2rem; font-weight: 700; color: var(--pico-primary); }
+        .glossary-section { 
+            background: #1c222d; 
+            padding: 2rem; 
+            border-radius: 8px; 
+            border-top: 4px solid var(--pico-primary); 
+            margin-top: 2rem;
+        }
         progress { display: none; }
     </style>
 </head>
 <body>
     <main class="container">
-        <hgroup style="margin-top:40px;">
-            <h1 style="color: #5da9e9;">Energy Valuation Tracker</h1>
-            <p>Vibrant Metrics. Mythic Compose. Dark Precision.</p>
+        <hgroup style="margin-top:2rem;">
+            <h1>Energy Valuation Tracker</h1>
+            <p>Professional Analytics for Energy Equity Valuation</p>
         </hgroup>
 
         <article>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="ticker" placeholder="XOM, CVX, BP..." style="margin-bottom:0; background: #0f141a;">
-                <button onclick="getValuation()">Analyze Ticker</button>
+            <div style="display: flex; gap: 1rem;">
+                <input type="text" id="ticker" placeholder="Enter Ticker (e.g. XOM)" style="margin-bottom:0;">
+                <button onclick="getValuation()">Generate Report</button>
             </div>
             <progress id="loader"></progress>
         </article>
@@ -33,35 +42,40 @@
         <div id="output" style="display:none;">
             <div class="grid">
                 <article>
-                    <header><h4 id="displayTicker" style="color: #fff;">---</h4></header>
-                    <p>EV / EBITDA (TTM)</p>
+                    <header><h4 id="compName">Company Name</h4></header>
+                    <label>EV/EBITDA (TTM)</label>
                     <div class="metric-val" id="multiple">-</div>
-                    <p style="margin-top:10px; font-size: 0.9rem;">Leverage: <span id="leverageText" style="color:#e9967a;">--</span> (Net Debt/EBITDA)</p>
-                    <div class="chart-box">
-                        <canvas id="gaugeChart"></canvas>
+                    <div class="chart-container">
+                        <canvas id="ratioChart"></canvas>
                     </div>
+                    <footer>
+                        <small>Net Debt / EBITDA: <span id="leverage">-</span></small>
+                    </footer>
                 </article>
 
                 <article>
-                    <header><h4 style="color: #fff;">7-Day Price Trend</h4></header>
-                    <p>Momentum Context</p>
-                    <div class="metric-val" id="lastPrice">-</div>
-                    <div class="chart-box">
+                    <header><h4>Market Momentum</h4></header>
+                    <label>Latest Closing Price</label>
+                    <div class="metric-val" id="price">-</div>
+                    <div class="chart-container">
                         <canvas id="historyChart"></canvas>
                     </div>
+                    <table role="grid" style="margin-top: 1rem; font-size: 0.85rem;">
+                        <tbody id="perfStats"></tbody>
+                    </table>
                 </article>
             </div>
 
-            <section class="glossary">
-                <h3 style="color: #5da9e9;">Metric Insights</h3>
+            <section class="glossary-section">
+                <h3>Financial Analysis Framework</h3>
                 <div class="grid">
                     <div>
-                        <strong>Relative Valuation</strong>
-                        <p>A "mythic" comparison to peers. If this company’s EV/EBITDA is lower than its industry neighbors, it may represent a value opportunity hiding in plain sight.</p>
+                        <strong>Relative Valuation Methodology</strong>
+                        <p>This approach values an asset by comparing it to similar assets in the market. By using multiples like EV/EBITDA, analysts can normalize differences in capital structure to determine if a stock is trading at a discount or premium relative to its sector.</p>
                     </div>
                     <div>
-                        <strong>Net Debt to EBITDA</strong>
-                        <p>This "Vitality Ratio" measures solvency. It tells us how many years of current EBITDA it would take to pay back all debt. Lower is safer, showing higher composure.</p>
+                        <strong>Leverage & Solvency</strong>
+                        <p>The Net Debt/EBITDA ratio measures a company's ability to pay off its incurred debt. In capital-intensive industries like Energy, maintaining a ratio typically below 3.0x is a key indicator of financial composure and operational stability.</p>
                     </div>
                 </div>
             </section>
@@ -69,91 +83,87 @@
     </main>
 
     <script>
-        // Global Chart Defaults for Dark Mode
-        Chart.defaults.color = '#a0aec0';
-        Chart.defaults.borderColor = '#2d3748';
-        let mainChart = null, historyChart = null;
-
-        const KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
+        let ratioChart = null;
+        let historyChart = null;
+        const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
 
         async function getValuation() {
-            const sym = document.getElementById('ticker').value.toUpperCase().trim();
-            if(!sym) return;
+            const ticker = document.getElementById('ticker').value.toUpperCase().trim();
+            if (!ticker) return;
 
             document.getElementById('loader').style.display = 'block';
             document.getElementById('output').style.display = 'none';
 
             try {
                 const [pRes, mRes, hRes] = await Promise.all([
-                    fetch(`https://financialmodelingprep.com/stable/profile?symbol=${sym}&apikey=${KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=${sym}&apikey=${KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${sym}&apikey=${KEY}`)
+                    fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`),
+                    fetch(`https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=${ticker}&apikey=${API_KEY}`),
+                    fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}&apikey=${API_KEY}`)
                 ]);
 
-                const p = (await pRes.json())[0];
-                const m = (await mRes.json())[0];
-                const h = await hRes.json();
+                const profile = (await pRes.json())[0];
+                const metrics = (await mRes.json())[0];
+                const historyData = await hRes.json();
 
-                if (!p || !m) throw new Error("Missing Data");
+                if (!profile || !metrics) throw new Error("Invalid Data");
 
-                // 1. Text Data Injection
-                document.getElementById('displayTicker').innerText = p.companyName;
-                document.getElementById('lastPrice').innerText = `$${p.price.toFixed(2)}`;
-                
-                const evEbitda = m.evToEBITDA;
-                document.getElementById('multiple').innerText = evEbitda ? `${evEbitda.toFixed(2)}x` : "N/A";
-                
-                const leverage = m.netDebtToEBITDA || 0;
-                document.getElementById('leverageText').innerText = leverage.toFixed(2);
+                // Update Text Elements
+                document.getElementById('compName').innerText = profile.companyName;
+                document.getElementById('multiple').innerText = metrics.evToEBITDA ? `${metrics.evToEBITDA.toFixed(2)}x` : 'N/A';
+                document.getElementById('price').innerText = `$${profile.price.toFixed(2)}`;
+                document.getElementById('leverage').innerText = metrics.netDebtToEBITDA ? metrics.netDebtToEBITDA.toFixed(2) : 'N/A';
 
-                // 2. Market Cap Visualization (Doughnut)
-                const ctxG = document.getElementById('gaugeChart').getContext('2d');
-                if(mainChart) mainChart.destroy();
-                mainChart = new Chart(ctxG, {
+                document.getElementById('perfStats').innerHTML = `
+                    <tr><td>Market Cap</td><td align="right">$${(profile.marketCap / 1e9).toFixed(2)}B</td></tr>
+                    <tr><td>52W High</td><td align="right">$${profile.range.split('-')[1]}</td></tr>
+                    <tr><td>Beta</td><td align="right">${profile.beta.toFixed(2)}</td></tr>
+                `;
+
+                // 1. Ratio Visualization (Doughnut)
+                const ctxR = document.getElementById('ratioChart').getContext('2d');
+                if (ratioChart) ratioChart.destroy();
+                ratioChart = new Chart(ctxR, {
                     type: 'doughnut',
                     data: {
                         labels: ['Equity Value', 'Enterprise Value Contribution'],
                         datasets: [{
-                            data: [p.marketCap, p.marketCap * 0.2], // Visual proxy for structure
-                            backgroundColor: ['#5da9e9', '#2d3748'],
+                            data: [profile.marketCap, profile.marketCap * 0.25],
+                            backgroundColor: ['#00a8e8', '#2a313d'],
                             borderWidth: 0
                         }]
                     },
-                    options: { maintainAspectRatio: false, cutout: '70%' }
+                    options: { maintainAspectRatio: false, cutout: '80%' }
                 });
 
-                // 3. 7-Day Trend Line Chart
+                // 2. 7-Day History Movement (Line)
                 const ctxH = document.getElementById('historyChart').getContext('2d');
-                if(historyChart) historyChart.destroy();
+                if (historyChart) historyChart.destroy();
                 
-                const weekData = h.historical ? h.historical.slice(0, 7).reverse() : [];
+                const week = (historyData.historical || []).slice(0, 7).reverse();
                 
                 historyChart = new Chart(ctxH, {
                     type: 'line',
                     data: {
-                        labels: weekData.map(d => d.date.substring(5)), // MM-DD
+                        labels: week.map(d => d.date.substring(5)),
                         datasets: [{
-                            label: 'Closing Price',
-                            data: weekData.map(d => d.close),
-                            borderColor: '#5da9e9',
-                            backgroundColor: 'rgba(93, 169, 233, 0.1)',
+                            data: week.map(d => d.close),
+                            borderColor: '#00a8e8',
+                            backgroundColor: 'rgba(0, 168, 232, 0.1)',
                             fill: true,
-                            tension: 0.4,
-                            pointRadius: 5,
-                            pointHoverRadius: 8
+                            tension: 0.4
                         }]
                     },
                     options: { 
-                        maintainAspectRatio: false,
+                        maintainAspectRatio: false, 
                         plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: false, grid: { color: '#2d3748' } }, x: { grid: { display: false } } }
+                        scales: { x: { grid: { display: false } }, y: { grid: { color: '#2a313d' } } }
                     }
                 });
 
                 document.getElementById('output').style.display = 'block';
-            } catch (err) {
-                alert("Data Error: " + err.message);
-                console.error(err);
+            } catch (e) {
+                alert("Technical Error: Verify ticker and connection.");
+                console.error(e);
             } finally {
                 document.getElementById('loader').style.display = 'none';
             }
