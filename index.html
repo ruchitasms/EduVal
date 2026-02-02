@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Valuation Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+</head>
+<body>
+    <main class="container">
+        <hgroup>
+            <h1>Energy Valuation Tracker</h1>
+            <h2>Turning Energy Data into Financial Value</h2>
+        </hgroup>
+
+        <section>
+            <input type="text" id="ticker" placeholder="Enter Ticker (e.g., XOM, NEE, CVX)">
+            <button id="run-val" py-click="calculate_valuation()">Analyze Value</button>
+        </section>
+
+        <section id="output-card" style="display:none;">
+            <article>
+                <header><strong id="company-name">Company Report</strong></header>
+                <div id="results"></div>
+                <footer>
+                    <small>Status: <span id="logic-check">Awaiting Data...</span></small>
+                </footer>
+            </article>
+        </section>
+
+        <py-config>
+            packages = ["yfinance", "pandas"]
+        </py-config>
+
+        <py-script>
+import yfinance as yf
+from pyscript import Element
+
+def calculate_valuation():
+    ticker_symbol = Element("ticker").value.upper()
+    if not ticker_symbol:
+        return
+
+    # Fetching the Universe
+    stock = yf.Ticker(ticker_symbol)
+    info = stock.info
+    
+    name = info.get('longName', 'Unknown')
+    ebitda = info.get('ebitda', 1) # Avoid div by zero
+    market_cap = info.get('marketCap', 0)
+    total_debt = info.get('totalDebt', 0)
+    total_cash = info.get('totalCash', 0)
+    ev = market_cap + total_debt - total_cash
+    
+    multiple = ev / ebitda
+    
+    # Update UI
+    Element("company-name").write(name)
+    Element("output-card").element.style.display = "block"
+    
+    result_html = f"""
+    <ul>
+        <li><strong>Enterprise Value (EV):</strong> ${ev/1e9:.2f}B</li>
+        <li><strong>EV/EBITDA Multiple:</strong> {multiple:.2f}x</li>
+        <li><strong>Market Cap:</strong> ${market_cap/1e9:.2f}B</li>
+    </ul>
+    """
+    Element("results").write(result_html)
+    
+    # Logic Logic
+    status = "Fairly Valued"
+    if multiple < 6: status = "Potentially Undervalued (Value Play)"
+    elif multiple > 12: status = "Premium Valuation (Growth/Transition Play)"
+    Element("logic-check").write(status)
+        </py-script>
+    </main>
+</body>
+</html>
