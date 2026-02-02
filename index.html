@@ -11,24 +11,18 @@
             --pico-background-color: #0b0e14;
             --pico-card-background-color: #151921;
         }
-        body { font-family: 'Inter', sans-serif; }
-        .chart-container { height: 220px; margin-top: 15px; }
-        .metric-val { font-size: 2rem; font-weight: 700; color: var(--pico-primary); }
-        .glossary-section { 
-            background: #1c222d; 
-            padding: 2rem; 
-            border-radius: 8px; 
-            border-top: 4px solid var(--pico-primary); 
-            margin-top: 2rem;
-        }
+        .chart-container { height: 300px; margin-top: 15px; }
+        .metric-val { font-size: 2.2rem; font-weight: 700; color: var(--pico-primary); }
+        .glossary-section { background: #1c222d; padding: 2rem; border-radius: 8px; border-top: 4px solid var(--pico-primary); margin-top: 2rem; }
         progress { display: none; }
+        table { font-size: 0.9rem; }
     </style>
 </head>
 <body>
     <main class="container">
         <hgroup style="margin-top:2rem;">
             <h1>Energy Valuation Tracker</h1>
-            <p>Professional Analytics for Energy Equity Valuation</p>
+            <p>Data-Driven Analysis for Energy Equities</p>
         </hgroup>
 
         <article>
@@ -43,39 +37,54 @@
             <div class="grid">
                 <article>
                     <header><h4 id="compName">Company Name</h4></header>
-                    <label>EV/EBITDA (TTM)</label>
+                    <label>EV / EBITDA (TTM)</label>
                     <div class="metric-val" id="multiple">-</div>
-                    <div class="chart-container">
-                        <canvas id="ratioChart"></canvas>
-                    </div>
-                    <footer>
-                        <small>Net Debt / EBITDA: <span id="leverage">-</span></small>
-                    </footer>
+                    
+                    <table role="grid" style="margin-top:1.5rem;">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th align="right">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Net Debt / EBITDA</td>
+                                <td align="right" id="leverage" style="font-weight:bold; color:#e9967a;">-</td>
+                            </tr>
+                            <tr>
+                                <td>Market Cap</td>
+                                <td align="right" id="mktCap">-</td>
+                            </tr>
+                            <tr>
+                                <td>Current Price</td>
+                                <td align="right" id="priceDisplay">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </article>
 
                 <article>
-                    <header><h4>Market Momentum</h4></header>
-                    <label>Latest Closing Price</label>
-                    <div class="metric-val" id="price">-</div>
+                    <header><h4>7-Day Price Movement</h4></header>
                     <div class="chart-container">
                         <canvas id="historyChart"></canvas>
                     </div>
-                    <table role="grid" style="margin-top: 1rem; font-size: 0.85rem;">
-                        <tbody id="perfStats"></tbody>
-                    </table>
+                    <footer>
+                        <small>Data Source: Financial Modeling Prep (Stable API)</small>
+                    </footer>
                 </article>
             </div>
 
             <section class="glossary-section">
-                <h3>Financial Analysis Framework</h3>
+                <h3>Analysis Framework</h3>
                 <div class="grid">
                     <div>
-                        <strong>Relative Valuation Methodology</strong>
-                        <p>This approach values an asset by comparing it to similar assets in the market. By using multiples like EV/EBITDA, analysts can normalize differences in capital structure to determine if a stock is trading at a discount or premium relative to its sector.</p>
+                        <strong>Enterprise Multiple (EV/EBITDA)</strong>
+                        <p>This ratio acts as a normalized valuation metric. Unlike P/E, it accounts for debt levels, which is vital in the energy sector where companies carry heavy infrastructure-related debt.</p>
                     </div>
                     <div>
-                        <strong>Leverage & Solvency</strong>
-                        <p>The Net Debt/EBITDA ratio measures a company's ability to pay off its incurred debt. In capital-intensive industries like Energy, maintaining a ratio typically below 3.0x is a key indicator of financial composure and operational stability.</p>
+                        <strong>Leverage Context</strong>
+                        <p>The Net Debt/EBITDA ratio indicates how many years of cash flow are needed to pay off all debt. A low EV/EBITDA paired with a low Net Debt/EBITDA often highlights a resilient, undervalued business.</p>
                     </div>
                 </div>
             </section>
@@ -83,7 +92,6 @@
     </main>
 
     <script>
-        let ratioChart = null;
         let historyChart = null;
         const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
 
@@ -103,66 +111,52 @@
 
                 const profile = (await pRes.json())[0];
                 const metrics = (await mRes.json())[0];
-                const historyData = await hRes.json();
+                const rawHistory = await hRes.json();
 
-                if (!profile || !metrics) throw new Error("Invalid Data");
+                if (!profile || !metrics) throw new Error("Missing Data");
 
-                // Update Text Elements
+                // 1. Text & Table Updates
                 document.getElementById('compName').innerText = profile.companyName;
                 document.getElementById('multiple').innerText = metrics.evToEBITDA ? `${metrics.evToEBITDA.toFixed(2)}x` : 'N/A';
-                document.getElementById('price').innerText = `$${profile.price.toFixed(2)}`;
-                document.getElementById('leverage').innerText = metrics.netDebtToEBITDA ? metrics.netDebtToEBITDA.toFixed(2) : 'N/A';
+                document.getElementById('leverage').innerText = metrics.netDebtToEBITDA ? `${metrics.netDebtToEBITDA.toFixed(2)}x` : 'N/A';
+                document.getElementById('mktCap').innerText = `$${(profile.marketCap / 1e9).toFixed(2)}B`;
+                document.getElementById('priceDisplay').innerText = `$${profile.price.toFixed(2)}`;
 
-                document.getElementById('perfStats').innerHTML = `
-                    <tr><td>Market Cap</td><td align="right">$${(profile.marketCap / 1e9).toFixed(2)}B</td></tr>
-                    <tr><td>52W High</td><td align="right">$${profile.range.split('-')[1]}</td></tr>
-                    <tr><td>Beta</td><td align="right">${profile.beta.toFixed(2)}</td></tr>
-                `;
-
-                // 1. Ratio Visualization (Doughnut)
-                const ctxR = document.getElementById('ratioChart').getContext('2d');
-                if (ratioChart) ratioChart.destroy();
-                ratioChart = new Chart(ctxR, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Equity Value', 'Enterprise Value Contribution'],
-                        datasets: [{
-                            data: [profile.marketCap, profile.marketCap * 0.25],
-                            backgroundColor: ['#00a8e8', '#2a313d'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: { maintainAspectRatio: false, cutout: '80%' }
-                });
-
-                // 2. 7-Day History Movement (Line)
+                // 2. Charting Logic (Mapped to your specific API response)
                 const ctxH = document.getElementById('historyChart').getContext('2d');
                 if (historyChart) historyChart.destroy();
                 
-                const week = (historyData.historical || []).slice(0, 7).reverse();
+                // We use your response structure: list of objects with "price" and "date"
+                const history = (rawHistory.historical || rawHistory).slice(0, 7).reverse();
                 
                 historyChart = new Chart(ctxH, {
                     type: 'line',
                     data: {
-                        labels: week.map(d => d.date.substring(5)),
+                        labels: history.map(d => d.date.split('-').slice(1).join('/')), // Formats to MM/DD
                         datasets: [{
-                            data: week.map(d => d.close),
+                            label: 'Closing Price',
+                            data: history.map(d => d.price), // Corrected from 'close' to 'price'
                             borderColor: '#00a8e8',
                             backgroundColor: 'rgba(0, 168, 232, 0.1)',
                             fill: true,
-                            tension: 0.4
+                            tension: 0.3,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#00a8e8'
                         }]
                     },
                     options: { 
                         maintainAspectRatio: false, 
                         plugins: { legend: { display: false } },
-                        scales: { x: { grid: { display: false } }, y: { grid: { color: '#2a313d' } } }
+                        scales: { 
+                            x: { grid: { display: false }, ticks: { color: '#888' } },
+                            y: { grid: { color: '#2a313d' }, ticks: { color: '#888' } }
+                        }
                     }
                 });
 
                 document.getElementById('output').style.display = 'block';
             } catch (e) {
-                alert("Technical Error: Verify ticker and connection.");
+                alert("Technical Error: Ensure the API response matches expected structure.");
                 console.error(e);
             } finally {
                 document.getElementById('loader').style.display = 'none';
