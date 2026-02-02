@@ -41,7 +41,7 @@
                 </article>
 
                 <article>
-                    <header><h4>30-Day Price Trend</h4></header>
+                    <header><h4>7-Day Price Trend</h4></header>
                     <p>Momentum Context</p>
                     <div class="metric-val" id="lastPrice">-</div>
                     <div class="chart-box">
@@ -59,28 +59,27 @@
                     </div>
                     <div>
                         <strong>EV/EBITDA (The Cash Multiple)</strong>
-                        <p>Calculated as $\frac{Enterprise Value}{EBITDA}$. It tells you how much you're paying for every dollar of operational cash flow. In energy, lower is generally better value.</p>
+                        <p>Calculated as EV / EBITDA. It tells you how much you're paying for every dollar of operational cash flow. In energy, lower is generally better value.</p>
                     </div>
                 </div>
                 <hr>
-                <p>💡 <strong>Analysis:</strong> A flat or rising price trend combined with a low EV/EBITDA often signals a <strong>Composition</strong> of high composure and steady growth.</p>
+                <p>💡 <strong>Analysis:</strong> A flat or rising price trend combined with a low EV/EBITDA often signals a composition of high composure and steady growth.</p>
             </section>
         </div>
     </main>
 
     <script>
         let donut = null, line = null;
-        const KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx'; 
+        const KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
 
         async function getValuation() {
             const sym = document.getElementById('ticker').value.toUpperCase().trim();
-            if(!sym) return;
+            if (!sym) return;
 
             document.getElementById('loader').style.display = 'block';
             document.getElementById('output').style.display = 'none';
 
             try {
-                // Fetch using 'Stable' endpoints which are more reliable in 2026
                 const [pRes, mRes, hRes] = await Promise.all([
                     fetch(`https://financialmodelingprep.com/stable/profile?symbol=${sym}&apikey=${KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=${sym}&apikey=${KEY}`),
@@ -93,37 +92,45 @@
 
                 if (!p) throw new Error("Check Ticker");
 
-                // 1. Update Metrics
+                // Update Metrics
                 document.getElementById('displayTicker').innerText = p.companyName;
                 document.getElementById('lastPrice').innerText = `$${p.price.toFixed(2)}`;
-                
-                // Try both possible keys for EV/EBITDA
-                const evEbitda = m.evToEbitdaTTM || m.enterpriseValueOverEBITDATTM;
+
+                const evEbitda = m.evToEBITDA || m.enterpriseValueOverEBITDATTM;
                 document.getElementById('multiple').innerText = evEbitda ? `${evEbitda.toFixed(2)}x` : "Data N/A";
 
-                // 2. Capital Structure Donut
+                // Donut Chart
                 const ctxD = document.getElementById('valChart').getContext('2d');
-                if(donut) donut.destroy();
+                if (donut) donut.destroy();
                 donut = new Chart(ctxD, {
                     type: 'doughnut',
                     data: {
                         labels: ['Equity', 'Debt'],
                         datasets: [{
-                            data: [p.marketCap, m.totalDebtTTM || 0],
+                            data: [p.marketCap, m.netDebtToEBITDA || 0],
                             backgroundColor: ['#3b4d61', '#d35400']
                         }]
                     },
                     options: { maintainAspectRatio: false }
                 });
 
-                // 3. Price History Line Chart
+                // 7-Day Price History Chart
                 const ctxL = document.getElementById('historyChart').getContext('2d');
-                if(line) line.destroy();
-                const history = h.historical ? h.historical.slice(0, 20).reverse() : [];
+                if (line) line.destroy();
+
+                const history = h.historical ? h.historical.slice(0, 7).reverse() : [];
+
+                const labels = history.map(d =>
+                    new Date(d.date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                    })
+                );
+
                 line = new Chart(ctxL, {
                     type: 'line',
                     data: {
-                        labels: history.map(d => d.date.split('-')[2]), // Just the day
+                        labels: labels,
                         datasets: [{
                             data: history.map(d => d.close),
                             borderColor: '#3b4d61',
@@ -132,7 +139,7 @@
                             tension: 0.3
                         }]
                     },
-                    options: { 
+                    options: {
                         maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: { x: { grid: { display: false } } }
@@ -140,6 +147,7 @@
                 });
 
                 document.getElementById('output').style.display = 'block';
+
             } catch (err) {
                 alert("Could not load " + sym + ". This is often a CORS or API Limit issue.");
                 console.error(err);
