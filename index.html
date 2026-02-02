@@ -22,7 +22,7 @@
 
         <article>
             <div style="display: flex; gap: 10px;">
-                <input type="text" id="ticker" placeholder="XOM" style="margin-bottom:0;">
+                <input type="text" id="ticker" placeholder="Company Ticker" style="margin-bottom:0;">
                 <button onclick="getValuation()">Analyze Asset</button>
             </div>
             <progress id="loader"></progress>
@@ -70,7 +70,7 @@
             try {
                 // Fetch Key Metrics & Price in parallel
                 const [metricRes, quoteRes] = await Promise.all([
-                    fetch(`https://financialmodelingprep.com/api/v3/key-metrics-ttm/${ticker}?apikey=${API_KEY}`),
+                    fetch(`https://financialmodelingprep.com/stable/income-statement?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/api/v3/quote/${ticker}?apikey=${API_KEY}`)
                 ]);
 
@@ -125,4 +125,5 @@
     </script>
 </body>
 </html>
+
 
