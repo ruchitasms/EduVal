@@ -42,7 +42,7 @@
 
                 <article>
                     <header><h4>7-Day Price Trend</h4></header>
-                    <p>Momentum Context</p>
+                    <p>Recent Momentum</p>
                     <div class="metric-val" id="lastPrice">-</div>
                     <div class="chart-box">
                         <canvas id="historyChart"></canvas>
@@ -55,26 +55,26 @@
                 <div class="grid">
                     <div>
                         <strong>Relative Valuation</strong>
-                        <p>Instead of guessing a stock's "true" value in a vacuum, we compare it to peers. If XOM has an EV/EBITDA of 8x while the sector average is 10x, it is "relatively" cheap.</p>
+                        <p>Instead of guessing a stock's "true" value, we compare it to peers. If XOM has an EV/EBITDA of 8x while the sector average is 10x, it is "relatively" cheap.</p>
                     </div>
                     <div>
                         <strong>EV/EBITDA (The Cash Multiple)</strong>
-                        <p>Calculated as EV / EBITDA. It tells you how much you're paying for every dollar of operational cash flow. In energy, lower is generally better value.</p>
+                        <p>Calculated as $EV \div EBITDA$. It tells you how much you're paying for every dollar of operational cash flow. In energy, lower is generally better value.</p>
                     </div>
                 </div>
                 <hr>
-                <p>💡 <strong>Analysis:</strong> A flat or rising price trend combined with a low EV/EBITDA often signals a composition of high composure and steady growth.</p>
+                <p>💡 <strong>Strategic Note:</strong> A rising 7-day trend paired with a low EV/EBITDA indicates a company gaining market composure while remaining fundamentally affordable.</p>
             </section>
         </div>
     </main>
 
     <script>
         let donut = null, line = null;
-        const KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
+        const KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx'; 
 
         async function getValuation() {
             const sym = document.getElementById('ticker').value.toUpperCase().trim();
-            if (!sym) return;
+            if(!sym) return;
 
             document.getElementById('loader').style.display = 'block';
             document.getElementById('output').style.display = 'none';
@@ -90,66 +90,65 @@
                 const m = (await mRes.json())[0];
                 const h = await hRes.json();
 
-                if (!p) throw new Error("Check Ticker");
+                if (!p) throw new Error("Ticker not found");
 
-                // Update Metrics
+                // 1. Text Data
                 document.getElementById('displayTicker').innerText = p.companyName;
                 document.getElementById('lastPrice').innerText = `$${p.price.toFixed(2)}`;
-
-                const evEbitda = m.evToEBITDA || m.enterpriseValueOverEBITDATTM;
+                
+                // Using the specific TTM field for EV/EBITDA
+                const evEbitda = m.evToEbitdaTTM || m.enterpriseValueOverEBITDATTM;
                 document.getElementById('multiple').innerText = evEbitda ? `${evEbitda.toFixed(2)}x` : "Data N/A";
 
-                // Donut Chart
+                // 2. Capital Structure Donut (Equity vs Debt in Dollars)
                 const ctxD = document.getElementById('valChart').getContext('2d');
-                if (donut) donut.destroy();
+                if(donut) donut.destroy();
                 donut = new Chart(ctxD, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Equity', 'Debt'],
+                        labels: ['Equity (Mkt Cap)', 'Total Debt'],
                         datasets: [{
-                            data: [p.marketCap, m.netDebtToEBITDA || 0],
+                            data: [p.marketCap, m.totalDebtTTM || 0],
                             backgroundColor: ['#3b4d61', '#d35400']
                         }]
                     },
-                    options: { maintainAspectRatio: false }
+                    options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
                 });
 
-                // 7-Day Price History Chart
+                // 3. 7-Day History Line Chart
                 const ctxL = document.getElementById('historyChart').getContext('2d');
-                if (line) line.destroy();
-
+                if(line) line.destroy();
+                
+                // Get exactly 7 days and reverse to chronological order
                 const history = h.historical ? h.historical.slice(0, 7).reverse() : [];
-
-                const labels = history.map(d =>
-                    new Date(d.date).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric'
-                    })
-                );
-
+                
                 line = new Chart(ctxL, {
                     type: 'line',
                     data: {
-                        labels: labels,
+                        // Formatting date as MM/DD
+                        labels: history.map(d => d.date.substring(5).replace('-', '/')), 
                         datasets: [{
                             data: history.map(d => d.close),
                             borderColor: '#3b4d61',
                             fill: true,
                             backgroundColor: 'rgba(59, 77, 97, 0.1)',
-                            tension: 0.3
+                            tension: 0.3,
+                            pointRadius: 4
                         }]
                     },
-                    options: {
+                    options: { 
                         maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
-                        scales: { x: { grid: { display: false } } }
+                        scales: { 
+                            x: { grid: { display: false } },
+                            y: { ticks: { callback: value => '$' + value } }
+                        }
                     }
                 });
 
                 document.getElementById('output').style.display = 'block';
-
             } catch (err) {
-                alert("Could not load " + sym + ". This is often a CORS or API Limit issue.");
+                alert("Could not load ticker. Please check your spelling or API limit.");
                 console.error(err);
             } finally {
                 document.getElementById('loader').style.display = 'none';
