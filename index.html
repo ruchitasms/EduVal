@@ -2,182 +2,155 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>Energy Valuation Dashboard</title>
+    <title>Global Equity Pulse</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { 
-            --pico-primary: #00a8e8; 
-            --pico-background-color: #0b0e14;
-            --pico-card-background-color: #151921;
-        }
-        .chart-container { height: 300px; margin-top: 15px; }
-        .metric-val { font-size: 2.2rem; font-weight: 700; color: var(--pico-primary); }
-        .glossary-section { background: #1c222d; padding: 2rem; border-radius: 8px; border-top: 4px solid var(--pico-primary); margin-top: 2rem; }
+        :root { --pico-primary: #00d4ff; --pico-background-color: #0d1117; --pico-card-background-color: #161b22; }
+        .metric-val { font-size: 2.4rem; font-weight: 800; color: var(--pico-primary); line-height: 1; }
+        .ticker-btn { padding: 4px 12px; font-size: 0.75rem; margin-right: 5px; cursor: pointer; border-radius: 20px; }
+        .chart-container { height: 280px; }
         progress { display: none; }
-        .leverage-badge { padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+        .solvency-indicator { font-weight: bold; border-radius: 4px; padding: 2px 6px; }
     </style>
 </head>
 <body>
     <main class="container">
         <hgroup style="margin-top:2rem;">
-            <h1>Energy Valuation Tracker</h1>
-            <p>Data-Driven Analysis for Energy Equities</p>
+            <h1>Global Equity Pulse</h1>
+            <p>Institutional-Grade Multi-Sector Analysis</p>
         </hgroup>
 
-        <article>
-            <div style="display: flex; gap: 1rem;">
-                <input type="text" id="ticker" placeholder="Enter Ticker (e.g. XOM)" style="margin-bottom:0;">
-                <button onclick="getValuation()">Generate Report</button>
+        <article style="padding: 1rem;">
+            <div id="quickSelect" style="margin-bottom: 1rem;">
+                <small>Quick Select:</small><br>
+                <button class="ticker-btn outline" onclick="runAnalysis('XOM')">XOM</button>
+                <button class="ticker-btn outline" onclick="runAnalysis('NFLX')">NFLX</button>
+                <button class="ticker-btn outline" onclick="runAnalysis('NVDA')">NVDA</button>
+                <button class="ticker-btn outline" onclick="runAnalysis('MSFT')">MSFT</button>
+                <button class="ticker-btn outline" onclick="runAnalysis('GOOGL')">GOOGL</button>
+                <button class="ticker-btn outline" onclick="runAnalysis('CVX')">CVX</button>
+                <button class="ticker-btn outline" onclick="runAnalysis('TSLA')">TSLA</button>
+                <button class="ticker-btn outline" onclick="runAnalysis('DIS')">DIS</button>
+                <button class="ticker-btn outline" onclick="runAnalysis('INTC')">INTC</button>
+                <button class="ticker-btn outline" onclick="runAnalysis('SOFI')">SOFI</button>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="tickerInput" placeholder="Enter Ticker..." style="margin-bottom:0;">
+                <button onclick="runAnalysis(document.getElementById('tickerInput').value)">Analyze</button>
             </div>
             <progress id="loader"></progress>
         </article>
 
-        <div id="output" style="display:none;">
+        <div id="dashboard" style="display:none;">
             <div class="grid">
                 <article>
-                    <header><h4 id="compName">Company Name</h4></header>
-                    <label>EV / EBITDA (Latest)</label>
-                    <div class="metric-val" id="multiple">-</div>
-                    
-                    <table role="grid" style="margin-top:1.5rem;">
-                        <thead>
-                            <tr>
-                                <th>Metric</th>
-                                <th align="right">Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Net Debt / EBITDA</td>
-                                <td align="right"><span id="leverage" class="leverage-badge">-</span></td>
-                            </tr>
-                            <tr>
-                                <td>Enterprise Value</td>
-                                <td align="right" id="entValue">-</td>
-                            </tr>
-                            <tr>
-                                <td>Market Cap</td>
-                                <td align="right" id="mktCap">-</td>
-                            </tr>
-                            <tr>
-                                <td>Current Price</td>
-                                <td align="right" id="priceDisplay">-</td>
-                            </tr>
-                        </tbody>
+                    <header><h4 id="compName">---</h4></header>
+                    <label>Enterprise Multiple (EV/EBITDA)</label>
+                    <div class="metric-val" id="evEbitdaDisplay">-</div>
+                    <hr>
+                    <table role="grid">
+                        <tr>
+                            <td>Net Debt / EBITDA</td>
+                            <td align="right"><span id="leverageVal" class="solvency-indicator">-</span></td>
+                        </tr>
+                        <tr>
+                            <td>Enterprise Value</td>
+                            <td align="right" id="evVal">-</td>
+                        </tr>
                     </table>
+                    <footer>
+                        <small>A debt-neutral valuation metric used to compare companies across different capital structures.</small>
+                    </footer>
                 </article>
 
                 <article>
-                    <header><h4>7-Day Price Movement</h4></header>
+                    <header><h4>7-Day Price Momentum</h4></header>
                     <div class="chart-container">
-                        <canvas id="historyChart"></canvas>
+                        <canvas id="priceChart"></canvas>
                     </div>
-                    <footer>
-                        <small id="dataDate">Fiscal Year: ---</small>
-                    </footer>
+                    <table role="grid" style="margin-top: 10px;">
+                        <tr>
+                            <td>Current Market Cap</td>
+                            <td align="right" id="mktCapVal">-</td>
+                        </tr>
+                    </table>
                 </article>
             </div>
-
-            <section class="glossary-section">
-                <h3>Financial Analysis Framework</h3>
-                <div class="grid">
-                    <div>
-                        <strong>Enterprise Multiple (EV/EBITDA)</strong>
-                        <p>This ratio measures how many years of cash profit it would take to buy the entire business (Equity + Debt - Cash). It is more comprehensive than P/E because it ignores differences in how companies are taxed or financed.</p>
-                    </div>
-                    <div>
-                        <strong>Leverage Context (Net Debt/EBITDA)</strong>
-                        <p>This is a solvency check. It tells us how many years of current earnings would be required to pay off all debt. In the Energy sector, a ratio below 2.0x is generally considered very strong.</p>
-                    </div>
-                </div>
-            </section>
         </div>
     </main>
 
     <script>
-        let historyChart = null;
+        let priceChart = null;
         const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
 
-        async function getValuation() {
-            const ticker = document.getElementById('ticker').value.toUpperCase().trim();
-            if (!ticker) return;
+        async function runAnalysis(ticker) {
+            ticker = ticker.toUpperCase().trim();
+            if(!ticker) return;
 
             document.getElementById('loader').style.display = 'block';
-            document.getElementById('output').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'none';
 
             try {
-                // Fetching Stable endpoints for consistency
                 const [pRes, mRes, hRes] = await Promise.all([
                     fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/key-metrics?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}&apikey=${API_KEY}`)
                 ]);
 
-                const profile = (await pRes.json())[0];
-                const metricsList = await mRes.json();
-                const rawHistory = await hRes.json();
+                const pData = await pRes.json();
+                const mData = await mRes.json();
+                const hData = await hRes.json();
 
-                // Select the most recent metrics object from the array
-                const metrics = metricsList[0];
+                // Normalization Logic
+                const profile = Array.isArray(pData) ? pData[0] : pData;
+                const metrics = Array.isArray(mData) ? mData[0] : mData;
+                const historyRaw = Array.isArray(hData) ? hData : (hData.historical || []);
 
-                if (!profile || !metrics) throw new Error("Missing Data");
+                if (!profile || !metrics) throw new Error("Data Unavailable");
 
-                // 1. Text & Table Updates using your exact API keys
+                // Update UI
                 document.getElementById('compName').innerText = profile.companyName;
-                document.getElementById('dataDate').innerText = `Data as of Fiscal Year: ${metrics.fiscalYear}`;
+                document.getElementById('evEbitdaDisplay').innerText = metrics.evToEBITDA ? `${metrics.evToEBITDA.toFixed(1)}x` : 'N/A';
                 
-                // Primary Multiples
-                const evEbitda = metrics.evToEBITDA;
-                document.getElementById('multiple').innerText = evEbitda ? `${evEbitda.toFixed(2)}x` : 'N/A';
-                
-                const netDebtEbitda = metrics.netDebtToEBITDA;
-                const levElement = document.getElementById('leverage');
-                levElement.innerText = netDebtEbitda ? `${netDebtEbitda.toFixed(2)}x` : 'N/A';
-                
-                // Logic-based coloring for Leverage (Practical Skill)
-                levElement.style.color = netDebtEbitda > 3 ? '#ff4d4d' : '#00e676';
+                const lev = metrics.netDebtToEBITDA;
+                const levEl = document.getElementById('leverageVal');
+                levEl.innerText = lev ? `${lev.toFixed(2)}x` : 'N/A';
+                levEl.style.backgroundColor = lev > 3.5 ? 'rgba(255, 77, 77, 0.2)' : 'rgba(0, 212, 255, 0.1)';
+                levEl.style.color = lev > 3.5 ? '#ff4d4d' : '#00d4ff';
 
-                // Financial Totals
-                document.getElementById('entValue').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(2)}B`;
-                document.getElementById('mktCap').innerText = `$${(profile.marketCap / 1e9).toFixed(2)}B`;
-                document.getElementById('priceDisplay').innerText = `$${profile.price.toFixed(2)}`;
+                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
+                document.getElementById('mktCapVal').innerText = `$${(profile.marketCap / 1e9).toFixed(1)}B`;
 
-                // 2. 7-Day Charting Logic (Mapping d.price)
-                const ctxH = document.getElementById('historyChart').getContext('2d');
-                if (historyChart) historyChart.destroy();
+                // Charting
+                const ctx = document.getElementById('priceChart').getContext('2d');
+                if (priceChart) priceChart.destroy();
+                const week = historyRaw.slice(0, 7).reverse();
                 
-                const history = (rawHistory.historical || rawHistory).slice(0, 7).reverse();
-                
-                historyChart = new Chart(ctxH, {
+                priceChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: history.map(d => d.date.split('-').slice(1).join('/')),
+                        labels: week.map(d => d.date.split('-').slice(1).join('/')),
                         datasets: [{
-                            label: 'Closing Price',
-                            data: history.map(d => d.price),
-                            borderColor: '#00a8e8',
-                            backgroundColor: 'rgba(0, 168, 232, 0.1)',
+                            data: week.map(d => d.price),
+                            borderColor: '#00d4ff',
+                            borderWidth: 3,
                             fill: true,
-                            tension: 0.3,
-                            pointRadius: 4,
-                            pointBackgroundColor: '#00a8e8'
+                            backgroundColor: 'rgba(0, 212, 255, 0.05)',
+                            tension: 0.4,
+                            pointRadius: 0
                         }]
                     },
-                    options: { 
-                        maintainAspectRatio: false, 
+                    options: {
+                        maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
-                        scales: { 
-                            x: { grid: { display: false }, ticks: { color: '#888' } },
-                            y: { grid: { color: '#2a313d' }, ticks: { color: '#888' } }
-                        }
+                        scales: { x: { grid: { display: false } }, y: { grid: { color: '#1f2937' } } }
                     }
                 });
 
-                document.getElementById('output').style.display = 'block';
+                document.getElementById('dashboard').style.display = 'block';
             } catch (e) {
-                alert("Technical Error: Verify ticker and connection.");
-                console.error(e);
+                alert("Technical Error: Ensure the API key and Ticker are valid.");
             } finally {
                 document.getElementById('loader').style.display = 'none';
             }
