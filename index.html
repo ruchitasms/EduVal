@@ -6,11 +6,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root { --pico-primary: #3b4d61; }
         .result-card { display: none; margin-top: 20px; }
-        .chart-container { height: 250px; margin-bottom: 20px; }
-        .pos { color: #27ae60; font-weight: bold; }
-        .neg { color: #e74c3c; font-weight: bold; }
-        .glossary { background: #f4f7f9; padding: 25px; border-radius: 12px; margin-top: 30px; border-left: 6px solid #3b4d61; }
+        .chart-box { height: 280px; margin-bottom: 20px; background: #fff; border: 1px solid #e1e4e8; border-radius: 8px; padding: 10px; }
+        .glossary { background: #f9fafb; padding: 25px; border-radius: 12px; margin-top: 30px; border-left: 6px solid #3b4d61; }
+        .metric-val { font-size: 1.8rem; font-weight: 700; color: #3b4d61; }
         progress { display: none; }
     </style>
 </head>
@@ -18,13 +18,13 @@
     <main class="container">
         <hgroup style="margin-top:40px;">
             <h1>Energy Valuation Tracker</h1>
-            <p><strong>Method:</strong> Relative Valuation (EV/EBITDA)</p>
+            <p>Institutional-Grade Relative Analysis</p>
         </hgroup>
 
         <article>
             <div style="display: flex; gap: 10px;">
-                <input type="text" id="ticker" placeholder="Enter Ticker (e.g. XOM)" style="margin-bottom:0;">
-                <button onclick="getValuation()">Generate Report</button>
+                <input type="text" id="ticker" placeholder="XOM, CVX, BP..." style="margin-bottom:0;">
+                <button onclick="getValuation()">Analyze Ticker</button>
             </div>
             <progress id="loader"></progress>
         </article>
@@ -32,129 +32,120 @@
         <div id="output" class="result-card">
             <div class="grid">
                 <article>
-                    <header><h4 id="compName">Company</h4></header>
-                    <p><strong>EV/EBITDA (TTM):</strong> <span id="multiple" style="font-size: 1.6rem; color: #3b4d61;">-</span></p>
-                    <div class="chart-container">
+                    <header><h4 id="displayTicker">---</h4></header>
+                    <p>EV/EBITDA (TTM)</p>
+                    <div class="metric-val" id="multiple">-</div>
+                    <div class="chart-box">
                         <canvas id="valChart"></canvas>
                     </div>
                 </article>
 
                 <article>
-                    <header><h4>Market Momentum</h4></header>
-                    <div class="chart-container">
+                    <header><h4>30-Day Price Trend</h4></header>
+                    <p>Momentum Context</p>
+                    <div class="metric-val" id="lastPrice">-</div>
+                    <div class="chart-box">
                         <canvas id="historyChart"></canvas>
                     </div>
-                    <table role="grid">
-                        <tbody id="perfBody"></tbody>
-                    </table>
                 </article>
             </div>
 
             <section class="glossary">
-                <h3>Making Sense of the Metrics</h3>
+                <h3>Metric Insights</h3>
                 <div class="grid">
                     <div>
-                        <strong>What is Relative Valuation?</strong>
-                        <p>It compares what the market pays for $1 of profit here vs. competitors. It's a "reality check" for stock prices.</p>
+                        <strong>Relative Valuation</strong>
+                        <p>Instead of guessing a stock's "true" value in a vacuum, we compare it to peers. If XOM has an EV/EBITDA of 8x while the sector average is 10x, it is "relatively" cheap.</p>
                     </div>
                     <div>
-                        <strong>EV/EBITDA (The Enterprise Multiple)</strong>
-                        <p>Calculated as $EV \div EBITDA$. It shows how many years of cash profit it takes to buy the whole business. <strong>6x to 9x</strong> is usually the "value" zone for Energy.</p>
+                        <strong>EV/EBITDA (The Cash Multiple)</strong>
+                        <p>Calculated as $\frac{Enterprise Value}{EBITDA}$. It tells you how much you're paying for every dollar of operational cash flow. In energy, lower is generally better value.</p>
                     </div>
                 </div>
+                <hr>
+                <p>💡 <strong>Analysis:</strong> A flat or rising price trend combined with a low EV/EBITDA often signals a <strong>Composition</strong> of high composure and steady growth.</p>
             </section>
         </div>
     </main>
 
     <script>
-        let myChart = null;
-        let lineChart = null;
-        const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx'; 
+        let donut = null, line = null;
+        const KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx'; 
 
         async function getValuation() {
-            const ticker = document.getElementById('ticker').value.toUpperCase().trim();
-            if(!ticker) return;
+            const sym = document.getElementById('ticker').value.toUpperCase().trim();
+            if(!sym) return;
 
             document.getElementById('loader').style.display = 'block';
             document.getElementById('output').style.display = 'none';
 
             try {
-                // We use the 'stable' path you verified manually
-                const urls = [
-                    `https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`,
-                    `https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=${ticker}&apikey=${API_KEY}`,
-                    `https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}&apikey=${API_KEY}`
-                ];
+                // Fetch using 'Stable' endpoints which are more reliable in 2026
+                const [pRes, mRes, hRes] = await Promise.all([
+                    fetch(`https://financialmodelingprep.com/stable/profile?symbol=${sym}&apikey=${KEY}`),
+                    fetch(`https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=${sym}&apikey=${KEY}`),
+                    fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${sym}&apikey=${KEY}`)
+                ]);
 
-                const [pRes, mRes, hRes] = await Promise.all(urls.map(url => fetch(url)));
+                const p = (await pRes.json())[0];
+                const m = (await mRes.json())[0];
+                const h = await hRes.json();
+
+                if (!p) throw new Error("Check Ticker");
+
+                // 1. Update Metrics
+                document.getElementById('displayTicker').innerText = p.companyName;
+                document.getElementById('lastPrice').innerText = `$${p.price.toFixed(2)}`;
                 
-                const profileData = await pRes.json();
-                const metricsData = await mRes.json();
-                const historyData = await hRes.json();
+                // Try both possible keys for EV/EBITDA
+                const evEbitda = m.evToEbitdaTTM || m.enterpriseValueOverEBITDATTM;
+                document.getElementById('multiple').innerText = evEbitda ? `${evEbitda.toFixed(2)}x` : "Data N/A";
 
-                if (!profileData.length) throw new Error("Ticker not found");
+                // 2. Capital Structure Donut
+                const ctxD = document.getElementById('valChart').getContext('2d');
+                if(donut) donut.destroy();
+                donut = new Chart(ctxD, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Equity', 'Debt'],
+                        datasets: [{
+                            data: [p.marketCap, m.totalDebtTTM || 0],
+                            backgroundColor: ['#3b4d61', '#d35400']
+                        }]
+                    },
+                    options: { maintainAspectRatio: false }
+                });
 
-                const profile = profileData[0];
-                const metrics = metricsData[0] || {};
-                const history = historyData.historical || [];
-
-                // Update UI
-                document.getElementById('compName').innerText = profile.companyName;
-                const evEbitda = metrics.evToEbitdaTTM || metrics.enterpriseValueOverEBITDATTM;
-                document.getElementById('multiple').innerText = evEbitda ? `${evEbitda.toFixed(2)}x` : "N/A";
-
-                document.getElementById('perfBody').innerHTML = `
-                    <tr><td>Latest Price</td><td>$${profile.price.toFixed(2)}</td></tr>
-                    <tr><td>Market Cap</td><td>$${(profile.marketCap/1e9).toFixed(2)}B</td></tr>
-                    <tr><td>52W Range</td><td>${profile.range}</td></tr>
-                `;
-
-                // Charts
-                renderDonut(profile.marketCap, metrics.totalDebtTTM || 0, metrics.netCashTTM || 0);
-                renderLine(history.slice(0, 30).reverse());
+                // 3. Price History Line Chart
+                const ctxL = document.getElementById('historyChart').getContext('2d');
+                if(line) line.destroy();
+                const history = h.historical ? h.historical.slice(0, 20).reverse() : [];
+                line = new Chart(ctxL, {
+                    type: 'line',
+                    data: {
+                        labels: history.map(d => d.date.split('-')[2]), // Just the day
+                        datasets: [{
+                            data: history.map(d => d.close),
+                            borderColor: '#3b4d61',
+                            fill: true,
+                            backgroundColor: 'rgba(59, 77, 97, 0.1)',
+                            tension: 0.3
+                        }]
+                    },
+                    options: { 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { x: { grid: { display: false } } }
+                    }
+                });
 
                 document.getElementById('output').style.display = 'block';
-            } catch (e) {
-                console.error("Critical Error:", e);
-                alert("Error: Check the console (F12) for details. Usually a CORS or Ticker issue.");
+            } catch (err) {
+                alert("Could not load " + sym + ". This is often a CORS or API Limit issue.");
+                console.error(err);
             } finally {
                 document.getElementById('loader').style.display = 'none';
             }
-        }
-
-        function renderDonut(mkt, debt, cash) {
-            const ctx = document.getElementById('valChart').getContext('2d');
-            if(myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Equity', 'Debt', 'Cash'],
-                    datasets: [{
-                        data: [mkt, debt, Math.abs(cash)],
-                        backgroundColor: ['#3b4d61', '#d35400', '#27ae60']
-                    }]
-                }
-            });
-        }
-
-        function renderLine(data) {
-            const ctx = document.getElementById('historyChart').getContext('2d');
-            if(lineChart) lineChart.destroy();
-            lineChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d.date.split('-').slice(1).join('/')),
-                    datasets: [{
-                        label: 'Price',
-                        data: data.map(d => d.close),
-                        borderColor: '#3b4d61',
-                        fill: true,
-                        backgroundColor: 'rgba(59, 77, 97, 0.1)',
-                        tension: 0.3
-                    }]
-                },
-                options: { plugins: { legend: { display: false } } }
-            });
         }
     </script>
 </body>
