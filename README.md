@@ -1,6 +1,8 @@
 ### 🎯 The Mission
 EduVal is an interactive learning platform designed to translate complex financial data into intuitive insights. Most retail investors look at price; data professionals look at the "engine" behind the price. This project is a work-in-progress journey to connect Financial Literacy with Data Science.
 
+https://ruchitasms.github.io/EduVal/
+
 ### 📊 Core Framework (Current Features)
 - The Valuation Verdict Engine: Automatically categorizes stocks into Value Plays, Fair Value, or Premium Growth based on their $EV/EBITDA$ multiples.
 - Sector-Specific Intelligence: The UI dynamically adjusts its theme (colors and logic) based on the industry (Energy, Tech, Entertainment, Semiconductors etc) to reflect different market expectations.
