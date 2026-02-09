@@ -9,11 +9,10 @@
         :root { --pico-primary: #00a8e8; --pico-background-color: #0b0e14; --pico-card-background-color: #151921; }
         .nav-tabs { display: flex; gap: 10px; margin-bottom: 1rem; }
         .nav-tabs button { flex: 1; font-size: 0.8rem; padding: 10px; }
-        /* Broader left pane: 1.2fr instead of 1fr */
         .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1.3fr; gap: 1.5rem; }
         .sts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
         .sts-card { background: var(--pico-card-background-color); padding: 1rem; border-radius: 8px; border-top: 3px solid var(--pico-primary); }
-        .traffic-light { padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin-top: 8px; color: #fff; }
+        .traffic-light { padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin: 8px 0; color: #fff; }
         .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 5px 0; font-size: 0.85rem; }
         .chart-wrapper { height: 300px; width: 100%; position: relative; }
         .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #fff; white-space: nowrap; }
@@ -77,9 +76,8 @@
                     <header>
                         <div style="display: flex; justify-content: space-between; align-items: baseline;">
                             <strong>7-Day Momentum (2026)</strong>
-                            <br>
                             <div>
-                                <span id="priceDisplay" style="color:var(--pico-primary); font-weight:bold; margin-right:15px;">Price: -</span> <br>
+                                <span id="priceDisplay" style="color:var(--pico-primary); font-weight:bold; margin-right:15px;">Price: -</span><br>
                                 <small id="mktCapVal" style="color:#888;">Cap: -</small>
                             </div>
                         </div>
@@ -95,29 +93,37 @@
                         <h6 style="margin:0;">Balance Sheet</h6>
                         <span class="section-sub">Company's Net Worth</span>
                         <div class="metric-row"><span>Current Ratio</span><span id="currRatioVal">-</span></div>
-                        <div class="metric-row"><span>Quick Ratio</span><span id="quickRatioVal">-</span></div>
                         <div id="crLight" class="traffic-light">-</div>
                         <hr>
+                        <div class="metric-row"><span>Quick Ratio</span><span id="quickRatioVal">-</span></div>
                         <div class="metric-row"><span>Total Assets</span><span id="assetsVal">-</span></div>
                         <div class="metric-row"><span>Total Liab.</span><span id="liabVal">-</span></div>
+                        <div class="metric-row" style="border-top: 1px dashed #444; margin-top:5px;">
+                            <span>Enterprise Value</span><span id="evValSts" style="color:var(--pico-primary)">-</span>
+                        </div>
                     </div>
+
                     <div class="sts-card">
                         <h6 style="margin:0;">Income Statement</h6>
                         <span class="section-sub">Company's Profitability</span>
                         <div class="metric-row"><span>Net Margin</span><span id="netMarginVal">-</span></div>
-                        <div class="metric-row"><span>EPS Growth</span><span id="epsGrowthVal">-</span></div>
                         <div id="incLight" class="traffic-light">-</div>
                         <hr>
+                        <div class="metric-row"><span>EPS Growth</span><span id="epsGrowthVal">-</span></div>
                         <div class="metric-row"><span>Revenue</span><span id="revVal">-</span></div>
                         <div class="metric-row"><span>Net Income</span><span id="netIncVal">-</span></div>
+                        <div class="metric-row" style="border-top: 1px dashed #444; margin-top:5px;">
+                            <span>EBITDA</span><span id="ebitdaValSts" style="color:var(--pico-primary)">-</span>
+                        </div>
                     </div>
+
                     <div class="sts-card">
                         <h6 style="margin:0;">Cash Flow</h6>
                         <span class="section-sub">Company's Cash Generation</span>
                         <div class="metric-row"><span>Cash Conversion</span><span id="cashConvVal">-</span></div>
-                        <div class="metric-row"><span>Working Cap</span><span id="workCapVal">-</span></div>
                         <div id="cfLight" class="traffic-light">-</div>
                         <hr>
+                        <div class="metric-row"><span>Working Cap</span><span id="workCapVal">-</span></div>
                         <div class="metric-row"><span>Operating CF</span><span id="ocfVal">-</span></div>
                         <div class="metric-row"><span>Free Cash Flow</span><span id="fcfVal" style="color:var(--pico-primary)">-</span></div>
                     </div>
@@ -184,64 +190,59 @@
                 const themeColor = sectorThemes[industry] || '#00a8e8';
                 document.documentElement.style.setProperty('--pico-primary', themeColor);
 
-                // Top Header Info
+                // Header & Year
                 document.getElementById('compName').innerText = profile.companyName;
                 document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
                 document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
                 document.getElementById('mktCapVal').innerText = `Cap: $${(profile.marketCap / 1e9).toFixed(1)}B`;
-
-                // Year Display
                 const yearText = bs.calendarYear || "2025";
                 document.getElementById('val-fy').innerText = `Audited: FY ${yearText}`;
                 document.getElementById('sts-fy').innerText = `Fiscal Year: ${yearText}`;
 
-                // Valuation Verdict
+                // Valuation
                 const evEbitda = metrics.evToEBITDA;
                 document.getElementById('evEbitdaDisplay').innerText = evEbitda.toFixed(2) + 'x';
                 const vBadge = document.getElementById('verdictBadge');
-                if(evEbitda < 10) { 
-                    vBadge.innerText = "Value Play"; vBadge.style.background = "#004d26"; 
-                } else if(evEbitda < 25) { 
-                    vBadge.innerText = "Fair Value"; vBadge.style.background = "#664d00"; 
-                } else { 
-                    vBadge.innerText = "Premium Growth"; vBadge.style.background = "#3b1e6e"; // Deep Indigo
-                }
+                if(evEbitda < 10) { vBadge.innerText = "Value Play"; vBadge.style.background = "#004d26"; }
+                else if(evEbitda < 25) { vBadge.innerText = "Fair Value"; vBadge.style.background = "#664d00"; }
+                else { vBadge.innerText = "Premium Growth"; vBadge.style.background = "#3b1e6e"; }
 
                 document.getElementById('leverageVal').innerText = metrics.netDebtToEBITDA.toFixed(2) + 'x';
                 document.getElementById('rangeVal').innerText = profile.range;
                 document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
 
-                // Statements Calculation
+                // Statement Logic & New Links
                 const cr = bs.totalCurrentAssets / bs.totalCurrentLiabilities;
-                const qr = (bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities;
                 document.getElementById('currRatioVal').innerText = cr.toFixed(2);
-                document.getElementById('quickRatioVal').innerText = qr.toFixed(2);
                 document.getElementById('crLight').style.background = cr > 1.2 ? "#004d26" : "#4d0000";
                 document.getElementById('crLight').innerText = cr > 1.2 ? "Healthy" : "Risk";
+                document.getElementById('evValSts').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
 
                 const margin = (inc[0].netIncome / inc[0].revenue) * 100;
-                const epsG = inc[1] ? (((inc[0].eps - inc[1].eps) / Math.abs(inc[1].eps)) * 100) : 0;
                 document.getElementById('netMarginVal').innerText = margin.toFixed(1) + '%';
-                document.getElementById('epsGrowthVal').innerText = epsG.toFixed(1) + '%';
                 document.getElementById('incLight').style.background = margin > 15 ? "#004d26" : "#664d00";
                 document.getElementById('incLight').innerText = margin > 15 ? "High Moat" : "Standard";
+                const ebitda = inc[0].ebitda || (inc[0].operatingIncome + (inc[0].depreciationAndAmortization || 0));
+                document.getElementById('ebitdaValSts').innerText = `$${(ebitda / 1e9).toFixed(1)}B`;
 
                 const fcf = cf.operatingCashFlow - cf.capitalExpenditure;
                 const conv = fcf / inc[0].netIncome;
                 document.getElementById('cashConvVal').innerText = conv.toFixed(2) + 'x';
-                document.getElementById('workCapVal').innerText = `$${((bs.totalCurrentAssets - bs.totalCurrentLiabilities) / 1e9).toFixed(1)}B`;
                 document.getElementById('cfLight').style.background = conv >= 1.0 ? "#004d26" : "#4d0000";
                 document.getElementById('cfLight').innerText = conv >= 1.0 ? "High Quality" : "Accrual Warning";
 
-                // Raw Totals
+                // Raw Metrics
+                document.getElementById('quickRatioVal').innerText = ((bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities).toFixed(2);
                 document.getElementById('assetsVal').innerText = `$${(bs.totalAssets / 1e9).toFixed(1)}B`;
                 document.getElementById('liabVal').innerText = `$${(bs.totalLiabilities / 1e9).toFixed(1)}B`;
+                document.getElementById('epsGrowthVal').innerText = inc[1] ? (((inc[0].eps - inc[1].eps) / Math.abs(inc[1].eps)) * 100).toFixed(1) + '%' : '0%';
                 document.getElementById('revVal').innerText = `$${(inc[0].revenue / 1e9).toFixed(1)}B`;
                 document.getElementById('netIncVal').innerText = `$${(inc[0].netIncome / 1e9).toFixed(1)}B`;
+                document.getElementById('workCapVal').innerText = `$${((bs.totalCurrentAssets - bs.totalCurrentLiabilities) / 1e9).toFixed(1)}B`;
                 document.getElementById('ocfVal').innerText = `$${(cf.operatingCashFlow / 1e9).toFixed(1)}B`;
                 document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
 
-                // Chart Logic
+                // Chart
                 const ctx = document.getElementById('priceChart').getContext('2d');
                 if (priceChart) priceChart.destroy();
                 priceChart = new Chart(ctx, {
@@ -260,5 +261,3 @@
     </script>
 </body>
 </html>
-
-
