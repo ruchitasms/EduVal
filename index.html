@@ -140,7 +140,7 @@
         const learnings = {
             val: `<strong>Valuation Tag Logic:</strong><br>
                   <strong>Introduction</strong><br>
-                  • Enterprise Value: It represents the total price tag of a company, calculated as Market Cap + Total Debt - Cash<br>
+                  • Enterprise Value: It represents the total price tag of a company, calculated as Market Cap + Total Debt - Cash. Here, Market Cap = (Current Share Price x Current Outstanding Shares)<br>
                   • Relative Valuation: This involves comparing a company's value to its peers using multiples like EV/EBITDA(used across industries because it neutralizes the effects of different debt levels and tax environments)<br>
                   <br><strong>Reading Values:</strong><br>
                   • <strong>Value Play (< 10x):</strong> "Cheap" relative to cash profits. (Ex: Energy/Banking)<br>
@@ -158,7 +158,8 @@
                   • Current Ratio: Current Assets / Current Liab<br>
                   • Quick Ratio: (Cash + Receivables) / Current Liab<br>
                   • Working Capital: Current Assets - Current Liabilities
-                  • Cash Conversion: Free Cash Flow / Net Income`
+                  • Cash Conversion: Free Cash Flow / Net Income
+                  • PS: The EV displayed here is as of the share price while the statements data was made available, hence the calculation here and on the valuation page may differ.`
         };
 
         function switchTab(tabId) {
@@ -261,3 +262,4 @@
     </script>
 </body>
 </html>
+
