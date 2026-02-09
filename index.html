@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>EduVal - Professional</title>
+    <title>EduVal - Professional Financial Analysis</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -13,13 +13,15 @@
         }
         .nav-tabs { display: flex; gap: 10px; margin-bottom: 1rem; }
         .nav-tabs button { flex: 1; font-size: 0.8rem; padding: 10px; }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1rem; }
         .sts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
         .sts-card { background: var(--pico-card-background-color); padding: 1rem; border-radius: 8px; border-top: 3px solid var(--pico-primary); }
-        .traffic-light { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin-top: 8px;}
+        .traffic-light { padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin-top: 8px; }
         .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 5px 0; font-size: 0.85rem; }
+        .chart-wrapper { min-height: 250px; position: relative; }
+        .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #fff; }
+        details summary { font-weight: bold; color: var(--pico-primary); cursor: pointer; }
         progress { display: none; margin: 10px 0; }
-        .chart-wrapper { min-height: 200px; position: relative; }
-        hr { margin: 10px 0; border-color: #2a313d; }
     </style>
 </head>
 <body>
@@ -28,38 +30,61 @@
         
         <header>
             <select id="tickerSelect" onchange="runAnalysis(this.value)">
-                <option value="" disabled selected>Select Company...</option>
-                <option value="MSFT">Microsoft (Software)</option>
-                <option value="NVDA">NVIDIA (Semiconductors)</option>
-                <option value="TSLA">Tesla (Automotive)</option>
+                <option value="" disabled selected>Select Company to Start Analysis...</option>
                 <option value="XOM">ExxonMobil (Energy)</option>
+                <option value="CVX">Chevron (Energy)</option>
+                <option value="NVDA">NVIDIA (Semiconductors)</option>
+                <option value="MSFT">Microsoft (Software)</option>
                 <option value="GOOGL">Alphabet (Tech)</option>
+                <option value="NFLX">Netflix (Entertainment)</option>
+                <option value="TSLA">Tesla (Automotive)</option>
+                <option value="DIS">Disney (Entertainment)</option>
+                <option value="INTC">Intel (Semiconductors)</option>
+                <option value="SOFI">SoFi (Fintech)</option>
             </select>
             <progress id="loader"></progress>
         </header>
 
         <div id="mainUI" style="display:none;">
             <div class="nav-tabs">
-                <button onclick="switchTab('val')">Valuation</button>
-                <button onclick="switchTab('sts')">Financial Sts</button>
+                <button id="btn-val" onclick="switchTab('val')">Valuation</button>
+                <button id="btn-sts" onclick="switchTab('sts')">Sts</button>
                 <button class="secondary" disabled>Profit</button>
                 <button class="secondary" disabled>Risk</button>
                 <button class="secondary" disabled>Benchmark</button>
             </div>
 
-            <article id="lessonBox" style="background: #1c222d; padding: 1rem;">
-                <small id="lessonText">Select a tab to start learning.</small>
-            </article>
+            <details id="lessonBox" style="background: #1c222d; padding: 0.5rem 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <summary id="lessonTitle">Click to learn about this Phase</summary>
+                <div id="lessonContent" style="font-size: 0.85rem; margin-top: 10px;"></div>
+            </details>
 
-            <div id="view-val" class="grid">
+            <div id="view-val" class="dashboard-grid">
                 <article>
-                    <header><h4 id="compName">-</h4></header>
-                    <label>EV / EBITDA</label>
-                    <h2 id="evEbitdaDisplay" style="color: var(--pico-primary)">-</h2>
-                    <p id="verdictText" style="font-size: 0.9rem;"></p>
+                    <header style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 id="compName" style="margin:0;">-</h4>
+                            <small id="industryLabel" style="color:#888;">-</small>
+                        </div>
+                        <span id="verdictBadge" class="verdict-badge">-</span>
+                    </header>
+                    <label>EV / EBITDA Multiple</label>
+                    <h1 id="evEbitdaDisplay" style="color: var(--pico-primary); margin:0;">-</h1>
+                    <table role="grid" style="margin-top:1rem;">
+                        <tr class="metric-row"><td>Net Debt / EBITDA</td><td id="leverageVal" align="right">-</td></tr>
+                        <tr class="metric-row"><td>52-Week Range</td><td id="rangeVal" align="right">-</td></tr>
+                        <tr class="metric-row"><td>Enterprise Value</td><td id="evVal" align="right">-</td></tr>
+                    </table>
+                    <footer><small id="metricsFY">Audited Data: 2025/26</small></footer>
                 </article>
+
                 <article>
+                    <header><strong>7-Day Momentum (Calendar 2026)</strong></header>
                     <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
+                    <footer style="display: flex; justify-content: space-between;">
+                        <strong id="priceDisplay" style="color:var(--pico-primary);">Price: -</strong>
+                        <small id="mktCapVal">Cap: -</small>
+                    </footer>
                 </article>
             </div>
 
@@ -67,30 +92,26 @@
                 <div class="sts-grid">
                     <div class="sts-card">
                         <h6>Balance Sheet</h6>
-                        <div class="metric-row"><span>Current Ratio</span><span id="currRatioVal" style="font-weight: bold;">-</span></div>
-                        <div id="currRatioLight" class="traffic-light">Liquidity Check</div>
+                        <div class="metric-row"><span>Current Ratio</span><span id="currRatioVal" style="font-weight:bold;">-</span></div>
+                        <div id="currRatioLight" class="traffic-light">-</div>
                         <hr>
                         <div class="metric-row"><span>Total Assets</span><span id="assetsVal">-</span></div>
-                        <div class="metric-row"><span>Total Liab.</span><span id="liabVal">-</span></div>
+                        <div class="metric-row"><span>Total Liabilities</span><span id="liabVal">-</span></div>
                     </div>
-
                     <div class="sts-card">
                         <h6>Income Statement</h6>
-                        <div class="metric-row"><span>Net Margin</span><span id="netMarginVal" style="font-weight: bold;">-</span></div>
-                        <div id="incVerdict" class="traffic-light">Efficiency Check</div>
+                        <div class="metric-row"><span>Net Margin</span><span id="netMarginVal" style="font-weight:bold;">-</span></div>
+                        <div id="incVerdict" class="traffic-light">-</div>
                         <hr>
                         <div class="metric-row"><span>Revenue</span><span id="revVal">-</span></div>
-                        <div class="metric-row"><span>Gross Margin</span><span id="grossMarginVal">-</span></div>
                         <div class="metric-row"><span>Net Income</span><span id="netIncVal">-</span></div>
                     </div>
-
                     <div class="sts-card">
                         <h6>Cash Flow</h6>
-                        <div class="metric-row"><span>Cash Conversion</span><span id="cashConvVal" style="font-weight: bold;">-</span></div>
-                        <div id="cfVerdict" class="traffic-light">Quality Check</div>
+                        <div class="metric-row"><span>Cash Conversion</span><span id="cashConvVal" style="font-weight:bold;">-</span></div>
+                        <div id="cfVerdict" class="traffic-light">-</div>
                         <hr>
                         <div class="metric-row"><span>Operating CF</span><span id="ocfVal">-</span></div>
-                        <div class="metric-row"><span>CapEx</span><span id="capexVal">-</span></div>
                         <div class="metric-row"><span>Free Cash Flow</span><span id="fcfVal" style="color:var(--pico-primary)">-</span></div>
                     </div>
                 </div>
@@ -101,17 +122,39 @@
     <script>
         let priceChart = null;
         const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
+        const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#ffffff', 'Fintech': '#ffcc00' };
+
+        const lessons = {
+            val: `
+                <strong>Identify Value:</strong> Use EV/EBITDA to see the real price of cash flow. Lower = cheaper.<br>
+                <strong>Monitor Risk:</strong> Use Net Debt/EBITDA to see how many years of profit it takes to pay debt.<br>
+                <strong>Verdict Logic:</strong><br>
+                • <strong>Value Play (< 10x):</strong> Paying less than $10 for every $1 of cash profit. Common in mature sectors.<br>
+                • <strong>Fair Value (10x - 25x):</strong> Standard range for healthy, blue-chip stocks like MSFT or GOOGL.<br>
+                • <strong>Premium Growth (> 25x):</strong> Paying over $25 for $1 of profit. Typical for high-tech like NVDA.`,
+            sts: `
+                <strong>The Three Pillars:</strong><br>
+                • <strong>Balance Sheet:</strong> Net Worth. Does the company have enough liquidity to survive?<br>
+                • <strong>Income St:</strong> Profitability. Is the core business model making money?<br>
+                • <strong>Cash Flow:</strong> The Cash. Is the profit actually turning into cold, hard cash?<br><br>
+                <strong>Verdict Logics:</strong><br>
+                • <strong>Liquidity:</strong> Current Ratio > 1.2 is healthy.<br>
+                • <strong>Efficiency:</strong> Net Margin > 20% indicates a strong competitive moat.<br>
+                • <strong>Quality:</strong> Cash Conversion (FCF/NI) > 1.0 means earnings are backed by real cash.<br><br>
+                <strong>Real Life Meaning:</strong> This exercise prevents you from being fooled by "paper profits" and ensures you invest in stable, cash-generating engines.`
+        };
 
         function switchTab(tabId) {
             document.getElementById('view-val').style.display = tabId === 'val' ? 'grid' : 'none';
-            document.getElementById('view-sts').style.display = tabId === 'sts' ? 'block' : 'none';
-            
-            const lesson = document.getElementById('lessonText');
-            if (tabId === 'val') {
-                lesson.innerHTML = "<strong>Valuation:</strong> Helps us see if the market price is 'fair' relative to cash profits (EBITDA).";
-            } else if (tabId === 'sts') {
-                lesson.innerHTML = "<strong>Phase 2 Decoding:</strong> We analyze <em>Liquidity</em> (BS), <em>Efficiency</em> (INC), and <em>Earnings Quality</em> (CF).";
-            }
+            document.getElementById('view-sts').style.display = tabId === 'sts' ? 'grid' : 'none';
+            document.getElementById('lessonContent').innerHTML = lessons[tabId];
+            document.getElementById('lessonBox').open = false;
+        }
+
+        function getIndustryFromUI(ticker) {
+            const select = document.getElementById('tickerSelect');
+            const option = Array.from(select.options).find(opt => opt.value === ticker);
+            return option ? option.text.match(/\(([^)]+)\)/)[1] : 'General';
         }
 
         async function runAnalysis(ticker) {
@@ -133,70 +176,65 @@
                 const bs = (await bsRes.json())[0];
                 const cf = (await cfRes.json())[0];
 
+                const industry = getIndustryFromUI(ticker);
+                const themeColor = sectorThemes[industry] || '#00a8e8';
+                document.documentElement.style.setProperty('--pico-primary', themeColor);
+
+                // Valuation UI Update
+                const evEbitda = metrics.evToEBITDA;
                 document.getElementById('compName').innerText = profile.companyName;
-                document.getElementById('evEbitdaDisplay').innerText = metrics.evToEBITDA.toFixed(2) + 'x';
+                document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
+                document.getElementById('evEbitdaDisplay').innerText = evEbitda.toFixed(2) + 'x';
+                
+                const vBadge = document.getElementById('verdictBadge');
+                if(evEbitda < 10) { vBadge.innerText = "Value Play"; vBadge.style.background = "#004d26"; }
+                else if(evEbitda < 25) { vBadge.innerText = "Fair Value"; vBadge.style.background = "#664d00"; }
+                else { vBadge.innerText = "Premium Growth"; vBadge.style.background = "#4d0000"; }
 
-                // --- 1. Balance Sheet: Liquidity Logic ---
+                document.getElementById('leverageVal').innerText = metrics.netDebtToEBITDA.toFixed(2) + 'x';
+                document.getElementById('rangeVal').innerText = profile.range;
+                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
+                document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
+                document.getElementById('mktCapVal').innerText = `Cap: $${(profile.marketCap / 1e9).toFixed(1)}B`;
+
+                // Phase 2 Financials
                 const cr = bs.totalCurrentAssets / bs.totalCurrentLiabilities;
-                const crLight = document.getElementById('currRatioLight');
                 document.getElementById('currRatioVal').innerText = cr.toFixed(2);
-                
-                if (cr > 1.5) {
-                    crLight.innerText = "Safe Liquidity"; crLight.style.background = "#004d26";
-                } else if (cr >= 1.2) {
-                    crLight.innerText = "Fair Buffer"; crLight.style.background = "#664d00";
-                } else {
-                    crLight.innerText = "Liquidity Risk"; crLight.style.background = "#4d0000";
-                }
-                document.getElementById('assetsVal').innerText = `$${(bs.totalAssets / 1e9).toFixed(1)}B`;
-                document.getElementById('liabVal').innerText = `$${(bs.totalLiabilities / 1e9).toFixed(1)}B`;
+                document.getElementById('currRatioLight').style.background = cr > 1.2 ? "#004d26" : "#4d0000";
+                document.getElementById('currRatioLight').innerText = cr > 1.2 ? "Healthy Liquidity" : "Liquidity Risk";
 
-                // --- 2. Income Statement: Efficiency Logic ---
                 const netMargin = (inc.netIncome / inc.revenue) * 100;
-                const incVerdict = document.getElementById('incVerdict');
                 document.getElementById('netMarginVal').innerText = netMargin.toFixed(1) + '%';
-                
-                if (netMargin > 20) {
-                    incVerdict.innerText = "High Efficiency"; incVerdict.style.background = "#004d26";
-                } else if (netMargin > 10) {
-                    incVerdict.innerText = "Standard Efficiency"; incVerdict.style.background = "#664d00";
-                } else {
-                    incVerdict.innerText = "Thin Margins"; incVerdict.style.background = "#4d0000";
-                }
-                document.getElementById('revVal').innerText = `$${(inc.revenue / 1e9).toFixed(1)}B`;
-                document.getElementById('grossMarginVal').innerText = ((inc.grossProfit / inc.revenue) * 100).toFixed(1) + '%';
-                document.getElementById('netIncVal').innerText = `$${(inc.netIncome / 1e9).toFixed(1)}B`;
+                document.getElementById('incVerdict').style.background = netMargin > 20 ? "#004d26" : "#664d00";
+                document.getElementById('incVerdict').innerText = netMargin > 20 ? "High Moat" : "Standard Efficiency";
 
-                // --- 3. Cash Flow: Quality Logic ---
                 const fcf = cf.operatingCashFlow - cf.capitalExpenditure;
                 const cashConv = fcf / inc.netIncome;
-                const cfVerdict = document.getElementById('cfVerdict');
                 document.getElementById('cashConvVal').innerText = cashConv.toFixed(2) + 'x';
-                
-                if (cashConv >= 1.0) {
-                    cfVerdict.innerText = "High Earnings Quality"; cfVerdict.style.background = "#004d26";
-                } else if (cashConv >= 0.7) {
-                    cfVerdict.innerText = "Healthy Conversion"; cfVerdict.style.background = "#664d00";
-                } else {
-                    cfVerdict.innerText = "Low Quality (Accruals)"; cfVerdict.style.background = "#4d0000";
-                }
+                document.getElementById('cfVerdict').style.background = cashConv >= 1.0 ? "#004d26" : "#4d0000";
+                document.getElementById('cfVerdict').innerText = cashConv >= 1.0 ? "High Quality" : "Accrual Lag";
+
+                document.getElementById('assetsVal').innerText = `$${(bs.totalAssets / 1e9).toFixed(1)}B`;
+                document.getElementById('liabVal').innerText = `$${(bs.totalLiabilities / 1e9).toFixed(1)}B`;
+                document.getElementById('revVal').innerText = `$${(inc.revenue / 1e9).toFixed(1)}B`;
+                document.getElementById('netIncVal').innerText = `$${(inc.netIncome / 1e9).toFixed(1)}B`;
                 document.getElementById('ocfVal').innerText = `$${(cf.operatingCashFlow / 1e9).toFixed(1)}B`;
-                document.getElementById('capexVal').innerText = `$${(cf.capitalExpenditure / 1e9).toFixed(1)}B`;
                 document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
 
-                // Render Price Chart
+                // Chart
                 const ctx = document.getElementById('priceChart').getContext('2d');
                 if (priceChart) priceChart.destroy();
                 priceChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: history.map(d => d.date.substring(8)),
-                        datasets: [{ data: history.map(d => d.price), borderColor: '#00a8e8', tension: 0.3 }]
+                        labels: history.map(d => d.date.substring(5).replace('-', '/') + '/26'),
+                        datasets: [{ data: history.map(d => d.price), borderColor: themeColor, backgroundColor: `${themeColor}1A`, fill: true, tension: 0.3 }]
                     },
                     options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
 
                 document.getElementById('mainUI').style.display = 'block';
+                switchTab('val');
             } catch (e) { console.error(e); } finally { document.getElementById('loader').style.display = 'none'; }
         }
     </script>
