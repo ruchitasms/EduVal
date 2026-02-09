@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>EduVal - Professional Build</title>
+    <title>EduVal - Financial Literacy with Data Science</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -17,13 +17,13 @@
         .chart-wrapper { height: 300px; width: 100%; position: relative; }
         .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #fff; }
         .section-sub { font-size: 0.75rem; color: #888; margin-bottom: 10px; display: block; }
-        #fy-label { font-weight: bold; color: var(--pico-primary); font-size: 0.9rem; }
+        .fy-anchor { font-weight: bold; color: var(--pico-primary); font-size: 0.85rem; background: #1c222d; padding: 2px 8px; border-radius: 4px; }
         progress { display: none; margin: 10px 0; }
     </style>
 </head>
 <body>
     <main class="container">
-        <h2>EduVal - Let's learn Finance Together!</h2>
+        <h2>EduVal - Let's learn Finance Together! 🦉</h2>
         
         <header>
             <select id="tickerSelect" onchange="runAnalysis(this.value)">
@@ -45,19 +45,22 @@
         <div id="mainUI" style="display:none;">
             <div class="nav-tabs">
                 <button id="btn-val" onclick="switchTab('val')">Valuation</button>
-                <button id="btn-sts" onclick="switchTab('sts')">Sts</button>
+                <button id="btn-sts" onclick="switchTab('sts')">Statements</button>
                 <button class="secondary" disabled>Profit</button>
             </div>
 
             <details id="lessonBox" style="background: #1c222d; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                 <summary>Formulas & Rules of Thumb</summary>
-                <div id="lessonContent" style="font-size: 0.85rem; margin-top: 10px;"></div>
+                <div id="lessonContent" style="font-size: 0.85rem; margin-top: 10px; line-height: 1.6;"></div>
             </details>
 
             <div id="view-val" class="dashboard-grid">
                 <article>
                     <header style="display: flex; justify-content: space-between;">
-                        <div><h4 id="compName" style="margin:0;">-</h4><small id="industryLabel">-</small></div>
+                        <div>
+                            <h4 id="compName" style="margin:0;">-</h4>
+                            <small id="industryLabel">-</small>
+                        </div>
                         <span id="verdictBadge" class="verdict-badge">-</span>
                     </header>
                     <label>EV / EBITDA Multiple</label>
@@ -67,6 +70,7 @@
                         <tr class="metric-row"><td>52-Week Range</td><td id="rangeVal" align="right">-</td></tr>
                         <tr class="metric-row"><td>Enterprise Value</td><td id="evVal" align="right">-</td></tr>
                     </table>
+                    <footer><span class="fy-anchor" id="val-fy">Audited: -</span></footer>
                 </article>
                 <article>
                     <header><strong>Price Momentum (2026)</strong></header>
@@ -75,10 +79,10 @@
             </div>
 
             <div id="view-sts" style="display:none;">
-                <div id="fy-label" style="margin-bottom: 10px;">Data Year: -</div>
+                <div style="margin-bottom: 10px;"><span class="fy-anchor" id="sts-fy">Fiscal Year: -</span></div>
                 <div class="sts-grid">
                     <div class="sts-card">
-                        <h6 style="margin-bottom:2px;">Balance Sheet</h6>
+                        <h6 style="margin:0;">Balance Sheet</h6>
                         <span class="section-sub">Company's Net Worth</span>
                         <div class="metric-row"><span>Current Ratio</span><span id="currRatioVal">-</span></div>
                         <div class="metric-row"><span>Quick Ratio</span><span id="quickRatioVal">-</span></div>
@@ -88,7 +92,7 @@
                         <div class="metric-row"><span>Total Liab.</span><span id="liabVal">-</span></div>
                     </div>
                     <div class="sts-card">
-                        <h6 style="margin-bottom:2px;">Income Statement</h6>
+                        <h6 style="margin:0;">Income Statement</h6>
                         <span class="section-sub">Company's Profitability</span>
                         <div class="metric-row"><span>Net Margin</span><span id="netMarginVal">-</span></div>
                         <div class="metric-row"><span>EPS Growth</span><span id="epsGrowthVal">-</span></div>
@@ -98,7 +102,7 @@
                         <div class="metric-row"><span>Net Income</span><span id="netIncVal">-</span></div>
                     </div>
                     <div class="sts-card">
-                        <h6 style="margin-bottom:2px;">Cash Flow</h6>
+                        <h6 style="margin:0;">Cash Flow</h6>
                         <span class="section-sub">Company's Cash Generation</span>
                         <div class="metric-row"><span>Cash Conversion</span><span id="cashConvVal">-</span></div>
                         <div class="metric-row"><span>Working Cap</span><span id="workCapVal">-</span></div>
@@ -117,20 +121,25 @@
         const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
         const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#ffffff', 'Fintech': '#ffcc00' };
 
-        const formulas = {
-            val: `<strong>Valuation Formulas:</strong><br>
-                  • EV/EBITDA: Enterprise Value / Earnings Before Interest, Tax, Depreciation & Amort.<br>
-                  • Net Debt/EBITDA: (Total Debt - Cash) / EBITDA.`,
-            sts: `<strong>Financial Statement Formulas:</strong><br>
-                  • <strong>Current Ratio:</strong> Total Current Assets / Total Current Liabilities<br>
-                  • <strong>Net Margin:</strong> (Net Income / Revenue) x 100<br>
-                  • <strong>Cash Conversion:</strong> Free Cash Flow / Net Income`
+        const learnings = {
+            val: `<strong>Valuation Rules:</strong><br>
+                  • <strong>Value Play (< 10x):</strong> "Cheap" relative to cash profits.<br>
+                  • <strong>Fair Value (10x-25x):</strong> Balanced market expectation.<br>
+                  • <strong>Premium Growth (> 25x):</strong> Market expects future explosion.<br><br>
+                  <strong>Formula:</strong> EV/EBITDA = Enterprise Value / Cash Earnings   <strong>Net Debt/EBITDA:</strong> (Total Debt - Cash) / EBITDA.`,
+            sts: `<strong>Financial Statement Verdicts:</strong><br>
+                  • <strong>Liquidity (Current Ratio):</strong> Goal > 1.2 (Current Assets / Current Liab).<br>
+                  • <strong>Efficiency (Net Margin):</strong> Goal > 15% (Net Income / Revenue).<br>
+                  • <strong>Quality (Cash Conv):</strong> Goal ≥ 1.0 (Free Cash Flow / Net Income).<br><br>
+                  <strong>Working Capital:</strong> Current Assets - Current Liabilities (Daily Survival Fund) <strong>Current Ratio:</strong> Total Current Assets / Total Current Liabilities<br>
+                  <strong>Net Margin:</strong> (Net Income / Revenue) x 100<br>.`
         };
 
         function switchTab(tabId) {
             document.getElementById('view-val').style.display = tabId === 'val' ? 'grid' : 'none';
             document.getElementById('view-sts').style.display = tabId === 'sts' ? 'block' : 'none';
-            document.getElementById('lessonContent').innerHTML = formulas[tabId];
+            document.getElementById('lessonContent').innerHTML = learnings[tabId];
+            document.getElementById('lessonBox').open = false;
         }
 
         async function runAnalysis(ticker) {
@@ -147,7 +156,7 @@
 
                 const profile = (await pRes.json())[0];
                 const metrics = (await mRes.json())[0];
-                const history = (await hRes.json()).slice(0, 10).reverse();
+                const history = (await hRes.json()).slice(0, 7).reverse();
                 const inc = await incRes.json();
                 const bs = (await bsRes.json())[0];
                 const cf = (await cfRes.json())[0];
@@ -156,46 +165,48 @@
                 const themeColor = sectorThemes[industry] || '#00a8e8';
                 document.documentElement.style.setProperty('--pico-primary', themeColor);
 
-                // Shared Data
-                document.getElementById('fy-label').innerText = `Fiscal Year: ${bs.calendarYear}`;
+                // FIXED: Year Display
+                const yearText = bs.calendarYear || "2025";
+                document.getElementById('val-fy').innerText = `Audited: FY ${yearText}`;
+                document.getElementById('sts-fy').innerText = `Fiscal Year: ${yearText}`;
+
+                // Valuation Verdict
+                const evEbitda = metrics.evToEBITDA;
                 document.getElementById('compName').innerText = profile.companyName;
                 document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
+                document.getElementById('evEbitdaDisplay').innerText = evEbitda.toFixed(2) + 'x';
+                
+                const vBadge = document.getElementById('verdictBadge');
+                if(evEbitda < 10) { vBadge.innerText = "Value Play"; vBadge.style.background = "#004d26"; }
+                else if(evEbitda < 25) { vBadge.innerText = "Fair Value"; vBadge.style.background = "#664d00"; }
+                else { vBadge.innerText = "Premium Growth"; vBadge.style.background = "#4d0000"; }
 
-                // Valuation
-                document.getElementById('evEbitdaDisplay').innerText = metrics.evToEBITDA.toFixed(2) + 'x';
                 document.getElementById('leverageVal').innerText = metrics.netDebtToEBITDA.toFixed(2) + 'x';
                 document.getElementById('rangeVal').innerText = profile.range;
                 document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
 
-                // Balance Sheet
+                // Statements
                 const cr = bs.totalCurrentAssets / bs.totalCurrentLiabilities;
                 const qr = (bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities;
                 document.getElementById('currRatioVal').innerText = cr.toFixed(2);
                 document.getElementById('quickRatioVal').innerText = qr.toFixed(2);
-                const crL = document.getElementById('crLight');
-                crL.innerText = cr > 1.2 ? "Liquid" : "Tight";
-                crL.style.background = cr > 1.2 ? "#004d26" : "#4d0000";
+                document.getElementById('crLight').style.background = cr > 1.2 ? "#004d26" : "#4d0000";
+                document.getElementById('crLight').innerText = cr > 1.2 ? "Healthy" : "Risk";
 
-                // Income Statement
                 const margin = (inc[0].netIncome / inc[0].revenue) * 100;
-                const epsG = ((inc[0].eps - inc[1].eps) / Math.abs(inc[1].eps)) * 100;
+                const epsG = inc[1] ? (((inc[0].eps - inc[1].eps) / Math.abs(inc[1].eps)) * 100) : 0;
                 document.getElementById('netMarginVal').innerText = margin.toFixed(1) + '%';
                 document.getElementById('epsGrowthVal').innerText = epsG.toFixed(1) + '%';
-                const incL = document.getElementById('incLight');
-                incL.innerText = margin > 15 ? "Efficient" : "Thin";
-                incL.style.background = margin > 15 ? "#004d26" : "#664d00";
+                document.getElementById('incLight').style.background = margin > 15 ? "#004d26" : "#664d00";
+                document.getElementById('incLight').innerText = margin > 15 ? "High Moat" : "Standard";
 
-                // Cash Flow
                 const fcf = cf.operatingCashFlow - cf.capitalExpenditure;
                 const conv = fcf / inc[0].netIncome;
-                const wc = bs.totalCurrentAssets - bs.totalCurrentLiabilities;
                 document.getElementById('cashConvVal').innerText = conv.toFixed(2) + 'x';
-                document.getElementById('workCapVal').innerText = `$${(wc / 1e9).toFixed(1)}B`;
-                const cfL = document.getElementById('cfLight');
-                cfL.innerText = conv >= 1.0 ? "Cash Rich" : "Accrual Heavy";
-                cfL.style.background = conv >= 1.0 ? "#004d26" : "#4d0000";
+                document.getElementById('workCapVal').innerText = `$${((bs.totalCurrentAssets - bs.totalCurrentLiabilities) / 1e9).toFixed(1)}B`;
+                document.getElementById('cfLight').style.background = conv >= 1.0 ? "#004d26" : "#4d0000";
+                document.getElementById('cfLight').innerText = conv >= 1.0 ? "High Quality" : "Accrual Warning";
 
-                // Raw Numbers
                 document.getElementById('assetsVal').innerText = `$${(bs.totalAssets / 1e9).toFixed(1)}B`;
                 document.getElementById('liabVal').innerText = `$${(bs.totalLiabilities / 1e9).toFixed(1)}B`;
                 document.getElementById('revVal').innerText = `$${(inc[0].revenue / 1e9).toFixed(1)}B`;
@@ -203,16 +214,16 @@
                 document.getElementById('ocfVal').innerText = `$${(cf.operatingCashFlow / 1e9).toFixed(1)}B`;
                 document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
 
-                // Chart Persistence Fix
+                // Chart
                 const ctx = document.getElementById('priceChart').getContext('2d');
                 if (priceChart) priceChart.destroy();
                 priceChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: history.map(d => d.date.split('-')[1] + '/' + d.date.split('-')[2]),
+                        labels: history.map(d => d.date.substring(5)),
                         datasets: [{ data: history.map(d => d.price), borderColor: themeColor, tension: 0.3, fill: false }]
                     },
-                    options: { maintainAspectRatio: false }
+                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
 
                 document.getElementById('mainUI').style.display = 'block';
