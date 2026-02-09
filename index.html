@@ -132,17 +132,22 @@
         const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#ffffff', 'Fintech': '#ffcc00' };
 
         const learnings = {
-            val: `<strong>Valuation Verdict Logic:</strong><br>
+            val: `<strong>Valuation Tag Logic:</strong><br>
+                  <strong>Introduction</strong><br>
+                  • Enterprise Value: It represents the total price tag of a company, calculated as Market Cap + Total Debt - Cash<br>
+                  • Relative Valuation: This involves comparing a company's value to its peers using multiples like EV/EBITDA(used across industries because it neutralizes the effects of different debt levels and tax environments)<br>
+                  <br><strong>Reading Values:</strong><br>
                   • <strong>Value Play (< 10x):</strong> "Cheap" relative to cash profits. (Ex: Energy/Banking)<br>
                   • <strong>Fair Value (10x-25x):</strong> Balanced market expectation. (Ex: Microsoft/Alphabet)<br>
                   • <strong>Premium Growth (> 25x):</strong> Market expects future earnings explosion. (Ex: NVIDIA/Tesla)<br><br>
                   <strong>Formulas:</strong><br>
                   • EV/EBITDA: Enterprise Value / EBITDA<br>
                   • Net Debt/EBITDA: (Total Debt - Cash) / EBITDA`,
-            sts: `<strong>Financial Statement Verdicts:</strong><br>
-                  • <strong>Liquidity (Current Ratio):</strong> Goal > 1.2 (Current Assets / Current Liab).<br>
-                  • <strong>Efficiency (Net Margin):</strong> Goal > 15% (Net Income / Revenue).<br>
-                  • <strong>Quality (Cash Conv):</strong> Goal ≥ 1.0 (Free Cash Flow / Net Income).<br><br>
+            sts: `• These are the "report cards" of a company, consisting of the Balance Sheet (what you own/owe), Income Statement (profitability), and Cash Flow Statement (actual cash moving in and out).<br>
+                  <br><strong>Financial Statement Tags:</strong><br>
+                  • <strong>Liquidity (Current Ratio):</strong>This measures a company’s "cash cushion" or its ability to pay off its immediate, short-term debts using assets that can be quickly converted into cash. Goal > 1.2 (Current Assets / Current Liab).<br>
+                  • <strong>Efficiency (Net Margin):</strong>This tracks how well a company manages its resources to generate profit, often measured by "Net Margin" to see how much profit is kept from every dollar of revenue.. Goal > 15% (Net Income / Revenue).<br>
+                  • <strong>Quality (Cash Conv):</strong>This determines if reported profits are "real" by checking if the company is actually generating hard cash (Cash Conversion) rather than just accounting entries. Goal ≥ 1.0 (Free Cash Flow / Net Income).<br><br>
                   <strong>Formulas:</strong><br>
                   • Current Ratio: Current Assets / Current Liab<br>
                   • Quick Ratio: (Cash + Receivables) / Current Liab<br>
@@ -255,4 +260,5 @@
     </script>
 </body>
 </html>
+
 
