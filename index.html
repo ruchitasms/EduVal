@@ -73,8 +73,17 @@
                     <footer><span class="fy-anchor" id="val-fy">Audited: -</span></footer>
                 </article>
                 <article>
-                    <header><strong>Price Momentum (2026)</strong></header>
-                    <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
+                    <header>
+                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <strong>7-Day Momentum (2026)</strong>
+                            <div>
+                                <span id="priceDisplay" style="color:var(--pico-primary); font-weight:bold; margin-right:15px;">Price: -</span>
+                                <small id="mktCapVal" style="color:#888;">Cap: -</small>
+                            </div>
+                        </div>
+                    </header>
+                </article>    
+    <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
                 </article>
             </div>
 
@@ -233,3 +242,4 @@
     </script>
 </body>
 </html>
+
