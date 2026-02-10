@@ -9,20 +9,26 @@
         :root { --pico-primary: #00a8e8; --pico-background-color: #0b0e14; --pico-card-background-color: #151921; }
         .nav-tabs { display: flex; gap: 10px; margin-bottom: 1rem; }
         .nav-tabs button { flex: 1; font-size: 0.8rem; padding: 10px; }
+        
+        /* Main Grid Layouts */
         .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1.3fr; gap: 1.5rem; }
         .sts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-        /* Updated Diagnostic Layout to match sketch */
-        .diag-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.5rem; align-items: start; }
-        .sts-card { background: var(--pico-card-background-color); padding: 1rem; border-radius: 8px; border-top: 3px solid var(--pico-primary); }
-        .traffic-light { padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin: 8px 0; color: #fff; }
-        .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 5px 0; font-size: 0.85rem; }
+        
+        /* Refined Diagnostic Layout (The Strategic Compass) */
+        .diag-container { display: grid; grid-template-columns: 1fr 1.4fr; gap: 1.5rem; align-items: start; }
+        .diag-header { background: #1c222d; padding: 12px; border-radius: 8px; margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center; }
+        
+        .sts-card { background: var(--pico-card-background-color); padding: 1.2rem; border-radius: 8px; border-top: 3px solid var(--pico-primary); height: 100%; }
+        .traffic-light { padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin: 8px 0; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
+        .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 8px 0; font-size: 0.85rem; }
         .chart-wrapper { height: 300px; width: 100%; position: relative; }
         .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #fff; white-space: nowrap; }
         .section-sub { font-size: 0.75rem; color: #888; margin-bottom: 10px; display: block; }
         .fy-anchor { font-weight: bold; color: var(--pico-primary); font-size: 0.85rem; background: #1c222d; padding: 2px 8px; border-radius: 4px; }
         progress { display: none; margin: 10px 0; }
-        .diag-header { background: #1c222d; padding: 10px; border-radius: 8px; margin-bottom: 1rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; }
-        #risk-verdict-box { margin-top: 1rem; padding: 1rem; border-radius: 8px; font-size: 0.85rem; line-height: 1.5; border-left: 4px solid var(--pico-primary); background: #1a2029; }
+        
+        #risk-verdict-box { padding: 1.2rem; border-radius: 8px; font-size: 0.9rem; line-height: 1.6; border-left: 5px solid var(--pico-primary); background: #1a2029; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .visual-panel { display: flex; flex-direction: column; gap: 1.5rem; }
     </style>
 </head>
 <body>
@@ -134,35 +140,37 @@
                 </div>
             </div>
 
-            <div id="view-diag" style="display:none;">
+            <div id="view-diag" style="display:none; flex-direction: column;">
                 <div class="diag-header">
-                    <div id="d-cr-box" style="padding:5px; border-radius:4px; font-weight:bold;">-</div>
-                    <div id="d-nm-box" style="padding:5px; border-radius:4px; font-weight:bold;">-</div>
-                    <div id="d-cc-box" style="padding:5px; border-radius:4px; font-weight:bold;">-</div>
+                    <div id="d-cr-box" style="padding:10px; border-radius:4px; font-weight:bold;">-</div>
+                    <div id="d-nm-box" style="padding:10px; border-radius:4px; font-weight:bold;">-</div>
+                    <div id="d-cc-box" style="padding:10px; border-radius:4px; font-weight:bold;">-</div>
                 </div>
-                <div class="diag-grid">
+                
+                <div class="diag-container">
                     <article class="sts-card">
-                        <h6>Strategic Health Metrics</h6>
+                        <h6 style="color: var(--pico-primary);">Structural Health</h6>
                         <div class="metric-row"><span>Operating Cycle (Days)</span><span id="d-oc">-</span></div>
                         <div class="metric-row"><span>Debt to Equity Ratio</span><span id="d-de">-</span></div>
                         <div class="metric-row"><span>Interest Coverage</span><span id="d-ic">-</span></div>
                         <div class="metric-row"><span>Financial Leverage</span><span id="d-fl">-</span></div>
                         <div class="metric-row"><span>Cash Ratio</span><span id="d-cashr">-</span></div>
                         <div class="metric-row"><span>Solvency Ratio</span><span id="d-solv">-</span></div>
-                        <hr>
-                        <h6>Valuation Context</h6>
+                        <br>
+                        <h6 style="color: var(--pico-primary);">Market Context</h6>
                         <div class="metric-row"><span>Dividend Yield %</span><span id="d-dy">-</span></div>
                         <div class="metric-row"><span>Price to Earnings (P/E)</span><span id="d-pe">-</span></div>
                     </article>
 
-                    <div style="display: flex; flex-direction: column; gap: 1rem;">
-                        <article class="sts-card" style="margin:0;">
-                            <h6 style="text-align: center;">Current Asset Breakdown</h6>
-                            <div style="height:220px;"><canvas id="assetChart"></canvas></div>
+                    <div class="visual-panel">
+                        <article class="sts-card" style="margin:0; border-top: none; border-bottom: 3px solid var(--pico-primary);">
+                            <h6 style="text-align: center;">Liquidity Composition (Current Assets)</h6>
+                            <div style="height:250px;"><canvas id="assetChart"></canvas></div>
                         </article>
                         
                         <div id="risk-verdict-box">
-                            <strong>Business Model & Risk Profile:</strong><br>
+                            <strong style="color: var(--pico-primary); font-size: 1.1rem;">Business Model & Risk Profile</strong>
+                            <hr style="margin: 10px 0;">
                             <span id="verdictText">Select a ticker to see analysis...</span>
                         </div>
                     </div>
@@ -178,50 +186,34 @@
         const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#ffffff', 'Fintech': '#ffcc00' };
 
         const learnings = {
-            val: `<strong>Valuation Tag Logic:</strong><br>
-                  <strong>Introduction</strong><br>
-                  • Enterprise Value: It represents the total price tag of a company, calculated as Market Cap + Total Debt - Cash. Here, Market Cap = (Current Share Price x Current Outstanding Shares)<br>
-                  • Relative Valuation: This involves comparing a company's value to its peers using multiples like EV/EBITDA(used across industries because it neutralizes the effects of different debt levels and tax environments)<br>
-                  <br><strong>Reading Values:</strong><br>
-                  • <strong>Value Play (< 10x):</strong> "Cheap" relative to cash profits. (Ex: Energy/Banking)<br>
-                  • <strong>Fair Value (10x-25x):</strong> Balanced market expectation. (Ex: Microsoft/Alphabet)<br>
-                  • <strong>Premium Growth (> 25x):</strong> Market expects future earnings explosion. (Ex: NVIDIA/Tesla)<br><br>
-                  <strong>Formulas:</strong><br>
-                  • EV/EBITDA: Enterprise Value / EBITDA<br>
-                  • Net Debt/EBITDA: (Total Debt - Cash) / EBITDA`,
-            sts: `• These are the "report cards" of a company, consisting of the Balance Sheet (what you own/owe), Income Statement (profitability), and Cash Flow Statement (actual cash moving in and out).<br>
-                  <br><strong>Financial Statement Tags:</strong><br>
-                  • <strong>Liquidity (Current Ratio):</strong>This measures a company’s "cash cushion" or its ability to pay off its immediate, short-term debts using assets that can be quickly converted into cash. Goal > 1.2 (Current Assets / Current Liab).<br>
-                  • <strong>Efficiency (Net Margin):</strong>This tracks how well a company manages its resources to generate profit, often measured by "Net Margin" to see how much profit is kept from every dollar of revenue.. Goal > 15% (Net Income / Revenue).<br>
-                  • <strong>Quality (Cash Conv):</strong>This determines if reported profits are "real" by checking if the company is actually generating hard cash (Cash Conversion) rather than just accounting entries. Goal ≥ 1.0 (Free Cash Flow / Net Income).<br><br>
-                  <strong>Formulas:</strong><br>
-                  • Current Ratio: Current Assets / Current Liab<br>
-                  • Quick Ratio: (Cash + Receivables) / Current Liab<br>
-                  • Working Capital: Current Assets - Current Liabilities
-                  • Cash Conversion: Free Cash Flow / Net Income
-                  • PS: The EV displayed here is as of the share price while the statements data was made available, hence the calculation here and on the valuation page may differ.`,
-            diag:`• Diagnostics are the <strong>"X-Ray."</strong> Aim is to reveal the structural health of the business and its ability to survive long-term stress. <br><br>
-                  <strong>Strategic Health Indicators:</strong><br>
-                  • <strong>Efficiency Cycle (Op. Cycle):</strong> This counts the days it takes for the company to buy inventory, sell it, and collect cash. A lower number means the business is a "fast mover."<br>
-                  • <strong>Debt Load (Debt to Equity):</strong> This shows the balance between borrowed money and owner's money. High ratios mean the company is heavily reliant on lenders.<br>
-                  • <strong>Survival Buffer (Interest Coverage):</strong> This checks how many times the company can pay its debt interest using its current profits. If this is < 3x, the company is on "thin ice."<br>
-                  • <strong>Asset Mix (Breakdown Chart):</strong> This visualizes what is actually inside the "Current Assets." Too much inventory or receivables compared to cash can signal a "liquidity trap."<br><br>
-                  <strong>Formulas:</strong><br>
-                  • Operating Cycle: Inventory Days + Receivable Days<br>
-                  • Debt to Equity: Total Liabilities / Shareholders Equity<br>
-                  • Interest Coverage: Operating Income / Interest Expense<br>
-                  • Price to Earnings (P/E): Stock Price / Earnings Per Share (EPS)`
+            val: `<strong>Valuation Intro</strong><br>
+                  • Enterprise Value (EV) is the "takeover price" (Market Cap + Debt - Cash).<br>
+                  • We use EV/EBITDA to see how expensive a company is relative to its actual cash operations.<br><br>
+                  <strong>Multiples Guide:</strong><br>
+                  • <strong>Value (< 10x):</strong> Low expectations, potentially "on sale."<br>
+                  • <strong>Fair (10x-25x):</strong> Steady-state market pricing.<br>
+                  • <strong>Growth (> 25x):</strong> High expectations for future dominance.`,
+            sts: `• These are the <strong>"Report Cards"</strong>: Balance Sheet (Wealth), Income (Profits), and Cash Flow (Movement).<br><br>
+                  • <strong>Liquidity (CR):</strong> The cash cushion to pay immediate bills. Goal > 1.2.<br>
+                  • <strong>Efficiency (Net Margin):</strong> How much profit stays in the pocket from every $1 of sales. Goal > 15%.<br>
+                  • <strong>Quality (Cash Conv):</strong> Checks if profits are "real cash" or just accounting. Goal ≥ 1.0.`,
+            diag: `• Diagnostics are the <strong>"X-Ray."</strong> They reveal structural health and the ability to survive long-term stress. <br><br>
+                   <strong>Indicators:</strong><br>
+                   • <strong>Efficiency Cycle:</strong> Days to turn inventory into cash. Lower is faster.<br>
+                   • <strong>Debt Load (D/E):</strong> Borrowed vs. Owned money. High means lender-reliant.<br>
+                   • <strong>Survival Buffer (Interest Coverage):</strong> Ability to pay debt interest from profits. < 3x is "thin ice."<br>
+                   • <strong>Asset Mix:</strong> Checks for "Liquidity Traps" (too much inventory/receivables).`
         };
 
         function switchTab(tabId) {
             document.getElementById('view-val').style.display = tabId === 'val' ? 'grid' : 'none';
-            document.getElementById('view-sts').style.display = tabId === 'sts' ? 'block' : 'none';
-            document.getElementById('view-diag').style.display = tabId === 'diag' ? 'grid' : 'none';
+            document.getElementById('view-sts').style.display = tabId === 'sts' ? 'grid' : 'none';
+            document.getElementById('view-diag').style.display = tabId === 'diag' ? 'flex' : 'none';
             document.getElementById('lessonContent').innerHTML = learnings[tabId];
             
-            document.getElementById('btn-val').classList.toggle('secondary', tabId !== 'val');
-            document.getElementById('btn-sts').classList.toggle('secondary', tabId !== 'sts');
-            document.getElementById('btn-diag').classList.toggle('secondary', tabId !== 'diag');
+            ['val', 'sts', 'diag'].forEach(id => {
+                document.getElementById(`btn-${id}`).classList.toggle('secondary', tabId !== id);
+            });
         }
 
         async function runAnalysis(ticker) {
@@ -249,6 +241,7 @@
                 const themeColor = sectorThemes[industry] || '#00a8e8';
                 document.documentElement.style.setProperty('--pico-primary', themeColor);
 
+                // Update basic info
                 document.getElementById('compName').innerText = profile.companyName;
                 document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
                 document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
@@ -257,6 +250,7 @@
                 document.getElementById('val-fy').innerText = `Audited: FY ${yearText}`;
                 document.getElementById('sts-fy').innerText = `Fiscal Year: ${yearText}`;
 
+                // Valuation Logic
                 const evEbitda = metrics.evToEBITDA;
                 document.getElementById('evEbitdaDisplay').innerText = evEbitda.toFixed(2) + 'x';
                 const vBadge = document.getElementById('verdictBadge');
@@ -264,6 +258,7 @@
                 else if(evEbitda < 25) { vBadge.innerText = "Fair Value"; vBadge.style.background = "#664d00"; }
                 else { vBadge.innerText = "Premium Growth"; vBadge.style.background = "#3b1e6e"; }
 
+                // Financial Statements Logic
                 const cr = bs.totalCurrentAssets / bs.totalCurrentLiabilities;
                 const margin = (inc[0].netIncome / inc[0].revenue) * 100;
                 const fcf = cf.operatingCashFlow - cf.capitalExpenditure;
@@ -279,22 +274,19 @@
                 document.getElementById('cfLight').style.background = conv >= 1.0 ? "#004d26" : "#4d0000";
                 document.getElementById('cfLight').innerText = conv >= 1.0 ? "High Quality" : "Accrual Warning";
 
+                // Map all diagnostic IDs
                 document.getElementById('leverageVal').innerText = metrics.netDebtToEBITDA.toFixed(2) + 'x';
-                document.getElementById('rangeVal').innerText = profile.range;
                 document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
                 document.getElementById('evValSts').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
                 document.getElementById('quickRatioVal').innerText = ((bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities).toFixed(2);
                 document.getElementById('assetsVal').innerText = `$${(bs.totalAssets / 1e9).toFixed(1)}B`;
                 document.getElementById('liabVal').innerText = `$${(bs.totalLiabilities / 1e9).toFixed(1)}B`;
-                document.getElementById('epsGrowthVal').innerText = inc[1] ? (((inc[0].eps - inc[1].eps) / Math.abs(inc[1].eps)) * 100).toFixed(1) + '%' : '0%';
                 document.getElementById('revVal').innerText = `$${(inc[0].revenue / 1e9).toFixed(1)}B`;
                 document.getElementById('netIncVal').innerText = `$${(inc[0].netIncome / 1e9).toFixed(1)}B`;
                 document.getElementById('workCapVal').innerText = `$${((bs.totalCurrentAssets - bs.totalCurrentLiabilities) / 1e9).toFixed(1)}B`;
-                document.getElementById('ocfVal').innerText = `$${(cf.operatingCashFlow / 1e9).toFixed(1)}B`;
                 document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
-                const ebitda = inc[0].ebitda || (inc[0].operatingIncome + (inc[0].depreciationAndAmortization || 0));
-                document.getElementById('ebitdaValSts').innerText = `$${(ebitda / 1e9).toFixed(1)}B`;
 
+                // Risk Diagnostics Metrics
                 document.getElementById('d-oc').innerText = (metrics.operatingCycle || 0).toFixed(1);
                 document.getElementById('d-de').innerText = (ratios.debtToEquityRatio || 0).toFixed(2);
                 document.getElementById('d-ic').innerText = (ratios.interestCoverageRatio || 0).toFixed(1) + "x";
@@ -304,6 +296,7 @@
                 document.getElementById('d-dy').innerText = (ratios.dividendYieldPercentage || 0).toFixed(2) + "%";
                 document.getElementById('d-pe').innerText = (ratios.priceToEarningsRatio || 0).toFixed(2) + "x";
 
+                // Diagnostic Header Boxes
                 const setBox = (id, val, target, label) => {
                     const el = document.getElementById(id);
                     el.style.background = val >= target ? "#004d26" : "#4d0000";
@@ -313,24 +306,22 @@
                 setBox('d-nm-box', margin/100, 0.15, "Net Margin:");
                 setBox('d-cc-box', conv, 1.0, "Cash Conv:");
 
-                const isCrGood = cr > 1.2;
-                const isNmGood = margin > 15;
-                const isCcGood = conv >= 1.0;
+                // Narrative Profile Generation
                 let vText = "";
-
-                if (!isCrGood && isNmGood && isCcGood) {
-                    vText = "The business is profitable and generates cash quickly, but maintains thin liquidity buffers. This lean model is efficient but leaves the company vulnerable to sudden capital requirements or revenue shocks.";
-                } else if (!isNmGood && isCrGood && isCcGood) {
-                    vText = "The business is liquid and manages cash well, but operates with narrow margins. This implies a competitive or commodity-like environment where cost escalations could quickly erode net income.";
-                } else if (!isCcGood && isNmGood && isCrGood) {
-                    vText = "Strong reported profitability and liquidity, but cash is trapped in the working capital cycle (receivables/inventory). The 'quality' of earnings is lower as profits aren't yet usable cash.";
-                } else if (isCrGood && isNmGood && isCcGood) {
-                    vText = "The company exhibits a resilient profile with strong liquidity, high-margin operations, and efficient cash conversion. This suggest a high-moat business with significant self-funding capacity.";
+                if (cr < 1.1 && margin > 15) {
+                    vText = "<strong>Lean Powerhouse:</strong> The business is highly profitable but operates with a 'Just-in-Time' capital structure. While efficient, any sudden freeze in credit markets or sales could cause a liquidity pinch.";
+                } else if (margin < 10 && cr > 1.5) {
+                    vText = "<strong>Safe but Stagnant:</strong> The company has a massive cash cushion, but the underlying business model is struggling to generate high value. It's a 'Fortress' with a weak engine.";
+                } else if (conv < 0.8) {
+                    vText = "<strong>The Working Capital Trap:</strong> On paper, profits look great. However, cash is being swallowed by unpaid bills (Receivables) or unsold goods (Inventory). Watch for future write-downs.";
+                } else if (cr > 1.2 && margin > 15 && conv >= 1.0) {
+                    vText = "<strong>Elite Quality:</strong> This is a rare 'Compounder.' It possesses strong pricing power, plenty of cash to self-fund growth, and converts nearly all accounting profit into cold, hard cash.";
                 } else {
-                    vText = "Multiple risk vectors detected. Weaknesses across liquidity and efficiency suggest a stressed or capital-intensive model. Further investigation into debt maturity and cost structures is recommended.";
+                    vText = "<strong>Mixed Resilience:</strong> The company is navigating significant trade-offs. It shows stability in some areas but faces pressure in others—likely a maturing business in a competitive sector.";
                 }
-                document.getElementById('verdictText').innerText = vText;
+                document.getElementById('verdictText').innerHTML = vText;
 
+                // Charts
                 if (priceChart) priceChart.destroy();
                 priceChart = new Chart(document.getElementById('priceChart').getContext('2d'), {
                     type: 'line',
@@ -345,10 +336,11 @@
                         labels: ['Cash', 'Inventory', 'Receivables', 'Other'], 
                         datasets: [{ 
                             data: [bs.cashAndCashEquivalents, bs.inventory, bs.netReceivables, (bs.totalCurrentAssets - (bs.cashAndCashEquivalents + bs.inventory + bs.netReceivables))],
-                            backgroundColor: ['#0077b6', '#d00000', '#ffb703', '#495057']
+                            backgroundColor: [themeColor, '#d00000', '#ffb703', '#495057'],
+                            borderWidth: 0
                         }] 
                     },
-                    options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#ccc', font: { size: 10 } } } } }
+                    options: { maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { color: '#ccc', font: { size: 11 } } } } }
                 });
 
                 document.getElementById('mainUI').style.display = 'block';
