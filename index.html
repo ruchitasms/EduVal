@@ -21,6 +21,7 @@
         .fy-anchor { font-weight: bold; color: var(--pico-primary); font-size: 0.85rem; background: #1c222d; padding: 2px 8px; border-radius: 4px; }
         progress { display: none; margin: 10px 0; }
         .diag-header { background: #1c222d; padding: 10px; border-radius: 8px; margin-bottom: 1rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; }
+        #risk-verdict-box { margin-top: 1rem; padding: 1rem; border-radius: 8px; font-size: 0.85rem; line-height: 1.5; border-left: 4px solid var(--pico-primary); background: #1a2029; }
     </style>
 </head>
 <body>
@@ -155,6 +156,7 @@
                     <article class="sts-card">
                         <h6 style="text-align: center;">Current Asset Breakdown</h6>
                         <div style="height:250px;"><canvas id="assetChart"></canvas></div>
+                        <div id="risk-verdict-box"><strong>Diagnostic Verdict:</strong> <span id="verdictText">Select a ticker to see analysis...</span></div>
                     </article>
                 </div>
             </div>
@@ -209,7 +211,7 @@
                 const themeColor = sectorThemes[industry] || '#00a8e8';
                 document.documentElement.style.setProperty('--pico-primary', themeColor);
 
-                // VALUATION
+                // VALUATION & STATEMENTS (Existing Logic)
                 document.getElementById('compName').innerText = profile.companyName;
                 document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
                 document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
@@ -225,31 +227,26 @@
                 else if(evEbitda < 25) { vBadge.innerText = "Fair Value"; vBadge.style.background = "#664d00"; }
                 else { vBadge.innerText = "Premium Growth"; vBadge.style.background = "#3b1e6e"; }
 
-                document.getElementById('leverageVal').innerText = metrics.netDebtToEBITDA.toFixed(2) + 'x';
-                document.getElementById('rangeVal').innerText = profile.range;
-                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
-
-                // STATEMENTS
                 const cr = bs.totalCurrentAssets / bs.totalCurrentLiabilities;
+                const margin = (inc[0].netIncome / inc[0].revenue) * 100;
+                const fcf = cf.operatingCashFlow - cf.capitalExpenditure;
+                const conv = fcf / inc[0].netIncome;
+
                 document.getElementById('currRatioVal').innerText = cr.toFixed(2);
                 document.getElementById('crLight').style.background = cr > 1.2 ? "#004d26" : "#4d0000";
                 document.getElementById('crLight').innerText = cr > 1.2 ? "Healthy" : "Risk";
-                document.getElementById('evValSts').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
-
-                const margin = (inc[0].netIncome / inc[0].revenue) * 100;
                 document.getElementById('netMarginVal').innerText = margin.toFixed(1) + '%';
                 document.getElementById('incLight').style.background = margin > 15 ? "#004d26" : "#664d00";
                 document.getElementById('incLight').innerText = margin > 15 ? "High Moat" : "Standard";
-                const ebitda = inc[0].ebitda || (inc[0].operatingIncome + (inc[0].depreciationAndAmortization || 0));
-                document.getElementById('ebitdaValSts').innerText = `$${(ebitda / 1e9).toFixed(1)}B`;
-
-                const fcf = cf.operatingCashFlow - cf.capitalExpenditure;
-                const conv = fcf / inc[0].netIncome;
                 document.getElementById('cashConvVal').innerText = conv.toFixed(2) + 'x';
                 document.getElementById('cfLight').style.background = conv >= 1.0 ? "#004d26" : "#4d0000";
                 document.getElementById('cfLight').innerText = conv >= 1.0 ? "High Quality" : "Accrual Warning";
 
-                // RAW STATS
+                // RAW STATS FILLING
+                document.getElementById('leverageVal').innerText = metrics.netDebtToEBITDA.toFixed(2) + 'x';
+                document.getElementById('rangeVal').innerText = profile.range;
+                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
+                document.getElementById('evValSts').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
                 document.getElementById('quickRatioVal').innerText = ((bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities).toFixed(2);
                 document.getElementById('assetsVal').innerText = `$${(bs.totalAssets / 1e9).toFixed(1)}B`;
                 document.getElementById('liabVal').innerText = `$${(bs.totalLiabilities / 1e9).toFixed(1)}B`;
@@ -259,25 +256,46 @@
                 document.getElementById('workCapVal').innerText = `$${((bs.totalCurrentAssets - bs.totalCurrentLiabilities) / 1e9).toFixed(1)}B`;
                 document.getElementById('ocfVal').innerText = `$${(cf.operatingCashFlow / 1e9).toFixed(1)}B`;
                 document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
+                const ebitda = inc[0].ebitda || (inc[0].operatingIncome + (inc[0].depreciationAndAmortization || 0));
+                document.getElementById('ebitdaValSts').innerText = `$${(ebitda / 1e9).toFixed(1)}B`;
 
                 // DIAGNOSTIC LOGIC
-                document.getElementById('d-oc').innerText = (ratios.operatingCycle || 0).toFixed(1);
-                document.getElementById('d-de').innerText = (metrics.debtToEquityRatio || 0).toFixed(2);
-                document.getElementById('d-ic').innerText = (metrics.interestCoverageRatio || 0).toFixed(1) + "x";
-                document.getElementById('d-fl').innerText = (metrics.financialLeverageRatio || 0).toFixed(2);
+                document.getElementById('d-oc').innerText = (metrics.operatingCycle || 0).toFixed(1);
+                document.getElementById('d-de').innerText = (ratios.debtToEquityRatio || 0).toFixed(2);
+                document.getElementById('d-ic').innerText = (ratios.interestCoverageRatio || 0).toFixed(1) + "x";
+                document.getElementById('d-fl').innerText = (ratios.financialLeverageRatio || 0).toFixed(2);
                 document.getElementById('d-cashr').innerText = (ratios.cashRatio || 0).toFixed(2);
                 document.getElementById('d-solv').innerText = (ratios.solvencyRatio || 0).toFixed(2);
-                document.getElementById('d-dy').innerText = (metrics.dividendYieldPercentage || 0).toFixed(2) + "%";
-                document.getElementById('d-pe').innerText = (metrics.priceToEarningsRatio || 0).toFixed(2) + "x";
+                document.getElementById('d-dy').innerText = (ratios.dividendYieldPercentage || 0).toFixed(2) + "%";
+                document.getElementById('d-pe').innerText = (ratios.priceToEarningsRatio || 0).toFixed(2) + "x";
 
                 const setBox = (id, val, target, label) => {
                     const el = document.getElementById(id);
                     el.style.background = val >= target ? "#004d26" : "#4d0000";
-                    el.innerText = `${label}: ${val.toFixed(2)}`;
+                    el.innerText = `${label} ${val.toFixed(2)}`;
                 };
-                setBox('d-cr-box', cr, 1.2, "CR");
-                setBox('d-nm-box', margin/100, 0.15, "NM");
-                setBox('d-cc-box', conv, 1.0, "CC");
+                setBox('d-cr-box', cr, 1.2, "Current Ratio:");
+                setBox('d-nm-box', margin/100, 0.15, "Net Margin:");
+                setBox('d-cc-box', conv, 1.0, "Cash Conv:");
+
+                // RISK VERDICT LOGIC
+                const isCrGood = cr > 1.2;
+                const isNmGood = margin > 15;
+                const isCcGood = conv >= 1.0;
+                let vText = "";
+
+                if (!isCrGood && isNmGood && isCcGood) {
+                    vText = "The business is profitable and brings in cash quickly, but it keeps very little cash or short-term assets on hand. This is usually manageable in stable conditions, but it can become risky if sales slow down or unexpected expenses arise.";
+                } else if (!isNmGood && isCrGood && isCcGood) {
+                    vText = "The business handles cash well and can meet short-term obligations, but it earns only a small profit on each sale. This leaves little room for error and increases risk if costs rise or competition forces lower prices.";
+                } else if (!isCcGood && isNmGood && isCrGood) {
+                    vText = "The business reports good profits and appears financially stable, but much of the cash is tied up in receivables or inventory. This means profits may not turn into usable cash quickly, creating funding pressure as the business grows.";
+                } else if (isCrGood && isNmGood && isCcGood) {
+                    vText = "The business is financially strong across liquidity, profitability, and cash flow. It earns good profits, converts them into cash efficiently, and has enough short-term resources to meet its obligations, indicating a well-balanced and resilient business model.";
+                } else {
+                    vText = "Multiple risk factors detected. Review individual red boxes in the header for specific weaknesses in liquidity, margins, or cash flow quality.";
+                }
+                document.getElementById('verdictText').innerText = vText;
 
                 // CHARTS
                 if (priceChart) priceChart.destroy();
@@ -294,7 +312,7 @@
                         labels: ['Cash', 'Inventory', 'Receivables', 'Other'], 
                         datasets: [{ 
                             data: [bs.cashAndCashEquivalents, bs.inventory, bs.netReceivables, (bs.totalCurrentAssets - (bs.cashAndCashEquivalents + bs.inventory + bs.netReceivables))],
-                            backgroundColor: ['#a2d2ff', '#ffafcc', '#bde0fe', '#ced4da'] 
+                            backgroundColor: ['#0077b6', '#d00000', '#ffb703', '#495057'] // Darker/Bolder colors
                         }] 
                     },
                     options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#ccc', font: { size: 10 } } } } }
