@@ -11,6 +11,7 @@
         .nav-tabs button { flex: 1; font-weight: bold; border: none; background: #2a313d; transition: 0.3s; }
         .nav-tabs button.active { background: var(--pico-primary); }
         
+        /* Layouts */
         .grid-val { display: grid; grid-template-columns: 1fr 1.2fr; gap: 2rem; }
         .grid-sts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
         .grid-diag { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.5rem; align-items: start; }
@@ -33,7 +34,7 @@
 </head>
 <body>
     <main class="container">
-        <h2 style="margin-top:20px;">EduVal - Let's learn Finance Together! 🦉</h2>
+        <h2 style="margin-top:20px;">EduVal - Financial Literacy Pro 🦉</h2>
         
         <header>
             <select id="tickerSelect" onchange="runAnalysis(this.value)">
@@ -164,10 +165,11 @@
             document.getElementById('loader').style.display = 'block';
             try {
                 const endpoints = ['profile','key-metrics','income-statement','balance-sheet-statement','cash-flow-statement','ratios','historical-price-eod/light'];
-                const responses = await Promise.all(endpoints.map(e => 
-                    fetch(`https://financialmodelingprep.com/stable/${e}?symbol=${ticker}&apikey=${API_KEY}`).then(res => res.json())
+                const res = await Promise.all(endpoints.map(e => 
+                    fetch(`https://financialmodelingprep.com/stable/${e}?symbol=${ticker}&apikey=${API_KEY}`).then(r => r.json())
                 ));
-                const [prof, met, inc, bs, cf, rat, hist] = responses.map(r => r[0] || r);
+
+                const prof = res[0][0], met = res[1][0], inc = res[2][0], bs = res[3][0], cf = res[4][0], rat = res[5][0], hist = res[6];
 
                 // VALUATION
                 document.getElementById('v-name').innerText = prof.companyName;
@@ -180,7 +182,7 @@
                 document.getElementById('v-marketCap').innerText = `$${(prof.mCap / 1e9).toFixed(1)}B`;
                 
                 const vBadge = document.getElementById('v-badge');
-                vBadge.innerText = met.evToEBITDA < 20 ? "Fair Value" : "Premium Growth";
+                vBadge.innerText = met.evToEBITDA < 20 ? "Value" : "Premium Growth";
                 vBadge.className = `verdict-badge ${met.evToEBITDA < 20 ? 'bg-green' : 'bg-red'}`;
 
                 // STATEMENTS
@@ -215,16 +217,13 @@
                 document.getElementById('s-fcf').innerText = fmt(fcf);
 
                 // DIAGNOSTICS
-                const rData = Array.isArray(rat) ? rat[0] : rat;
-                document.getElementById('d-oc').innerText = (rData.operatingCycle || 0).toFixed(1);
-                document.getElementById('d-de').innerText = (met.debtToEquityRatio || rData.debtEquityRatio || 0).toFixed(2);
-                document.getElementById('d-ic').innerText = (met.interestCoverageRatio || rData.interestCoverageRatio || 0).toFixed(1) + "x";
+                document.getElementById('d-oc').innerText = (rat.operatingCycle || 0).toFixed(1);
+                document.getElementById('d-de').innerText = (met.debtToEquityRatio || rat.debtEquityRatio || 0).toFixed(2);
+                document.getElementById('d-ic').innerText = (met.interestCoverageRatio || rat.interestCoverageRatio || 0).toFixed(1) + "x";
                 document.getElementById('d-fl').innerText = (met.financialLeverageRatio || 0).toFixed(2);
-                document.getElementById('d-cashr').innerText = (rData.cashRatio || 0).toFixed(2);
-                document.getElementById('d-solv').innerText = (rData.solvencyRatio || 0).toFixed(2);
-                
-                
-                document.getElementById('d-dy').innerText = (rat.dividendYieldPercentage || 0).toFixed(2) + "%";
+                document.getElementById('d-cashr').innerText = (rat.cashRatio || 0).toFixed(2);
+                document.getElementById('d-solv').innerText = (rat.solvencyRatio || 0).toFixed(2);
+                document.getElementById('d-dy').innerText = (met.dividendYieldPercentage || 0).toFixed(2) + "%";
                 document.getElementById('d-pe').innerText = (met.priceToEarningsRatio || 0).toFixed(2) + "x";
 
                 const setLight = (id, val, target, label) => {
@@ -240,7 +239,7 @@
                 document.getElementById('mainUI').style.display = 'block';
                 switchTab('val');
 
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error("API Error:", err); }
             document.getElementById('loader').style.display = 'none';
         }
 
