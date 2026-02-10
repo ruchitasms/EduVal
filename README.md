@@ -26,8 +26,5 @@ Logic: Custom-built financial screening algorithms.
 Since this project uses a free API tier, our study is currently focused on a curated list of 10 high-impact companies across diverse sectors (Tech, Energy, Fintech, etc.) to ensure data accuracy and speed.
 
 ### ⏭️ Next-up: Phase 3
-Profitability & Capital Allocation
-
-ROE & ROIC Analysis: Deep dive into how effectively management reinvests profits.
-
+Risk & Leverage Metrics - the part of finance that reveals how companies react under pressure.
 Dividend Sustainability: Checking if the "Profit" is actually reaching the shareholders.
