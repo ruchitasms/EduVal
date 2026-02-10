@@ -185,7 +185,7 @@
                     fetch(`https://financialmodelingprep.com/stable/income-statement?symbol=${ticker}&limit=2&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/balance-sheet-statement?symbol=${ticker}&limit=1&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${ticker}&limit=1&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/financial-ratios?symbol=${ticker}&limit=1&apikey=${API_KEY}`)
+                    fetch(`https://financialmodelingprep.com/stable/ratios?symbol=${ticker}&limit=1&apikey=${API_KEY}`)
                 ]);
 
                 const profile = (await pRes.json())[0], metrics = (await mRes.json())[0];
