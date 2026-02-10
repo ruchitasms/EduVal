@@ -9,19 +9,26 @@
         :root { --pico-primary: #00a8e8; --pico-background-color: #0b0e14; --pico-card-background-color: #151921; }
         .nav-tabs { display: flex; gap: 10px; margin-bottom: 1rem; }
         .nav-tabs button { flex: 1; font-size: 0.8rem; padding: 10px; }
-        .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1.3fr; gap: 1.5rem; }
         
-        /* Phase 3 Diagnostic Layout (Based on your Sketch) */
-        .diag-grid { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 1.2rem; }
-        .sts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-        .sts-card { background: var(--pico-card-background-color); padding: 1rem; border-radius: 8px; border-top: 3px solid var(--pico-primary); }
+        /* Layouts */
+        .grid-val { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.5rem; }
+        .grid-sts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        .grid-diag { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 1.2rem; }
+
+        /* Component Styling */
+        .card-custom { background: var(--pico-card-background-color); padding: 1.2rem; border-radius: 8px; border-top: 3px solid var(--pico-primary); }
+        .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 8px 0; font-size: 0.9rem; }
         .traffic-light { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin: 5px 0; color: #fff; width: 100%; text-align: center; }
-        .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 5px 0; font-size: 0.85rem; }
-        .chart-wrapper { height: 250px; width: 100%; position: relative; }
         .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #fff; }
+        .chart-wrapper { height: 240px; width: 100%; position: relative; }
+        .decoder-box { background: #1c222d; border-left: 4px solid var(--pico-primary); padding: 1rem; font-size: 0.85rem; border-radius: 0 8px 8px 0; }
         .section-sub { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block; }
-        .decoder-box { background: #1c222d; border-left: 4px solid var(--pico-primary); padding: 1rem; font-size: 0.85rem; line-height: 1.4; border-radius: 0 8px 8px 0; }
         progress { display: none; margin: 10px 0; }
+        
+        /* Badges for Statements */
+        .status-badge { display: block; width: fit-content; padding: 2px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-top: 10px; }
+        .bg-green { background: #004d26; color: #fff; }
+        .bg-red { background: #4d0000; color: #fff; }
     </style>
 </head>
 <body>
@@ -40,115 +47,113 @@
                 <option value="TSLA">Tesla (Automotive)</option>
                 <option value="DIS">Disney (Entertainment)</option>
                 <option value="INTC">Intel (Semiconductors)</option>
-                <option value="SOFI">SoFi (Fintech)</option>
             </select>
             <progress id="loader"></progress>
         </header>
 
         <div id="mainUI" style="display:none;">
             <div class="nav-tabs">
-                <button id="btn-diag" onclick="switchTab('diag')">Risk Diagnostics</button>
                 <button id="btn-val" onclick="switchTab('val')">Valuation</button>
                 <button id="btn-sts" onclick="switchTab('sts')">Statements</button>
+                <button id="btn-diag" onclick="switchTab('diag')">Risk Diagnostics</button>
             </div>
 
-            <details id="lessonBox" style="background: #1c222d; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+            <details id="lessonBox">
                 <summary>Formulas & Rules of Thumb</summary>
-                <div id="lessonContent" style="font-size: 0.85rem; margin-top: 10px; line-height: 1.6;"></div>
+                <div id="lessonContent" style="font-size: 0.85rem; margin-top: 10px;"></div>
             </details>
 
-            <div id="view-diag" class="diag-grid">
-                <article>
-                    <span class="section-sub">Efficiency & Strategy</span>
-                    <div class="metric-row"><span>Asset Turnover</span><strong id="diag-at">-</strong></div>
-                    <div class="metric-row"><span>Debt to Equity</span><strong id="diag-de">-</strong></div>
-                    <div class="metric-row"><span>Interest Coverage</span><strong id="diag-ic">-</strong></div>
-                    <div class="metric-row"><span>Operating Margin</span><strong id="diag-om">-</strong></div>
-                </article>
-
-                <article>
-                    <span class="section-sub">Operational Health</span>
-                    <div style="display: flex; gap: 5px; margin-bottom: 15px;">
-                        <div id="crLight" class="traffic-light">CR</div>
-                        <div id="nmLight" class="traffic-light">NM</div>
-                        <div id="ccLight" class="traffic-light">CC</div>
-                    </div>
-                    <div id="decoderText" class="decoder-box">
-                        Select a company to decode the business model risk...
-                    </div>
-                </article>
-
-                <article>
-                    <span class="section-sub">Current Asset Mix</span>
-                    <div class="chart-wrapper" style="height:140px;"><canvas id="assetChart"></canvas></div>
-                    <p style="font-size: 0.65rem; color: #666; margin-top:10px;">
-                        High Inventory (Red) = Liquidity Risk. High Cash (Blue) = Safety.
-                    </p>
-                </article>
-            </div>
-
-            <div id="view-val" class="dashboard-grid" style="display:none;">
-                <article>
-                    <header style="display: flex; justify-content: space-between; align-items: center;">
+            <div id="view-val" class="grid-val">
+                <article class="card-custom">
+                    <header style="display: flex; justify-content: space-between; align-items: center; border:none; padding:0;">
                         <div>
                             <h4 id="compName" style="margin:0;">-</h4>
                             <small id="industryLabel">-</small>
                         </div>
                         <span id="verdictBadge" class="verdict-badge">-</span>
                     </header>
-                    <label>EV / EBITDA Multiple</label>
-                    <h1 id="evEbitdaDisplay" style="color: var(--pico-primary); margin:0;">-</h1>
-                    <table role="grid">
-                        <tr class="metric-row"><td>Net Debt / EBITDA</td><td id="leverageVal" align="right">-</td></tr>
-                        <tr class="metric-row"><td>52-Week Range</td><td id="rangeVal" align="right">-</td></tr>
-                        <tr class="metric-row"><td>Enterprise Value</td><td id="evVal" align="right">-</td></tr>
-                    </table>
+                    <div style="margin: 1.5rem 0;">
+                        <label>EV / EBITDA Multiple</label>
+                        <h1 id="evEbitdaDisplay" style="color: var(--pico-primary); margin:0;">-</h1>
+                    </div>
+                    <div class="metric-row"><span>Net Debt / EBITDA</span><strong id="leverageVal">-</strong></div>
+                    <div class="metric-row"><span>52-Week Range</span><strong id="rangeVal" style="font-size:0.75rem;">-</strong></div>
+                    <div class="metric-row"><span>Enterprise Value</span><strong id="evVal">-</strong></div>
                 </article>
-                <article>
-                    <header><strong>7-Day Momentum</strong></header>  
+                <article class="card-custom">
+                    <header style="border:none; padding:0; margin-bottom:1rem;"><strong>7-Day Momentum</strong></header>
                     <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
                 </article>
             </div>
 
-            <div id="view-sts" style="display:none;">
-                <div class="sts-grid">
-                    <div class="sts-card">
-                        <h6>Balance Sheet</h6>
-                        <div class="metric-row"><span>Total Assets</span><span id="assetsVal">-</span></div>
-                        <div class="metric-row"><span>Total Liab.</span><span id="liabVal">-</span></div>
+            <div id="view-sts" class="grid-sts" style="display:none;">
+                <article class="card-custom">
+                    <h6>Balance Sheet</h6>
+                    <div class="metric-row"><span>Current Ratio</span><span id="sts-cr">-</span></div>
+                    <span id="badge-cr" class="status-badge">-</span>
+                    <hr>
+                    <div class="metric-row"><span>Quick Ratio</span><span id="sts-qr">-</span></div>
+                    <div class="metric-row"><span>Total Assets</span><span id="sts-assets">-</span></div>
+                    <div class="metric-row"><span>Total Liab.</span><span id="sts-liab">-</span></div>
+                </article>
+                <article class="card-custom">
+                    <h6>Income Statement</h6>
+                    <div class="metric-row"><span>Net Margin</span><span id="sts-nm">-</span></div>
+                    <span id="badge-nm" class="status-badge">-</span>
+                    <hr>
+                    <div class="metric-row"><span>EPS Growth</span><span id="sts-eps">-</span></div>
+                    <div class="metric-row"><span>Revenue</span><span id="sts-rev">-</span></div>
+                    <div class="metric-row"><span>EBITDA</span><span id="sts-ebitda">-</span></div>
+                </article>
+                <article class="card-custom">
+                    <h6>Cash Flow</h6>
+                    <div class="metric-row"><span>Cash Conversion</span><span id="sts-cc">-</span></div>
+                    <span id="badge-cc" class="status-badge">-</span>
+                    <hr>
+                    <div class="metric-row"><span>Working Cap</span><span id="sts-wc">-</span></div>
+                    <div class="metric-row"><span>Operating CF</span><span id="sts-ocf">-</span></div>
+                    <div class="metric-row"><span>Free Cash Flow</span><span id="sts-fcf">-</span></div>
+                </article>
+            </div>
+
+            <div id="view-diag" class="grid-diag" style="display:none;">
+                <article class="card-custom">
+                    <span class="section-sub">Efficiency & Strategy</span>
+                    <div class="metric-row"><span>Asset Turnover</span><strong id="diag-at">-</strong></div>
+                    <div class="metric-row"><span>Debt to Equity</span><strong id="diag-de">-</strong></div>
+                    <div class="metric-row"><span>Interest Coverage</span><strong id="diag-ic">-</strong></div>
+                    <div class="metric-row"><span>Operating Margin</span><strong id="diag-om">-</strong></div>
+                </article>
+                <article class="card-custom">
+                    <span class="section-sub">Operational Health</span>
+                    <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+                        <div id="light-cr" class="traffic-light">CR</div>
+                        <div id="light-nm" class="traffic-light">NM</div>
+                        <div id="light-cc" class="traffic-light">CC</div>
                     </div>
-                    <div class="sts-card">
-                        <h6>Income Statement</h6>
-                        <div class="metric-row"><span>Revenue</span><span id="revVal">-</span></div>
-                        <div class="metric-row"><span>Net Income</span><span id="netIncVal">-</span></div>
-                    </div>
-                    <div class="sts-card">
-                        <h6>Cash Flow</h6>
-                        <div class="metric-row"><span>Operating CF</span><span id="ocfVal">-</span></div>
-                        <div class="metric-row"><span>Free Cash Flow</span><span id="fcfVal">-</span></div>
-                    </div>
-                </div>
+                    <div id="decoderText" class="decoder-box">Select a company to decode...</div>
+                </article>
+                <article class="card-custom">
+                    <span class="section-sub">Current Asset Mix</span>
+                    <div style="height:150px;"><canvas id="assetChart"></canvas></div>
+                </article>
             </div>
         </div>
     </main>
 
     <script>
         const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
-        const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#ffffff', 'Fintech': '#ffcc00' };
-        
-        let priceChart = null;
-        let assetChart = null;
+        const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#ffffff' };
+        let priceChart = null, assetChart = null;
 
         const learnings = {
-            diag: `<strong>Risk Diagnostics:</strong> We look for patterns. For example, a company with low liquidity (CR < 1.0) but high Cash Conversion (CC > 1.0) is often a highly efficient retailer.`,
-            val: `<strong>Valuation:</strong> EV/EBITDA shows what you pay for every $1 of cash profit. < 10x is usually seen as 'Value'.`,
-            sts: `<strong>Statements:</strong> The raw data behind the analysis. Check if Revenue is growing faster than Expenses.`
+            val: `<strong>Valuation:</strong> EV/EBITDA shows what you pay for every $1 of cash profit.`,
+            sts: `<strong>Statements:</strong> The raw "report card". We check Liquidity, Efficiency, and Cash Quality.`,
+            diag: `<strong>Risk:</strong> Deep dive into how the business model handles assets and debt.`
         };
 
         function switchTab(tabId) {
-            document.getElementById('view-diag').style.display = tabId === 'diag' ? 'grid' : 'none';
-            document.getElementById('view-val').style.display = tabId === 'val' ? 'grid' : 'none';
-            document.getElementById('view-sts').style.display = tabId === 'sts' ? 'block' : 'none';
+            ['val', 'sts', 'diag'].forEach(t => document.getElementById(`view-${t}`).style.display = t === tabId ? (t === 'diag' ? 'grid' : (t === 'sts' ? 'grid' : 'grid')) : 'none');
             document.getElementById('lessonContent').innerHTML = learnings[tabId];
         }
 
@@ -167,8 +172,8 @@
 
                 const profile = (await pRes.json())[0];
                 const metrics = (await mRes.json())[0];
-                const histData = await hRes.json();
-                const history = Array.isArray(histData) ? histData.slice(0, 7).reverse() : [];
+                const histRaw = await hRes.json();
+                const history = Array.isArray(histRaw) ? histRaw.slice(0, 7).reverse() : [];
                 const inc = await incRes.json();
                 const bs = (await bsRes.json())[0];
                 const cf = (await cfRes.json())[0];
@@ -178,36 +183,76 @@
                 const themeColor = sectorThemes[industry] || '#00a8e8';
                 document.documentElement.style.setProperty('--pico-primary', themeColor);
 
-                // --- DIAGNOSTICS LOGIC ---
+                // --- TAB 1: VALUATION ---
+                document.getElementById('compName').innerText = profile.companyName;
+                document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
+                document.getElementById('evEbitdaDisplay').innerText = (metrics.evToEBITDA || 0).toFixed(2) + 'x';
+                document.getElementById('leverageVal').innerText = (metrics.netDebtToEBITDA || 0).toFixed(2) + 'x';
+                document.getElementById('rangeVal').innerText = profile.range;
+                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
+                
+                const vBadge = document.getElementById('verdictBadge');
+                vBadge.innerText = metrics.evToEBITDA < 15 ? "Value Play" : "Premium Growth";
+                vBadge.style.background = metrics.evToEBITDA < 15 ? "#004d26" : "#3b1e6e";
+
+                const ctxP = document.getElementById('priceChart').getContext('2d');
+                if (priceChart) priceChart.destroy();
+                priceChart = new Chart(ctxP, {
+                    type: 'line',
+                    data: {
+                        labels: history.map(d => d.date.substring(5)),
+                        datasets: [{ data: history.map(d => d.price), borderColor: themeColor, tension: 0.3, fill: false }]
+                    },
+                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+
+                // --- TAB 2: STATEMENTS ---
                 const cr = bs.totalCurrentAssets / bs.totalCurrentLiabilities;
                 const nm = (inc[0].netIncome / inc[0].revenue) * 100;
                 const fcf = cf.operatingCashFlow - cf.capitalExpenditure;
                 const cc = fcf / inc[0].netIncome;
 
+                document.getElementById('sts-cr').innerText = cr.toFixed(2);
+                document.getElementById('badge-cr').innerText = cr > 1.2 ? "Healthy" : "Tight Liquidity";
+                document.getElementById('badge-cr').className = `status-badge ${cr > 1.2 ? 'bg-green' : 'bg-red'}`;
+
+                document.getElementById('sts-nm').innerText = nm.toFixed(1) + "%";
+                document.getElementById('badge-nm').innerText = nm > 15 ? "High Moat" : "Average";
+                document.getElementById('badge-nm').className = `status-badge ${nm > 15 ? 'bg-green' : 'bg-red'}`;
+
+                document.getElementById('sts-cc').innerText = cc.toFixed(2) + "x";
+                document.getElementById('badge-cc').innerText = cc > 1.0 ? "High Quality" : "Accrual Warning";
+                document.getElementById('badge-cc').className = `status-badge ${cc > 1.0 ? 'bg-green' : 'bg-red'}`;
+
+                document.getElementById('sts-qr').innerText = ((bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities).toFixed(2);
+                document.getElementById('sts-assets').innerText = `$${(bs.totalAssets / 1e9).toFixed(1)}B`;
+                document.getElementById('sts-liab').innerText = `$${(bs.totalLiabilities / 1e9).toFixed(1)}B`;
+                document.getElementById('sts-eps').innerText = (metrics.epsGrowth || 0).toFixed(1) + "%";
+                document.getElementById('sts-rev').innerText = `$${(inc[0].revenue / 1e9).toFixed(1)}B`;
+                document.getElementById('sts-ebitda').innerText = `$${(inc[0].ebitda / 1e9).toFixed(1)}B`;
+                document.getElementById('sts-wc').innerText = `$${((bs.totalCurrentAssets - bs.totalCurrentLiabilities) / 1e9).toFixed(1)}B`;
+                document.getElementById('sts-ocf').innerText = `$${(cf.operatingCashFlow / 1e9).toFixed(1)}B`;
+                document.getElementById('sts-fcf').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
+
+                // --- TAB 3: DIAGNOSTICS ---
                 document.getElementById('diag-at').innerText = (ratios.assetTurnover || 0).toFixed(2);
                 document.getElementById('diag-de').innerText = (metrics.debtToEquity || 0).toFixed(2);
                 document.getElementById('diag-ic').innerText = (metrics.interestCoverage || 0).toFixed(1) + 'x';
                 document.getElementById('diag-om').innerText = ((inc[0].operatingIncome / inc[0].revenue) * 100).toFixed(1) + '%';
 
-                // Traffic Lights
                 const setLight = (id, val, target, label) => {
                     const el = document.getElementById(id);
                     el.style.background = val >= target ? "#004d26" : "#4d0000";
                     el.innerText = `${label}: ${val.toFixed(2)}`;
                 };
-                setLight('crLight', cr, 1.2, 'CR');
-                setLight('nmLight', nm / 100, 0.15, 'NM');
-                setLight('ccLight', cc, 1.0, 'CC');
+                setLight('light-cr', cr, 1.2, 'Current Ratio:');
+                setLight('light-nm', nm/100, 0.15, 'Net Margins:');
+                setLight('light-cc', cc, 1.0, 'Cash Conversion:');
 
-                // Business Model Decoder
-                let story = "";
-                if (cr < 1.1 && cc > 1.1) story = "<strong>The Efficiency Machine:</strong> Low cash cushion but fast flow. Common in tech/retail.";
-                else if (cc < 0.7) story = "<strong>Accrual Warning:</strong> Profits are accounting entries, but hard cash is not following.";
-                else if (cr > 1.5 && nm > 20) story = "<strong>The Fortress:</strong> Highly profitable with massive liquidity. Low risk.";
-                else story = "<strong>Standard Operations:</strong> The company is performing within normal risk parameters.";
+                let story = (cr < 1.1 && cc > 1.1) ? "<strong>The Efficiency Machine:</strong> Operates on low cash because money moves fast." : 
+                            (cc < 0.7) ? "<strong>The Accrual Trap:</strong> Profits look good on paper, but the bank account says otherwise." : "<strong>Balanced:</strong> Steady growth with manageable risk.";
                 document.getElementById('decoderText').innerHTML = story;
 
-                // Asset Mix Chart
                 const ctxA = document.getElementById('assetChart').getContext('2d');
                 if (assetChart) assetChart.destroy();
                 assetChart = new Chart(ctxA, {
@@ -222,39 +267,11 @@
                     options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
 
-                // --- VALUATION & STATEMENTS UPDATES ---
-                document.getElementById('compName').innerText = profile.companyName;
-                document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
-                document.getElementById('evEbitdaDisplay').innerText = (metrics.evToEBITDA || 0).toFixed(2) + 'x';
-                
-                const vBadge = document.getElementById('verdictBadge');
-                vBadge.innerText = metrics.evToEBITDA < 12 ? "Value Play" : "Growth Premium";
-                vBadge.style.background = metrics.evToEBITDA < 12 ? "#004d26" : "#3b1e6e";
-
-                document.getElementById('leverageVal').innerText = (metrics.netDebtToEBITDA || 0).toFixed(2) + 'x';
-                document.getElementById('rangeVal').innerText = profile.range;
-                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
-                document.getElementById('assetsVal').innerText = `$${(bs.totalAssets / 1e9).toFixed(1)}B`;
-                document.getElementById('revVal').innerText = `$${(inc[0].revenue / 1e9).toFixed(1)}B`;
-                document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
-
-                // Price Chart
-                const ctxP = document.getElementById('priceChart').getContext('2d');
-                if (priceChart) priceChart.destroy();
-                priceChart = new Chart(ctxP, {
-                    type: 'line',
-                    data: {
-                        labels: history.map(d => d.date.substring(5)),
-                        datasets: [{ data: history.map(d => d.price), borderColor: themeColor, tension: 0.3 }]
-                    },
-                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
-
                 document.getElementById('mainUI').style.display = 'block';
-                switchTab('diag');
+                switchTab('val');
             } catch (e) {
                 console.error(e);
-                alert("Data sync error. Try another company.");
+                alert("Could not load data.");
             } finally {
                 document.getElementById('loader').style.display = 'none';
             }
