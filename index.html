@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>EduVal - Financial Literacy Pro (Phase 3)</title>
+    <title>EduVal - Financial Literacy Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -20,13 +20,13 @@
         .fy-anchor { font-weight: bold; color: var(--pico-primary); font-size: 0.85rem; background: #1c222d; padding: 2px 8px; border-radius: 4px; }
         progress { display: none; margin: 10px 0; }
 
-        /* --- Risk Section Styles (Phase 3) --- */
-        .risk-container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 2rem; }
-        .risk-kpi-row { display: flex; gap: 10px; margin-bottom: 1rem; }
-        .risk-kpi-badge { flex: 1; padding: 8px; text-align: center; border-radius: 6px; font-weight: bold; font-size: 0.85rem; border: 1px solid #333; }
-        .risk-header { color: var(--pico-primary); font-weight: bold; margin-bottom: 1rem; border-bottom: 1px solid var(--pico-primary); padding-bottom: 5px; display: block; }
-        .donut-wrapper { height: 220px; position: relative; display: flex; justify-content: center; margin-bottom: 1rem; }
-        .risk-text-box { background: #1c222d; padding: 1rem; border-radius: 6px; border-left: 4px solid var(--pico-primary); font-size: 0.85rem; }
+        /* --- Risk Layout Fixes --- */
+        .risk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .kpi-badge-container { display: flex; gap: 10px; margin-bottom: 15px; }
+        .kpi-badge { flex: 1; padding: 8px 5px; text-align: center; border-radius: 6px; font-weight: bold; font-size: 0.8rem; border: 1px solid #333; background: #1c222d; }
+        .risk-chart-box { height: 200px; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; position: relative; }
+        .risk-narrative { background: #151921; padding: 15px; border-radius: 8px; border-left: 4px solid var(--pico-primary); font-size: 0.85rem; line-height: 1.5; color: #ccc; }
+        .risk-header { font-weight: bold; color: var(--pico-primary); border-bottom: 2px solid #2a313d; padding-bottom: 5px; margin-bottom: 10px; display: block; }
     </style>
 </head>
 <body>
@@ -54,7 +54,8 @@
             <div class="nav-tabs">
                 <button id="btn-val" onclick="switchTab('val')">Valuation</button>
                 <button id="btn-sts" onclick="switchTab('sts')">Statements</button>
-                <button id="btn-rsk" onclick="switchTab('rsk')">Risk Diagnostics</button> </div>
+                <button id="btn-rsk" onclick="switchTab('rsk')">Risk Diagnostics</button>
+            </div>
 
             <details id="lessonBox" style="background: #1c222d; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                 <summary>Formulas & Rules of Thumb</summary>
@@ -109,7 +110,6 @@
                             <span>Enterprise Value</span><span id="evValSts" style="color:var(--pico-primary)">-</span>
                         </div>
                     </div>
-
                     <div class="sts-card">
                         <h6 style="margin:0;">Income Statement</h6>
                         <span class="section-sub">Company's Profitability</span>
@@ -123,7 +123,6 @@
                             <span>EBITDA</span><span id="ebitdaValSts" style="color:var(--pico-primary)">-</span>
                         </div>
                     </div>
-
                     <div class="sts-card">
                         <h6 style="margin:0;">Cash Flow</h6>
                         <span class="section-sub">Company's Cash Generation</span>
@@ -137,98 +136,71 @@
                 </div>
             </div>
 
-            <div id="view-rsk" style="display:none;">
-                <div class="risk-container">
-                    <div>
-                        <span class="risk-header">Structural Health</span>
-                        <div class="metric-row"><span>Operating Cycle (Days)</span><span id="rsk-opCycle">-</span></div>
-                        <div class="metric-row"><span>Debt to Equity Ratio</span><span id="rsk-deRatio">-</span></div>
-                        <div class="metric-row"><span>Interest Coverage</span><span id="rsk-intCov">-</span></div>
-                        <div class="metric-row"><span>Financial Leverage</span><span id="rsk-finLev">-</span></div>
-                        <div class="metric-row"><span>Cash Ratio</span><span id="rsk-cashRatio">-</span></div>
-                        <div class="metric-row"><span>Solvency Ratio</span><span id="rsk-solvency">-</span></div>
-
-                        <br>
-                        <span class="risk-header">Market Context</span>
-                        <div class="metric-row"><span>Dividend Yield %</span><span id="rsk-divYield">-</span></div>
-                        <div class="metric-row"><span>Price to Earnings (P/E)</span><span id="rsk-pe">-</span></div>
+            <div id="view-rsk" class="risk-grid" style="display:none;">
+                <article>
+                    <header class="risk-header">Structural Health</header>
+                    <table role="grid">
+                        <tr class="metric-row"><td>Operating Cycle</td><td id="rsk-opCycle" align="right">-</td></tr>
+                        <tr class="metric-row"><td>Debt to Equity</td><td id="rsk-deRatio" align="right">-</td></tr>
+                        <tr class="metric-row"><td>Interest Coverage</td><td id="rsk-intCov" align="right">-</td></tr>
+                        <tr class="metric-row"><td>Cash Ratio</td><td id="rsk-cashRatio" align="right">-</td></tr>
+                        <tr class="metric-row"><td>Solvency Ratio</td><td id="rsk-solvency" align="right">-</td></tr>
+                        <tr class="metric-row"><td>Dividend Yield</td><td id="rsk-divYield" align="right">-</td></tr>
+                    </table>
+                </article>
+                <article>
+                    <header class="risk-header">Market & Model</header>
+                    <div class="kpi-badge-container">
+                        <div id="badge-cr" class="kpi-badge">CR: -</div>
+                        <div id="badge-mr" class="kpi-badge">Margin: -</div>
+                        <div id="badge-cv" class="kpi-badge">Conv: -</div>
+                    </div>
+                    
+                    <div style="font-size:0.75rem; text-align:center; margin-bottom:5px; color:#888;">Liquidity Composition</div>
+                    <div class="risk-chart-box">
+                        <canvas id="liquidityChart"></canvas>
                     </div>
 
-                    <div>
-                        <div class="risk-kpi-row">
-                            <div id="badge-cr" class="risk-kpi-badge">CR: -</div>
-                            <div id="badge-mr" class="risk-kpi-badge">Margin: -</div>
-                            <div id="badge-cv" class="risk-kpi-badge">Conv: -</div>
-                        </div>
-
-                        <div style="text-align:center; margin-bottom:5px;">Liquidity Composition</div>
-                        <div class="donut-wrapper">
-                            <canvas id="liquidityChart"></canvas>
-                        </div>
-
-                        <div class="risk-text-box">
-                            <h6 style="margin:0; color:var(--pico-primary);">Business Model & Risk Profile</h6>
-                            <p id="risk-narrative" style="margin-top:5px; margin-bottom:0; color:#ccc;">-</p>
-                        </div>
+                    <div class="risk-narrative">
+                        <strong style="color:var(--pico-primary); display:block; margin-bottom:5px;">Diagnostics</strong>
+                        <span id="risk-narrative-text">Loading analysis...</span>
                     </div>
-                </div>
+                </article>
             </div>
-
         </div>
     </main>
 
     <script>
         let priceChart = null;
-        let liquidityChart = null; // New chart instance
-        const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx'; // Demo key
+        let liquidityChart = null;
+        const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx'; 
         const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#ffffff', 'Fintech': '#ffcc00' };
 
         const learnings = {
-            val: `<strong>Valuation Tag Logic:</strong><br>
-                  <strong>Introduction</strong><br>
-                  • Enterprise Value: It represents the total price tag of a company, calculated as Market Cap + Total Debt - Cash. Here, Market Cap = (Current Share Price x Current Outstanding Shares)<br>
-                  • Relative Valuation: This involves comparing a company's value to its peers using multiples like EV/EBITDA(used across industries because it neutralizes the effects of different debt levels and tax environments)<br>
-                  <br><strong>Reading Values:</strong><br>
-                  • <strong>Value Play (< 10x):</strong> "Cheap" relative to cash profits. (Ex: Energy/Banking)<br>
-                  • <strong>Fair Value (10x-25x):</strong> Balanced market expectation. (Ex: Microsoft/Alphabet)<br>
-                  • <strong>Premium Growth (> 25x):</strong> Market expects future earnings explosion. (Ex: NVIDIA/Tesla)<br><br>
-                  <strong>Formulas:</strong><br>
-                  • EV/EBITDA: Enterprise Value / EBITDA<br>
-                  • Net Debt/EBITDA: (Total Debt - Cash) / EBITDA`,
-            sts: `• These are the "report cards" of a company, consisting of the Balance Sheet (what you own/owe), Income Statement (profitability), and Cash Flow Statement (actual cash moving in and out).<br>
-                  <br><strong>Financial Statement Tags:</strong><br>
-                  • <strong>Liquidity (Current Ratio):</strong>This measures a company’s "cash cushion" or its ability to pay off its immediate, short-term debts using assets that can be quickly converted into cash. Goal > 1.2 (Current Assets / Current Liab).<br>
-                  • <strong>Efficiency (Net Margin):</strong>This tracks how well a company manages its resources to generate profit, often measured by "Net Margin" to see how much profit is kept from every dollar of revenue.. Goal > 15% (Net Income / Revenue).<br>
-                  • <strong>Quality (Cash Conv):</strong>This determines if reported profits are "real" by checking if the company is actually generating hard cash (Cash Conversion) rather than just accounting entries. Goal ≥ 1.0 (Free Cash Flow / Net Income).<br><br>
-                  <strong>Formulas:</strong><br>
-                  • Current Ratio: Current Assets / Current Liab<br>
-                  • Quick Ratio: (Cash + Receivables) / Current Liab<br>
-                  • Working Capital: Current Assets - Current Liabilities
-                  • Cash Conversion: Free Cash Flow / Net Income
-                  • PS: The EV displayed here is as of the share price while the statements data was made available, hence the calculation here and on the valuation page may differ.`,
-            rsk: `<strong>Risk Diagnostics Guide:</strong><br>
-                  • <strong>Structural Health:</strong> Can the company survive a storm? We look at debt levels and how long it takes to turn inventory into cash (Operating Cycle).<br>
-                  • <strong>Liquidity Composition:</strong> Not all "current assets" are equal. Cash is king. High inventory or receivables can be risky if customers don't pay or products don't sell.<br>
-                  • <strong>Business Model Profile:</strong> We analyze the interaction between Liquidity, Margins, and Cash Conversion to diagnose the specific operational risks the business faces.`
+            val: `<strong>Valuation Tag Logic:</strong><br>• EV/EBITDA: Enterprise Value / EBITDA<br>• Net Debt/EBITDA: (Total Debt - Cash) / EBITDA<br>• Value Play (< 10x), Fair Value (10x-25x), Premium (> 25x).`,
+            sts: `<strong>Statement Tags:</strong><br>• Current Ratio: Current Assets / Current Liab (>1.2 Healthy)<br>• Net Margin: Net Income / Revenue (>15% High Moat)<br>• Cash Conv: Free Cash Flow / Net Income (≥1.0 High Quality)`,
+            rsk: `<strong>Risk Diagnostics Guide:</strong><br>• <strong>Op Cycle:</strong> Days to turn inventory to cash. Lower is better.<br>• <strong>Interest Cov:</strong> Ability to pay interest (EBIT / Interest Exp). >3x is safe.<br>• <strong>Cash Ratio:</strong> Purest liquidity (Cash / Current Liab).`
         };
 
         function switchTab(tabId) {
             document.getElementById('view-val').style.display = tabId === 'val' ? 'grid' : 'none';
             document.getElementById('view-sts').style.display = tabId === 'sts' ? 'block' : 'none';
-            document.getElementById('view-rsk').style.display = tabId === 'rsk' ? 'block' : 'none';
+            document.getElementById('view-rsk').style.display = tabId === 'rsk' ? 'grid' : 'none';
             document.getElementById('lessonContent').innerHTML = learnings[tabId];
         }
 
         async function runAnalysis(ticker) {
             document.getElementById('loader').style.display = 'block';
             try {
-                const [pRes, mRes, hRes, incRes, bsRes, cfRes] = await Promise.all([
+                // ADDED: Ratios API Endpoint (index 6)
+                const [pRes, mRes, hRes, incRes, bsRes, cfRes, rRes] = await Promise.all([
                     fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/key-metrics?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/income-statement?symbol=${ticker}&limit=2&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/balance-sheet-statement?symbol=${ticker}&limit=1&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${ticker}&limit=1&apikey=${API_KEY}`)
+                    fetch(`https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${ticker}&limit=1&apikey=${API_KEY}`),
+                    fetch(`https://financialmodelingprep.com/stable/ratios?symbol=${ticker}&limit=1&apikey=${API_KEY}`)
                 ]);
 
                 const profile = (await pRes.json())[0];
@@ -237,12 +209,13 @@
                 const inc = await incRes.json();
                 const bs = (await bsRes.json())[0];
                 const cf = (await cfRes.json())[0];
+                const ratios = (await rRes.json())[0]; // New Data Source
 
                 const industry = document.getElementById('tickerSelect').selectedOptions[0].text.match(/\(([^)]+)\)/)[1];
                 const themeColor = sectorThemes[industry] || '#00a8e8';
                 document.documentElement.style.setProperty('--pico-primary', themeColor);
 
-                // Header & Year
+                // Common Data
                 document.getElementById('compName').innerText = profile.companyName;
                 document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
                 document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
@@ -251,7 +224,7 @@
                 document.getElementById('val-fy').innerText = `Audited: FY ${yearText}`;
                 document.getElementById('sts-fy').innerText = `Fiscal Year: ${yearText}`;
 
-                // Valuation
+                // --- Valuation Tab ---
                 const evEbitda = metrics.evToEBITDA;
                 document.getElementById('evEbitdaDisplay').innerText = evEbitda.toFixed(2) + 'x';
                 const vBadge = document.getElementById('verdictBadge');
@@ -263,7 +236,7 @@
                 document.getElementById('rangeVal').innerText = profile.range;
                 document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
 
-                // Statement Logic
+                // --- Statements Tab ---
                 const cr = bs.totalCurrentAssets / bs.totalCurrentLiabilities;
                 document.getElementById('currRatioVal').innerText = cr.toFixed(2);
                 document.getElementById('crLight').style.background = cr > 1.2 ? "#004d26" : "#4d0000";
@@ -283,7 +256,6 @@
                 document.getElementById('cfLight').style.background = conv >= 1.0 ? "#004d26" : "#4d0000";
                 document.getElementById('cfLight').innerText = conv >= 1.0 ? "High Quality" : "Accrual Warning";
 
-                // Raw Metrics
                 document.getElementById('quickRatioVal').innerText = ((bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities).toFixed(2);
                 document.getElementById('assetsVal').innerText = `$${(bs.totalAssets / 1e9).toFixed(1)}B`;
                 document.getElementById('liabVal').innerText = `$${(bs.totalLiabilities / 1e9).toFixed(1)}B`;
@@ -294,44 +266,46 @@
                 document.getElementById('ocfVal').innerText = `$${(cf.operatingCashFlow / 1e9).toFixed(1)}B`;
                 document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
 
-                // --- RISK DIAGNOSTICS (PHASE 3) ---
+                // --- RISK TAB (Phase 3) ---
+                // Populating Structural Health from Ratios API
+                document.getElementById('rsk-opCycle').innerText = ratios.operatingCycle ? ratios.operatingCycle.toFixed(0) + ' Days' : '-';
+                document.getElementById('rsk-deRatio').innerText = ratios.debtEquityRatio ? ratios.debtEquityRatio.toFixed(2) + 'x' : '-';
+                document.getElementById('rsk-intCov').innerText = ratios.interestCoverage ? ratios.interestCoverage.toFixed(1) + 'x' : '-';
+                document.getElementById('rsk-cashRatio').innerText = ratios.cashRatio ? ratios.cashRatio.toFixed(2) + 'x' : '-';
                 
-                // 1. Structural Health
-                document.getElementById('rsk-opCycle').innerText = metrics.operatingCycle ? metrics.operatingCycle.toFixed(1) : "0.0";
-                document.getElementById('rsk-deRatio').innerText = metrics.debtToEquity ? metrics.debtToEquity.toFixed(2) : "0.00";
-                document.getElementById('rsk-intCov').innerText = metrics.interestCoverage ? metrics.interestCoverage.toFixed(1) + 'x' : "0.0x";
-                // Financial Leverage = Assets / Equity
-                const finLev = bs.totalAssets / bs.totalStockholdersEquity;
-                document.getElementById('rsk-finLev').innerText = isFinite(finLev) ? finLev.toFixed(2) : "0.00";
-                // Cash Ratio = Cash / Current Liabilities
-                const cashRatio = bs.cashAndCashEquivalents / bs.totalCurrentLiabilities;
-                document.getElementById('rsk-cashRatio').innerText = cashRatio.toFixed(2);
-                // Solvency Ratio = (Net Income + Deprec) / Total Liabilities
+                // Calculated Metrics
                 const solvency = (inc[0].netIncome + inc[0].depreciationAndAmortization) / bs.totalLiabilities;
                 document.getElementById('rsk-solvency').innerText = solvency.toFixed(2);
-
-                // 2. Market Context
                 document.getElementById('rsk-divYield').innerText = (metrics.dividendYield * 100).toFixed(2) + '%';
-                document.getElementById('rsk-pe').innerText = metrics.peRatio ? metrics.peRatio.toFixed(2) + 'x' : "-";
 
-                // 3. Risk Visuals (Top Badges)
+                // Badges
                 const badgeCR = document.getElementById('badge-cr');
                 const badgeMR = document.getElementById('badge-mr');
                 const badgeCV = document.getElementById('badge-cv');
 
-                badgeCR.innerText = `CR: ${cr.toFixed(2)}`;
+                badgeCR.innerText = `Current Ratio: ${cr.toFixed(2)}`;
                 badgeCR.style.background = cr > 1.2 ? '#004d26' : '#4d0000';
-                badgeMR.innerText = `Margin: ${(margin/100).toFixed(2)}`;
-                badgeMR.style.background = margin > 15 ? '#004d26' : '#4d0000'; // Using /100 to match user image format (0.07)
-                badgeCV.innerText = `Conv: ${conv.toFixed(2)}`;
+                badgeMR.innerText = `Net Mrg: ${margin.toFixed(1)}%`;
+                badgeMR.style.background = margin > 15 ? '#004d26' : '#4d0000';
+                badgeCV.innerText = `Cash Conv: ${conv.toFixed(2)}`;
                 badgeCV.style.background = conv >= 1.0 ? '#004d26' : '#4d0000';
 
-                // 4. Donut Chart (Liquidity)
+                // Diagnostics Text Logic
+                const riskText = document.getElementById('risk-narrative-text');
+                if (cr < 1.2 && margin > 15 && conv >= 1.0) {
+                    riskText.innerText = "Low current ratio, healthy margins & cash conversion: The business is profitable and brings in cash quickly, but it keeps very little cash or short-term assets on hand. This is usually manageable in stable conditions, but it can become risky if sales slow down or unexpected expenses arise.";
+                } else if (cr > 1.2 && margin < 15 && conv >= 1.0) {
+                    riskText.innerText = "Low net margin, healthy liquidity & cash conversion: The business handles cash well and can meet short-term obligations, but it earns only a small profit on each sale. This leaves little room for error and increases risk if costs rise or competition forces lower prices.";
+                } else if (cr > 1.2 && margin > 15 && conv < 1.0) {
+                    riskText.innerText = "Poor cash conversion, healthy margin & liquidity: The business reports good profits and appears financially stable, but much of the cash is tied up in receivables or inventory. This means profits may not turn into usable cash quickly, creating funding pressure as the business grows.";
+                } else {
+                    riskText.innerText = "Balanced Risk Profile: The company does not exhibit extreme skews in the primary risk triad (Liquidity-Margin-Conversion). Review specific structural metrics like Debt/Equity for deeper leverage insights.";
+                }
+
+                // Donut Chart
                 const ctxLiquidity = document.getElementById('liquidityChart').getContext('2d');
                 if (liquidityChart) liquidityChart.destroy();
-                
                 const otherAssets = bs.totalCurrentAssets - (bs.cashAndCashEquivalents + bs.inventory + bs.netReceivables);
-                
                 liquidityChart = new Chart(ctxLiquidity, {
                     type: 'doughnut',
                     data: {
@@ -345,30 +319,12 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'right', labels: { boxWidth: 10, color: '#fff', font: {size: 9} } }
-                        },
-                        cutout: '65%'
+                        plugins: { legend: { position: 'right', labels: { boxWidth: 10, color: '#fff', font: {size: 9} } } },
+                        cutout: '60%'
                     }
                 });
 
-                // 5. Business Model Logic (User Provided)
-                const riskTextBox = document.getElementById('risk-narrative');
-                // Logic based on: cr (1.2 threshold), margin (15 threshold), conv (1.0 threshold)
-                
-                if (cr < 1.2 && margin > 15 && conv >= 1.0) {
-                    riskTextBox.innerText = "Low current ratio, healthy margins & cash conversion: The business is profitable and brings in cash quickly, but it keeps very little cash or short-term assets on hand. This is usually manageable in stable conditions, but it can become risky if sales slow down or unexpected expenses arise.";
-                } else if (cr > 1.2 && margin < 15 && conv >= 1.0) {
-                    riskTextBox.innerText = "Low net margin, healthy liquidity & cash conversion: The business handles cash well and can meet short-term obligations, but it earns only a small profit on each sale. This leaves little room for error and increases risk if costs rise or competition forces lower prices.";
-                } else if (cr > 1.2 && margin > 15 && conv < 1.0) {
-                    riskTextBox.innerText = "Poor cash conversion, healthy margin & liquidity: The business reports good profits and appears financially stable, but much of the cash is tied up in receivables or inventory. This means profits may not turn into usable cash quickly, creating funding pressure as the business grows.";
-                } else {
-                    riskTextBox.innerText = "Mixed Resilience: Navigating standard trade-offs. The company displays a mixed profile that does not fit a single extreme risk category, suggesting a balance between operational efficiency and financial structuring.";
-                }
-
-                // --- END RISK DIAGNOSTICS ---
-
-                // Chart
+                // --- Price Chart ---
                 const ctx = document.getElementById('priceChart').getContext('2d');
                 if (priceChart) priceChart.destroy();
                 priceChart = new Chart(ctx, {
@@ -381,8 +337,9 @@
                 });
 
                 document.getElementById('mainUI').style.display = 'block';
-                // switchTab('val'); // Commented out to stay on current tab if desired, or default to Val
-                // We'll just default to val on load, but manual switches work
+                // FIXED: Call switchTab to populate "Formulas" box on load
+                switchTab('val');
+
             } catch (e) { console.error(e); } finally { document.getElementById('loader').style.display = 'none'; }
         }
     </script>
