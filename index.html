@@ -260,18 +260,18 @@
     risk: `<strong>Risk & Solvency Analysis:</strong><br>
           <strong>Introduction</strong><br>
           • <strong>Altman Z-Score:</strong> A "crystal ball" formula used to predict the likelihood of bankruptcy within 2 years. It combines five ratios covering liquidity, profitability, and leverage to provide a single health score.<br>
-          • <strong>Supplementary Analysis:</strong> While the Z-Score looks at the "big picture," these individual categories act as a diagnostic tool to find the specific source of financial stress.<br>
-          • Z = 1.2(A) + 1.4(B) + 3.3(C) + 0.6(D) + 1.0(E). The weights assigned are different because each component statistically contributes differently to Bankrupcy, determined using MDA (Multiple Discriminant Analysis) & to reduce TypeI - TypeII errors in prediction.<br>
-                              - A =   Working Capital / Total Assets (Weight 1.2) <br>
-                              - B = Retained Earnings / Total Assets (Weight 1.4) <br>
+          • <strong>Supplementary Analysis:</strong> While the Z-Score looks at the big picture, these individual categories act as a diagnostic tool to find the specific source of financial stress.<br>
+          • Z = 6.56(A) + 3.26(B) + 6.72(C) + 1.05(D) + 3.25. The weights assigned are different because each component statistically contributes differently to Bankrupcy, determined using MDA (Multiple Discriminant Analysis) & to reduce TypeI - TypeII errors in prediction.<br>
+                              - A = Working Capital / Total Assets (Weight 6.56) <br>
+                              - B = Retained Earnings / Total Assets (Weight 3.26) <br>
                               - C = EBIT / Total Assets (Weight 3.3)<br>
-                              - D = Cap / Total Liab. (Weight 0.6)<br>
-                              - E =  Sales / Total Assets (Weight 1.0) <br>
-          *Note: Financials and Tech may require modified weights for full accuracy.*<br>                    
+                              - D = Book Value of Equity / Book Value of Liab. (Weight 0.6)<br>
+                              - 3.25 = constant adjustment factor (also called an intercept or baseline shift) <br>
+          *Note: The original Z = 1.2(A) + 1.4(B) + 3.3(C) + 0.6(D) + 1.0(E) is only applicable to US-based manufacturing organizations*<br>                    
           <br><strong>Reading Values (Z-Score):</strong><br>
-          • <strong>Safe Zone (> 2.99):</strong> High vitality. The company is structured and composed, with low risk of insolvency.<br>
-          • <strong>Grey Zone (1.81 - 2.99):</strong> Cautious flow. The company isn't in immediate danger but has "cracks" in its financial composure.<br>
-          • <strong>Distress Zone (< 1.81):</strong> High stress. Significant risk of bankruptcy; urgent corrective measures are needed to survive.<br><br>
+          • <strong>Safe Zone (> 2.60):</strong> High vitality. The company is structured and composed, with low risk of insolvency.<br>
+          • <strong>Grey Zone (1.10 - 2.60):</strong> Cautious flow. The company isn't in immediate danger but has "cracks" in its financial composure.<br>
+          • <strong>Distress Zone (< 1.10):</strong> High stress. Significant risk of bankruptcy; urgent corrective measures are needed to survive.<br><br>
           <strong>Core Categories:</strong><br>
           • <strong>Leverage (D/E & Int. Cov):</strong> Measures if the company is strong or drowning in debt. We look at whether they can actually afford the interest they owe.<br>
           • <strong>Profitability (ROE):</strong> Measures how efficiently the company harnesses shareholder capital to create growth.<br><br>
@@ -381,9 +381,10 @@
                 const A = (bs.totalCurrentAssets - bs.totalCurrentLiabilities) / bs.totalAssets;
                 const B = bs.retainedEarnings / bs.totalAssets;
                 const C = inc[0].operatingIncome / bs.totalAssets;
-                const D = profile.marketCap / bs.totalLiabilities;
+                const D = bs.totalStockholdersEquity / bs.totalLiabilities;
                 const E = inc[0].revenue / bs.totalAssets;
-                const zScore = (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E);
+                //const zScore = (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E);
+                const zScore = (6.56 * A) + (3.26 * B) + (6.72 * C) + (1.05 * D) + 3.25;
                 const probValue = (1 / (1 + Math.exp(zScore))) * 100; 
 
                 document.getElementById('zScoreProb').innerText = probValue.toFixed(2) + '%';
@@ -406,9 +407,9 @@
 
                 // Update Summary text (Same as before)
                 let summary = "";
-                if (zScore > 2.99) {
+                if (zScore > 2.60) {
                     summary = `${profile.symbol} is financially bulletproof (Z-Score: ${zScore.toFixed(2)}). Its ${roeVal > 15 ? 'superb ROE' : 'stable earnings'} provide a massive safety buffer. **Action:** Focus on long-term expansion or returning capital to shareholders.`;
-                } else if (zScore > 1.8) {
+                } else if (zScore > 1.10) {
                     summary = `${profile.symbol} is in the 'Grey Zone' (${zScore.toFixed(2)}). While stable, the ${deR > 2 ? 'leverage' : 'liquidity'} needs monitoring. **Action:** Improve operational efficiency and prioritize paying down expensive debt to boost interest coverage.`;
                 } else {
                     summary = `URGENT: ${profile.symbol} is in the 'Distress Zone' (${zScore.toFixed(2)}). Solvency risk is high due to ${margin < 0 ? 'losses' : 'debt burden'}. **Action:** Restructure debt, cut non-essential costs, and explore asset sales to preserve cash.`;
@@ -418,8 +419,8 @@
 
                 // Traffic Light Rectification
                 ['z-safe', 'z-grey', 'z-risk'].forEach(id => document.getElementById(id).classList.remove('active'));
-                if(zScore > 2.99) document.getElementById('z-safe').classList.add('active');
-                else if(zScore > 1.8) document.getElementById('z-grey').classList.add('active');
+                if(zScore > 2.60) document.getElementById('z-safe').classList.add('active');
+                else if(zScore > 1.10) document.getElementById('z-grey').classList.add('active');
                 else document.getElementById('z-risk').classList.add('active');
 
                 // Z-Score Bar Chart Rectification
@@ -466,4 +467,5 @@
     </script>
 </body>
 </html>
+
 
