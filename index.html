@@ -380,8 +380,8 @@
                 document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
 
 // --- PHASE 03: RISK & RESILIENCE ---
-                const industry = document.getElementById('tickerSelect').selectedOptions[0].text.match(/\(([^)]+)\)/)[1];
-                const isFinancial = industry.includes("Fintech") || industry.includes("Banking");
+                const ind = document.getElementById('tickerSelect').selectedOptions[0].text.match(/\(([^)]+)\)/)[1];
+                const isFinancial = ind.includes("Fintech") || ind.includes("Banking");
 
                 // Ratios for Z-Score
                 const A = (bs.totalCurrentAssets - bs.totalCurrentLiabilities) / bs.totalAssets;
@@ -490,4 +490,5 @@
     </script>
 </body>
 </html>
+
 
