@@ -208,6 +208,12 @@
             <td>ROE: <span id="r-roe">-</span><br>EPS: <span id="r-eps">-</span></td>
             <td style="text-align:center; font-size:0.7rem; color:#888;">> 10%<br>Positive</td> <td id="s-pro" style="text-align:center; font-size:1.2rem;">-</td>
         </tr>
+        <tr>
+            <td><strong>Modern Z''</strong></td>
+            <td>Non-Mfg Score: <span id="r-z2">-</span></td>
+            <td style="text-align:center; font-size:0.7rem; color:#888;">> 5.85</td> 
+            <td id="s-z2" style="text-align:center; font-size:1.2rem;">-</td>
+        </tr>
     </tbody>
 </table>
                         <div style="background:#1c222d; padding:12px; border-radius:8px; border-left:4px solid var(--pico-primary); margin-top:10px;">
@@ -393,9 +399,14 @@
                 document.getElementById('r-roe').innerText = roeVal.toFixed(1) + '%';
                 document.getElementById('r-eps').innerText = `$${inc[0].eps.toFixed(2)}`;
 
+                // 1. Calculate the modern version
+                const zScoreModern = (6.56 * A) + (3.26 * B) + (6.72 * C) + (1.05 * D) + 3.25;
+                document.getElementById('r-z2').innerText = zScoreModern.toFixed(2);
+
                 document.getElementById('s-liq').innerText = (cr > 1.2 && quickR > 1.0) ? "✅" : "⚠️";
                 document.getElementById('s-lev').innerText = (deR < 2.0 && intCov > 3) ? "✅" : "⚠️";
                 document.getElementById('s-pro').innerText = (roeVal > 10) ? "✅" : "⚠️";
+                document.getElementById('s-z2').innerText = (zScoreModern > 5.85) ? "✅" : (zScoreModern > 4.15 ? "🟡" : "⚠️");
 
                 // Update Summary text (Same as before)
                 let summary = "";
@@ -459,3 +470,4 @@
     </script>
 </body>
 </html>
+
