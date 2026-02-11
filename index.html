@@ -414,24 +414,19 @@
                     document.getElementById('r-z2').innerText = "N/A";
                     document.getElementById('riskSummary').innerHTML = `<strong>Note:</strong> The Altman Z-Score model is not applicable to financial institutions like ${profile.symbol}. Their high leverage is a structural part of banking operations, making traditional bankruptcy formulas misleading. Focus on Liquidity and ROE instead.`;
                     
-                    // Reset UI Elements for N/A
                     ['z-safe', 'z-grey', 'z-risk'].forEach(id => document.getElementById(id).classList.remove('active'));
                     document.getElementById('s-z2').innerText = "➖";
                 } else {
-                    // 3. Normal Industry Logic
                     document.getElementById('zScoreMain').innerText = zScore.toFixed(2);
                     document.getElementById('r-z2').innerText = zScoreModern.toFixed(2);
 
-                    // Update Traffic Lights (Classic Z)
                     ['z-safe', 'z-grey', 'z-risk'].forEach(id => document.getElementById(id).classList.remove('active'));
                     if(zScore > 2.99) document.getElementById('z-safe').classList.add('active');
                     else if(zScore > 1.8) document.getElementById('z-grey').classList.add('active');
                     else document.getElementById('z-risk').classList.add('active');
 
-                    // Update Modern Z'' Status Emoji
                     document.getElementById('s-z2').innerText = (zScoreModern > 5.85) ? "✅" : (zScoreModern > 4.15 ? "🟡" : "⚠️");
 
-                    // Dynamic Risk Summary
                     let summary = "";
                     if (zScore > 2.99) {
                         summary = `${profile.symbol} is financially bulletproof (Z-Score: ${zScore.toFixed(2)}). Its ${roeVal > 15 ? 'superb ROE' : 'stable earnings'} provide a massive safety buffer.`;
@@ -448,7 +443,7 @@
                 document.getElementById('s-lev').innerText = (deR < 2.0 && intCov > 3) ? "✅" : "⚠️";
                 document.getElementById('s-pro').innerText = (roeVal > 10) ? "✅" : "⚠️";
 
-                // 5. Z-Score Bar Chart Rendering
+                // 5. Charts Rendering
                 const zCtx = document.getElementById('zScoreChart').getContext('2d');
                 if (zChart) zChart.destroy();
                 zChart = new Chart(zCtx, {
@@ -461,32 +456,38 @@
                             borderRadius: 4 
                         }]
                     },
-                    options: { 
-                        maintainAspectRatio: false, 
-                        plugins: { 
-                            legend: { display: false },
-                            datalabels: {
-                                anchor: 'end',
-                                align: 'top',
-                                color: '#fff',
-                                font: { size: 10, weight: 'bold' },
-                                formatter: (val) => val.toFixed(2)
-                            }
-                        },
-                        scales: { 
-                            y: { grid: { color: '#2a313d' }, ticks: { font: { size: 10 } } }, 
-                            x: { grid: { display: false } } 
-                        }
-                    }
+                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+
+                const pCtx = document.getElementById('priceChart').getContext('2d');
+                if (priceChart) priceChart.destroy();
+                priceChart = new Chart(pCtx, {
+                    type: 'line',
+                    data: {
+                        labels: history.map(h => h.date.slice(5)),
+                        datasets: [{
+                            label: 'Price',
+                            data: history.map(h => h.close),
+                            borderColor: themeColor,
+                            tension: 0.4,
+                            fill: true,
+                            backgroundColor: themeColor + '22'
+                        }]
+                    },
+                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
 
                 document.getElementById('mainUI').style.display = 'block';
                 switchTab('val');
-            } catch (e) { console.error(e); } finally { document.getElementById('loader').style.display = 'none'; }
+
+            } catch (err) {
+                console.error(err);
+                alert("Error fetching data. Check your API key or ticker.");
+            } finally {
+                document.getElementById('loader').style.display = 'none';
+            }
         }
     </script>
 </body>
 </html>
-
-
 
