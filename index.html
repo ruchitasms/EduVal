@@ -7,29 +7,46 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
-        :root { --pico-primary: #00a8e8; --pico-background-color: #0b0e14; --pico-card-background-color: #151921; }
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 1rem; }
-        .nav-tabs button { flex: 1; font-size: 0.8rem; padding: 10px; }
-        .nav-tabs button.secondary {background-color: #2a313d; border-color: #2a313d; color: #888;}
-        .nav-tabs button.active {background-color: var(--pico-primary); border-color: var(--pico-primary); color: #fff; }
-        .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1.3fr; gap: 1.5rem; }
-        .risk-grid { display: grid; grid-template-columns: 1.3fr 1.2fr; gap: 1.5rem; }
-        .sts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-        .sts-card { background: var(--pico-card-background-color); padding: 1rem; border-radius: 8px; border-top: 3px solid var(--pico-primary); }
-        .traffic-light { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin: 4px 0; color: #fff; opacity: 0.2; transition: all 0.3s; border: 2px solid transparent; }
-        .traffic-light.active { opacity: 1; border: 2px solid #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
-        .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 5px 0; font-size: 0.85rem; }
-        .chart-wrapper { height: 300px; width: 100%; position: relative; }
-        .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #fff; white-space: nowrap; }
-        .section-sub { font-size: 0.75rem; color: #888; margin-bottom: 10px; display: block; }
-        .fy-anchor { font-weight: bold; color: var(--pico-primary); font-size: 0.85rem; background: #1c222d; padding: 2px 8px; border-radius: 4px; }
-        progress { display: none; margin: 10px 0; }
-        .z-bar-container { background: #1c222d; padding: 15px; border-radius: 8px; }
-        .sup-table { font-size: 0.8rem; margin-bottom: 0; }
-        .sup-table td { padding: 8px 4px; }
-        .z-floating-val { background: #2a313d; padding: 5px 15px; border-radius: 8px; border: 1px solid var(--pico-primary); font-family: monospace; font-size: 1.1rem; }
-        .range-label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-bottom: 2px; }
-    </style>
+    :root { --pico-primary: #00a8e8; --pico-background-color: #0b0e14; --pico-card-background-color: #151921; }
+
+    /* 1. BROADEN THE APP: Overriding the default Pico container */
+    .container { max-width: 1400px; padding: 2rem; }
+
+    /* 2. SOFTEN THE BORDERS: Styling the article tags */
+    article { 
+        border: 1px solid #2a313d; 
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
+        padding: 1.5rem; 
+    }
+
+    .nav-tabs { display: flex; gap: 10px; margin-bottom: 1.5rem; }
+    .nav-tabs button { flex: 1; font-size: 0.8rem; padding: 10px; }
+    .nav-tabs button.secondary {background-color: #2a313d; border-color: #2a313d; color: #888;}
+    .nav-tabs button.active {background-color: var(--pico-primary); border-color: var(--pico-primary); color: #fff; }
+
+    /* 3. INCREASE THE GAPS: Updated these from 1.5rem to 2.5rem */
+    .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1.3fr; gap: 2.5rem; }
+    .risk-grid { display: grid; grid-template-columns: 1.3fr 1.2fr; gap: 2.5rem; }
+    .sts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+
+    .sts-card { background: var(--pico-card-background-color); padding: 1.5rem; border-radius: 8px; border-top: 3px solid var(--pico-primary); }
+    
+    /* ... rest of your existing styles ... */
+    .traffic-light { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin: 4px 0; color: #fff; opacity: 0.2; transition: all 0.3s; border: 2px solid transparent; }
+    .sup-table th, .sup-table td {padding: 8px 5px; vertical-align: middle;}
+    .sup-table th:nth-child(3), .sup-table td:nth-child(3) {white-space: nowrap; border-left: 1px solid #2a313d;}
+    .traffic-light.active { opacity: 1; border: 2px solid #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+    .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 5px 0; font-size: 0.85rem; }
+    .chart-wrapper { height: 300px; width: 100%; position: relative; }
+    .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #fff; white-space: nowrap; }
+    .section-sub { font-size: 0.75rem; color: #888; margin-bottom: 10px; display: block; }
+    .fy-anchor { font-weight: bold; color: var(--pico-primary); font-size: 0.85rem; background: #1c222d; padding: 2px 8px; border-radius: 4px; }
+    progress { display: none; margin: 10px 0; }
+    .z-bar-container { background: #1c222d; padding: 15px; border-radius: 8px; }
+    .sup-table { font-size: 0.8rem; margin-bottom: 0; }
+    .z-floating-val { background: #2a313d; padding: 5px 15px; border-radius: 8px; border: 1px solid var(--pico-primary); font-family: monospace; font-size: 1.1rem; }
+    .range-label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-bottom: 2px; }
+</style>
 </head>
 <body>
     <main class="container">
@@ -168,27 +185,31 @@
                     <article>
                         <header><strong>Supplementary Analysis</strong></header>
                         <table class="sup-table" role="grid">
-                            <thead>
-                                <tr><th>Category</th><th>Key Metrics</th><th style="text-align:center;">Status</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Liquidity</strong></td>
-                                    <td>Current: <span id="r-curr">-</span><br>Quick: <span id="r-quick">-</span></td>
-                                    <td id="s-liq" style="text-align:center; font-size:1.2rem;">-</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Leverage</strong></td>
-                                    <td>D/E: <span id="r-de">-</span><br>Int. Cov: <span id="r-ic">-</span></td>
-                                    <td id="s-lev" style="text-align:center; font-size:1.2rem;">-</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Profit</strong></td>
-                                    <td>ROE: <span id="r-roe">-</span><br>EPS: <span id="r-eps">-</span></td>
-                                    <td id="s-pro" style="text-align:center; font-size:1.2rem;">-</td>
-                                </tr>
-                            </tbody>
-                        </table>
+    <thead>
+        <tr>
+            <th>Category</th>
+            <th>Key Metrics</th>
+            <th style="text-align:center;">Goal</th> <th style="text-align:center;">Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Liquidity</strong></td>
+            <td>Current: <span id="r-curr">-</span><br>Quick: <span id="r-quick">-</span></td>
+            <td style="text-align:center; font-size:0.7rem; color:#888;">> 1.2<br>> 1.0</td> <td id="s-liq" style="text-align:center; font-size:1.2rem;">-</td>
+        </tr>
+        <tr>
+            <td><strong>Leverage</strong></td>
+            <td>D/E: <span id="r-de">-</span><br>Int. Cov: <span id="r-ic">-</span></td>
+            <td style="text-align:center; font-size:0.7rem; color:#888;">< 2.0<br>> 3.0x</td> <td id="s-lev" style="text-align:center; font-size:1.2rem;">-</td>
+        </tr>
+        <tr>
+            <td><strong>Profit</strong></td>
+            <td>ROE: <span id="r-roe">-</span><br>EPS: <span id="r-eps">-</span></td>
+            <td style="text-align:center; font-size:0.7rem; color:#888;">> 10%<br>Positive</td> <td id="s-pro" style="text-align:center; font-size:1.2rem;">-</td>
+        </tr>
+    </tbody>
+</table>
                         <div style="background:#1c222d; padding:12px; border-radius:8px; border-left:4px solid var(--pico-primary); margin-top:10px;">
                             <strong>Risk Summary & Corrective Actions:</strong>
                             <p id="riskSummary" style="font-size:0.8rem; margin:5px 0 0 0; line-height:1.4; color:#ccc;">Select a company to see report.</p>
@@ -235,6 +256,12 @@
           <strong>Introduction</strong><br>
           • <strong>Altman Z-Score:</strong> A "crystal ball" formula used to predict the likelihood of bankruptcy within 2 years. It combines five ratios covering liquidity, profitability, and leverage to provide a single health score.<br>
           • <strong>Supplementary Analysis:</strong> While the Z-Score looks at the "big picture," these individual categories act as a diagnostic tool to find the specific source of financial stress.<br>
+          • Z = 1.2(A) + 1.4(B) + 3.3(C) + 0.6(D) + 1.0(E). The weights assigned are different because each component statistically contributes differently to Bankrupcy, determined using MDA (Multiple Discriminant Analysis) & to reduce TypeI - TypeII errors in prediction.<br>
+                              - A =   Working Capital / Total Assets (Weight 1.2) <br>
+                              - B = Retained Earnings / Total Assets (Weight 1.4) <br>
+                              - C = EBIT / Total Assets (Weight 3.3)<br>
+                              - D = Cap / Total Liab. (Weight 0.6)<br>
+                              - E =  Sales / Total Assets (Weight 1.0) <br>
           <br><strong>Reading Values (Z-Score):</strong><br>
           • <strong>Safe Zone (> 2.99):</strong> High vitality. The company is structured and composed, with low risk of insolvency.<br>
           • <strong>Grey Zone (1.81 - 2.99):</strong> Cautious flow. The company isn't in immediate danger but has "cracks" in its financial composure.<br>
@@ -393,7 +420,7 @@
                 zChart = new Chart(zCtx, {
                     type: 'bar',
                     data: {
-                        labels: ['WC', 'RE', 'EBIT', 'EQ', 'Sales'],
+                        labels: ['A', 'B', 'C', 'D', 'E'],
                         datasets: [{ data: [A, B, C, D, E], backgroundColor: themeColor, borderRadius: 4 }]
                     },
                     options: { 
