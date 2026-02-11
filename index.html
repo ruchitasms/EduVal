@@ -159,8 +159,13 @@
                 <div class="risk-grid">
                     <article>
                         <header style="display: flex; justify-content: space-between; align-items: center;">
-                            <strong>Altman's Z-Score (Z")</strong>
-                            <div class="z-floating-val" id="zScoreMain">-</div>
+                            <strong>Altman's Z-Score</strong>
+                            <div class="z-floating-val">
+                            <span id="zScoreMain">0.00</span>
+                            <div style="font-size: 0.6rem; color: #888; margin-top: -5px; text-align: center;">
+                            P(): <span id="zScoreProb">0.00%</span>
+                            </div>
+                            </div>
                         </header>
                         <div style="display: flex; gap: 8px; margin-bottom: 1.5rem;">
                             <div style="flex:1; text-align:center;">
@@ -378,7 +383,9 @@
                 const D = profile.marketCap / bs.totalLiabilities;
                 const E = inc[0].revenue / bs.totalAssets;
                 const zScore = (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E);
+                const probValue = (1 / (1 + Math.exp(zScore))) * 100; 
 
+                document.getElementById('zScoreProb').innerText = probValue.toFixed(2) + '%';
                 document.getElementById('zScoreMain').innerText = zScore.toFixed(2);
                 const quickR = (bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities;
                 const deR = bs.totalLiabilities / bs.totalStockholdersEquity;
@@ -458,7 +465,3 @@
     </script>
 </body>
 </html>
-
-
-
-
