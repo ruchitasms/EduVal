@@ -10,6 +10,8 @@
         :root { --pico-primary: #00a8e8; --pico-background-color: #0b0e14; --pico-card-background-color: #151921; }
         .nav-tabs { display: flex; gap: 10px; margin-bottom: 1rem; }
         .nav-tabs button { flex: 1; font-size: 0.8rem; padding: 10px; }
+        .nav-tabs button.secondary {background-color: #2a313d; border-color: #2a313d; color: #888;}
+        .nav-tabs button.active {background-color: var(--pico-primary); border-color: var(--pico-primary); color: #fff; }
         .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1.3fr; gap: 1.5rem; }
         .risk-grid { display: grid; grid-template-columns: 1.3fr 1.2fr; gap: 1.5rem; }
         .sts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
@@ -52,9 +54,9 @@
 
         <div id="mainUI" style="display:none;">
             <div class="nav-tabs">
-                <button id="btn-val" onclick="switchTab('val')">Valuation</button>
-                <button id="btn-sts" onclick="switchTab('sts')">Statements</button>
-                <button id="btn-risk" onclick="switchTab('risk')">Risk Evaluation</button>
+            <button id="btn-val" class="active" onclick="switchTab('val')">Valuation</button>
+            <button id="btn-sts" class="secondary" onclick="switchTab('sts')">Statements</button>
+            <button id="btn-risk" class="secondary" onclick="switchTab('risk')">Risk Evaluation</button>
             </div>
 
             <details id="lessonBox" style="background: #1c222d; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
@@ -247,10 +249,30 @@
 };
 
         function switchTab(tabId) {
-            ['view-val', 'view-sts', 'view-risk'].forEach(v => document.getElementById(v).style.display = 'none');
-            document.getElementById(`view-${tabId}`).style.display = (tabId === 'sts') ? 'block' : (tabId === 'risk' ? 'block' : 'grid');
-            document.getElementById('lessonContent').innerHTML = (learnings[tabId] || "");
+    // 1. Handle View Visibility
+    ['view-val', 'view-sts', 'view-risk'].forEach(v => {
+        document.getElementById(v).style.display = 'none';
+    });
+    
+    // Display the selected view
+    const targetView = document.getElementById(`view-${tabId}`);
+    targetView.style.display = (tabId === 'sts') ? 'block' : (tabId === 'risk' ? 'block' : 'grid');
+
+    // 2. Handle Button Highlighting
+    const tabs = ['val', 'sts', 'risk'];
+    tabs.forEach(t => {
+        const btn = document.getElementById(`btn-${t}`);
+        if (t === tabId) {
+            btn.classList.add('active');
+            btn.classList.remove('secondary');
+        } else {
+            btn.classList.remove('active');
+            btn.classList.add('secondary');
         }
+    });
+
+    // 3. Update Lesson Content
+    document.getElementById('lessonContent').innerHTML = (learnings[tabId] || "");}
 
         async function runAnalysis(ticker) {
             document.getElementById('loader').style.display = 'block';
@@ -266,7 +288,8 @@
 
                 const profile = (await pRes.json())[0];
                 const metrics = (await mRes.json())[0];
-                const history = (await hRes.json()).slice(0, 7).reverse();
+                const historyData = await hRes.json();
+                const history = (historyData.historical || historyData).slice(0, 7).reverse();
                 const inc = await incRes.json();
                 const bs = (await bsRes.json())[0];
                 const cf = (await cfRes.json())[0];
@@ -348,10 +371,15 @@
 
                 // Update Summary text (Same as before)
                 let summary = "";
-                if (zScore > 2.99) summary = `${profile.symbol} is financially bulletproof...`;
-                else if (zScore > 1.8) summary = `${profile.symbol} is in the 'Grey Zone'...`;
-                else summary = `URGENT: ${profile.symbol} is in the 'Distress Zone'...`;
+                if (zScore > 2.99) {
+                    summary = `${profile.symbol} is financially bulletproof (Z-Score: ${zScore.toFixed(2)}). Its ${roeVal > 15 ? 'superb ROE' : 'stable earnings'} provide a massive safety buffer. **Action:** Focus on long-term expansion or returning capital to shareholders.`;
+                } else if (zScore > 1.8) {
+                    summary = `${profile.symbol} is in the 'Grey Zone' (${zScore.toFixed(2)}). While stable, the ${deR > 2 ? 'leverage' : 'liquidity'} needs monitoring. **Action:** Improve operational efficiency and prioritize paying down expensive debt to boost interest coverage.`;
+                } else {
+                    summary = `URGENT: ${profile.symbol} is in the 'Distress Zone' (${zScore.toFixed(2)}). Solvency risk is high due to ${margin < 0 ? 'losses' : 'debt burden'}. **Action:** Restructure debt, cut non-essential costs, and explore asset sales to preserve cash.`;
+                }
                 document.getElementById('riskSummary').innerText = summary;
+
 
                 // Traffic Light Rectification
                 ['z-safe', 'z-grey', 'z-risk'].forEach(id => document.getElementById(id).classList.remove('active'));
