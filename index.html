@@ -15,21 +15,21 @@
         --accent-orange: #f39c12;
     }
 
-    /* Broad horizon - forcing Pico to behave */
     .container { 
         max-width: 1450px !important; 
         padding: 1.5rem 2rem; 
     }
 
-    /* 2. CARD REFINEMENT - Fixed Overflow */
+    /* 2. CARD REFINEMENT - Flex Headers for Visibility */
     article { 
         border: 1px solid #2a313d; 
         border-radius: 12px;
         padding: 1.5rem; 
         background: var(--pico-card-background-color);
-        overflow: hidden; /* Prevents chart/table drift */
         margin-bottom: 0;
-        height: 100%; /* Ensures cards in the same row are equal height */
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
 
     article header {
@@ -37,6 +37,10 @@
         border-bottom: 1px solid #2a313d;
         padding: 0 0 1rem 0;
         margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between; /* Keeps Title left and Z-Value right */
+        align-items: center;
+        min-height: 3rem; /* Ensures enough space for titles */
     }
 
     /* 3. NAVIGATION */
@@ -45,15 +49,15 @@
     .nav-tabs button.secondary { background-color: #1c222d; border-color: #2a313d; color: #666; }
     .nav-tabs button.active { background-color: var(--pico-primary); border-color: var(--pico-primary); color: #fff; }
 
-    /* 4. GRID SYSTEM - Responsive & Broad */
+    /* 4. GRID SYSTEM */
     .dashboard-grid, .risk-grid { 
         display: grid; 
-        grid-template-columns: 1fr 1fr; /* Equal split for balance */
+        grid-template-columns: 1fr 1fr; 
         gap: 2rem; 
         margin-bottom: 2rem;
     }
 
-    /* 5. RESILIENCE TABLE (The "Goal" Column Fix) */
+    /* 5. RESILIENCE TABLE ALIGNMENT */
     .sup-table { 
         font-size: 0.85rem; 
         width: 100%; 
@@ -61,12 +65,11 @@
         margin-top: 0.5rem;
     }
     
-    .sup-table th { color: #555; text-transform: uppercase; font-size: 0.65rem; padding-bottom: 10px; }
+    .sup-table th { color: #888; text-transform: uppercase; font-size: 0.65rem; padding-bottom: 10px; text-align: left; }
     .sup-table td { padding: 10px 4px; border-bottom: 1px solid #1c222d; }
     
-    /* Alignment Logic */
-    .sup-table th:nth-child(3), .sup-table td:nth-child(3) { text-align: center; width: 80px; } /* Goal */
-    .sup-table th:nth-child(4), .sup-table td:nth-child(4) { text-align: center; width: 60px; } /* Status */
+    .sup-table th:nth-child(3), .sup-table td:nth-child(3) { text-align: center; width: 90px; } 
+    .sup-table th:nth-child(4), .sup-table td:nth-child(4) { text-align: center; width: 70px; } 
     
     .sup-table td:nth-child(3) { 
         color: #888; 
@@ -75,45 +78,46 @@
         border-left: 1px solid #2a313d; 
     }
 
-    /* 6. Z-SCORE & SUMMARY COMPONENTS */
-    #riskSummaryContainer, .risk-summary-box { 
-        background: #0d1117; 
-        padding: 1rem; 
-        border-radius: 8px; 
-        border-left: 4px solid var(--accent-orange); 
-        margin-top: 1rem;
-        font-size: 0.85rem;
+    /* 6. Z-SCORE & CHART VISIBILITY */
+    .chart-wrapper { 
+        height: 320px; 
+        width: 100%; 
+        position: relative;
+        margin-top: 15px;
+        padding-bottom: 10px;
     }
 
     .z-floating-val { 
         background: #1c222d; 
-        padding: 4px 12px; 
-        border-radius: 6px; 
+        padding: 6px 14px; 
+        border-radius: 8px; 
         border: 1px solid var(--accent-orange); 
         color: var(--accent-orange);
         font-family: monospace; 
         font-size: 1.1rem;
-        float: right; /* Keeps it in the corner of the header */
+        font-weight: bold;
     }
 
-    .chart-wrapper { 
-        height: 300px; 
-        width: 100%; 
-        position: relative;
-        margin-top: 10px;
+    #riskSummaryContainer, .risk-summary-box { 
+        background: #0d1117; 
+        padding: 1.2rem; 
+        border-radius: 8px; 
+        border-left: 4px solid var(--accent-orange); 
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        line-height: 1.5;
     }
 
-    /* Labels for the Z-score Bars */
-    .range-label { font-size: 0.65rem; color: #555; text-transform: uppercase; text-align: center; }
-
-    /* Metric Rows (for Balance Sheet/Income Statement cards) */
+    /* Metric Rows Styling */
     .metric-row { 
         display: flex; 
         justify-content: space-between; 
         border-bottom: 1px solid #1c222d; 
-        padding: 8px 0; 
+        padding: 10px 0; 
         font-size: 0.85rem; 
     }
+
+    .range-label { font-size: 0.65rem; color: #555; text-transform: uppercase; text-align: center; margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -526,5 +530,6 @@
     </script>
 </body>
 </html>
+
 
 
