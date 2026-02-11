@@ -7,45 +7,109 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
-    :root { --pico-primary: #00a8e8; --pico-background-color: #0b0e14; --pico-card-background-color: #151921; }
-
-    /* 1. BROADEN THE APP: Overriding the default Pico container */
-    .container { max-width: 1400px; padding: 2rem; }
-
-    /* 2. SOFTEN THE BORDERS: Styling the article tags */
-    article { 
-        border: 1px solid #2a313d; 
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
-        padding: 1.5rem; 
+    /* 1. CORE THEME & LAYOUT */
+    :root { 
+        --pico-primary: #00a8e8; 
+        --pico-background-color: #0b0e14; 
+        --pico-card-background-color: #151921; 
+        --accent-orange: #f39c12;
     }
 
-    .nav-tabs { display: flex; gap: 10px; margin-bottom: 1.5rem; }
-    .nav-tabs button { flex: 1; font-size: 0.8rem; padding: 10px; }
-    .nav-tabs button.secondary {background-color: #2a313d; border-color: #2a313d; color: #888;}
-    .nav-tabs button.active {background-color: var(--pico-primary); border-color: var(--pico-primary); color: #fff; }
+    /* Broadens the horizon of the app */
+    .container { 
+        max-width: 1450px; 
+        padding: 1.5rem 2.5rem; 
+    }
 
-    /* 3. INCREASE THE GAPS: Updated these from 1.5rem to 2.5rem */
-    .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1.3fr; gap: 2.5rem; }
-    .risk-grid { display: grid; grid-template-columns: 1.3fr 1.2fr; gap: 2.5rem; }
+    /* 2. CARD & ARTICLE REFINEMENT */
+    article { 
+        border: 1px solid #2a313d; 
+        border-radius: 12px;
+        padding: 1.5rem; 
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        background: var(--pico-card-background-color);
+        transition: border-color 0.3s ease;
+    }
+
+    article:hover {
+        border-color: #3f4a5d;
+    }
+
+    article header {
+        background: transparent;
+        border-bottom: 1px solid #2a313d;
+        padding: 0 0 1rem 0;
+        margin-bottom: 1.5rem;
+    }
+
+    /* 3. NAVIGATION & TABS */
+    .nav-tabs { display: flex; gap: 12px; margin-bottom: 2rem; }
+    .nav-tabs button { 
+        flex: 1; 
+        font-size: 0.85rem; 
+        padding: 12px; 
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    .nav-tabs button.secondary { background-color: #1c222d; border-color: #2a313d; color: #666; }
+    .nav-tabs button.active { background-color: var(--pico-primary); border-color: var(--pico-primary); color: #fff; }
+
+    /* 4. GRID SYSTEM (Alignment & Gaps) */
+    .dashboard-grid, .risk-grid { 
+        display: grid; 
+        grid-template-columns: 1.2fr 1.3fr; 
+        gap: 2.5rem; 
+        align-items: start;
+    }
     .sts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
 
-    .sts-card { background: var(--pico-card-background-color); padding: 1.5rem; border-radius: 8px; border-top: 3px solid var(--pico-primary); }
+    /* 5. TABLE & METRIC ALIGNMENT */
+    .sup-table { font-size: 0.85rem; width: 100%; border-collapse: collapse; }
+    .sup-table th { color: #888; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; }
+    .sup-table td { padding: 12px 5px; vertical-align: middle; border-bottom: 1px solid #1c222d; }
     
-    /* ... rest of your existing styles ... */
-    .traffic-light { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin: 4px 0; color: #fff; opacity: 0.2; transition: all 0.3s; border: 2px solid transparent; }
-    .sup-table th, .sup-table td {padding: 8px 5px; vertical-align: middle;}
-    .sup-table th:nth-child(3), .sup-table td:nth-child(3) {white-space: nowrap; border-left: 1px solid #2a313d;}
-    .traffic-light.active { opacity: 1; border: 2px solid #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
-    .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 5px 0; font-size: 0.85rem; }
-    .chart-wrapper { height: 300px; width: 100%; position: relative; }
-    .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #fff; white-space: nowrap; }
-    .section-sub { font-size: 0.75rem; color: #888; margin-bottom: 10px; display: block; }
-    .fy-anchor { font-weight: bold; color: var(--pico-primary); font-size: 0.85rem; background: #1c222d; padding: 2px 8px; border-radius: 4px; }
-    progress { display: none; margin: 10px 0; }
-    .z-bar-container { background: #1c222d; padding: 15px; border-radius: 8px; }
-    .sup-table { font-size: 0.8rem; margin-bottom: 0; }
-    .z-floating-val { background: #2a313d; padding: 5px 15px; border-radius: 8px; border: 1px solid var(--pico-primary); font-family: monospace; font-size: 1.1rem; }
-    .range-label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-bottom: 2px; }
+    /* Specific Column Alignment */
+    .sup-table th:nth-child(3), .sup-table td:nth-child(3), /* Goal Column */
+    .sup-table th:nth-child(4), .sup-table td:nth-child(4) { /* Status Column */
+        text-align: center;
+    }
+    
+    .sup-table td:nth-child(3) { 
+        color: #888; 
+        font-family: 'Courier New', monospace; 
+        font-size: 0.75rem;
+        border-left: 1px solid #2a313d; /* Vertical separator for the Goal column */
+    }
+
+    /* 6. COMPONENT STYLES (Z-Score & Risk) */
+    .traffic-light { 
+        padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; 
+        display: inline-block; color: #fff; opacity: 0.2; border: 2px solid transparent; 
+    }
+    .traffic-light.active { opacity: 1; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+
+    /* The Orange Accent Summary Box */
+    #riskSummaryContainer, .risk-summary-box { 
+        background: #0b0e14; 
+        padding: 1.2rem; 
+        border-radius: 8px; 
+        border-left: 4px solid var(--accent-orange); 
+        margin-top: 1.5rem;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 8px 0; font-size: 0.85rem; }
+    .chart-wrapper { height: 320px; width: 100%; padding-top: 1rem; }
+
+    /* 7. TEXT & BADGES */
+    .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.75rem; color: #fff; }
+    .section-sub { font-size: 0.75rem; color: #555; margin-bottom: 8px; display: block; }
+    .z-floating-val { 
+        background: #1c222d; padding: 6px 14px; border-radius: 8px; 
+        border: 1px solid var(--accent-orange); color: var(--accent-orange);
+        font-family: monospace; font-size: 1.2rem; font-weight: bold;
+    }
 </style>
 </head>
 <body>
@@ -73,7 +137,7 @@
             <div class="nav-tabs">
             <button id="btn-val" class="active" onclick="switchTab('val')">Valuation</button>
             <button id="btn-sts" class="secondary" onclick="switchTab('sts')">Statements</button>
-            <button id="btn-risk" class="secondary" onclick="switchTab('risk')">Risk Evaluation</button>
+            <button id="btn-risk" class="secondary" onclick="switchTab('risk')">Resilience</button>
             </div>
 
             <details id="lessonBox" style="background: #1c222d; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
@@ -458,3 +522,4 @@
     </script>
 </body>
 </html>
+
