@@ -182,8 +182,18 @@
                             </div>
                         </div>
                         <div class="z-bar-container">
-                            <canvas id="zScoreChart" height="240"></canvas>
+                          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                          <div class="range-label">Altman Z (Original)</div>
+                          <div id="zScoreMain" class="z-floating-val" style="color: var(--pico-primary);">0.00</div>
+                          </div>
+                          <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.8rem;">
+                          <span style="color: #888;">Modern Z'' Score:</span>
+                          <span id="zDoublePrime" style="font-weight: bold;">0.00</span>
                         </div>
+                          <p style="font-size: 0.65rem; color: #888; margin-top: 8px; font-style: italic; line-height: 1.2;">
+                                *Note: Z'' is a modern adaptation with higher buffers. Original Z is shown for higher sensitivity, though it typically excludes financial institutions like SoFi.
+                          </p>
+                         </div>
                         <small style="display:block; margin-top:10px; color:#888;">Weights: WC(1.2), RE(1.4), EBIT(3.3), EQ(0.6), Sales(1.0)</small>
                     </article>
 
@@ -261,13 +271,13 @@
           <strong>Introduction</strong><br>
           • <strong>Altman Z-Score:</strong> A "crystal ball" formula used to predict the likelihood of bankruptcy within 2 years. It combines five ratios covering liquidity, profitability, and leverage to provide a single health score.<br>
           • <strong>Supplementary Analysis:</strong> While the Z-Score looks at the big picture, these individual categories act as a diagnostic tool to find the specific source of financial stress.<br>
-          • Z = 6.56(A) + 3.26(B) + 6.72(C) + 1.05(D) + 3.25. The weights assigned are different because each component statistically contributes differently to Bankrupcy, determined using MDA (Multiple Discriminant Analysis) & to reduce TypeI - TypeII errors in prediction.<br>
+          • Z = 1.2(A) + 1.4(B) + 3.3(C) + 0.6(D) + 1.0(E). The weights assigned are different because each component statistically contributes differently to Bankrupcy, determined using MDA (Multiple Discriminant Analysis) & to reduce TypeI - TypeII errors in prediction.<br>
                               - A = Working Capital / Total Assets (Weight 6.56) <br>
                               - B = Retained Earnings / Total Assets (Weight 3.26) <br>
                               - C = EBIT / Total Assets (Weight 3.3)<br>
-                              - D = Book Value of Equity / Book Value of Liab. (Weight 0.6)<br>
-                              - 3.25 = constant adjustment factor (also called an intercept or baseline shift) <br>
-          *Note: The original Z = 1.2(A) + 1.4(B) + 3.3(C) + 0.6(D) + 1.0(E) is only applicable to US-based manufacturing organizations*<br>                    
+                              - D = Cap / Total Liab. (Weight 0.6)<br>
+                              - E = constant adjustment factor (also called an intercept or baseline shift) <br>
+          *Note: The modern Z = 6.56(A) + 3.26(B) + 6.72(C) + 1.05(D) + 3.25 is only applicable to US-based manufacturing organizations*<br>                    
           <br><strong>Reading Values (Z-Score):</strong><br>
           • <strong>Safe Zone (> 2.60):</strong> High vitality. The company is structured and composed, with low risk of insolvency.<br>
           • <strong>Grey Zone (1.10 - 2.60):</strong> Cautious flow. The company isn't in immediate danger but has "cracks" in its financial composure.<br>
@@ -381,14 +391,16 @@
                 const A = (bs.totalCurrentAssets - bs.totalCurrentLiabilities) / bs.totalAssets;
                 const B = bs.retainedEarnings / bs.totalAssets;
                 const C = inc[0].operatingIncome / bs.totalAssets;
-                const D = bs.totalStockholdersEquity / bs.totalLiabilities;
+                const D_b = profile.marketCap / bs.totalLiabilities;
+                const D_m = bs.totalStockholdersEquity / bs.totalLiabilities;
                 const E = inc[0].revenue / bs.totalAssets;
-                //const zScore = (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E);
-                const zScore = (6.56 * A) + (3.26 * B) + (6.72 * C) + (1.05 * D) + 3.25;
+                const zScore = (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D_b) + (1.0 * E);
+                const zDoublePrime = (6.56 * A) + (3.26 * B) + (6.72 * C) + (1.05 * D_m) + 3.25;
                 const probValue = (1 / (1 + Math.exp(zScore))) * 100; 
 
                 document.getElementById('zScoreProb').innerText = probValue.toFixed(2) + '%';
-                document.getElementById('zScoreMain').innerText = zScore.toFixed(2);
+                document.getElementById('zDoublePrime').innerText = zDoublePrime.toFixed(2);
+                document.getElementById('zScore1').innerText = zDoublePrime.toFixed(2);
                 const quickR = (bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities;
                 const deR = bs.totalLiabilities / bs.totalStockholdersEquity;
                 const intCov = inc[0].operatingIncome / Math.abs(inc[0].interestExpense || 1);
@@ -407,9 +419,9 @@
 
                 // Update Summary text (Same as before)
                 let summary = "";
-                if (zScore > 2.60) {
+                if (zScore > 2.99) {
                     summary = `${profile.symbol} is financially bulletproof (Z-Score: ${zScore.toFixed(2)}). Its ${roeVal > 15 ? 'superb ROE' : 'stable earnings'} provide a massive safety buffer. **Action:** Focus on long-term expansion or returning capital to shareholders.`;
-                } else if (zScore > 1.10) {
+                } else if (zScore > 1.8) {
                     summary = `${profile.symbol} is in the 'Grey Zone' (${zScore.toFixed(2)}). While stable, the ${deR > 2 ? 'leverage' : 'liquidity'} needs monitoring. **Action:** Improve operational efficiency and prioritize paying down expensive debt to boost interest coverage.`;
                 } else {
                     summary = `URGENT: ${profile.symbol} is in the 'Distress Zone' (${zScore.toFixed(2)}). Solvency risk is high due to ${margin < 0 ? 'losses' : 'debt burden'}. **Action:** Restructure debt, cut non-essential costs, and explore asset sales to preserve cash.`;
@@ -467,5 +479,6 @@
     </script>
 </body>
 </html>
+
 
 
