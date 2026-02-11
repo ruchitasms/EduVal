@@ -379,20 +379,28 @@
                 document.getElementById('ocfVal').innerText = `$${(cf.operatingCashFlow / 1e9).toFixed(1)}B`;
                 document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
 
-                // --- PHASE 03: RISK ---
+// --- PHASE 03: RISK & RESILIENCE ---
+                const industry = document.getElementById('tickerSelect').selectedOptions[0].text.match(/\(([^)]+)\)/)[1];
+                const isFinancial = industry.includes("Fintech") || industry.includes("Banking");
+
+                // Ratios for Z-Score
                 const A = (bs.totalCurrentAssets - bs.totalCurrentLiabilities) / bs.totalAssets;
                 const B = bs.retainedEarnings / bs.totalAssets;
                 const C = inc[0].operatingIncome / bs.totalAssets;
                 const D = profile.marketCap / bs.totalLiabilities;
                 const E = inc[0].revenue / bs.totalAssets;
-                const zScore = (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E);
 
-                document.getElementById('zScoreMain').innerText = zScore.toFixed(2);
+                // Core Logic Calculations
+                const zScore = (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E);
+                const zScoreModern = (6.56 * A) + (3.26 * B) + (6.72 * C) + (1.05 * D) + 3.25;
+
+                // Supplementary Metrics
                 const quickR = (bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities;
                 const deR = bs.totalLiabilities / bs.totalStockholdersEquity;
                 const intCov = inc[0].operatingIncome / Math.abs(inc[0].interestExpense || 1);
                 const roeVal = (inc[0].netIncome / bs.totalStockholdersEquity) * 100;
 
+                // 1. Populate Supplementary Table Values
                 document.getElementById('r-curr').innerText = cr.toFixed(2);
                 document.getElementById('r-quick').innerText = quickR.toFixed(2);
                 document.getElementById('r-de').innerText = deR.toFixed(2);
@@ -400,41 +408,58 @@
                 document.getElementById('r-roe').innerText = roeVal.toFixed(1) + '%';
                 document.getElementById('r-eps').innerText = `$${inc[0].eps.toFixed(2)}`;
 
-                // 1. Calculate the modern version
-                const zScoreModern = (6.56 * A) + (3.26 * B) + (6.72 * C) + (1.05 * D) + 3.25;
-                document.getElementById('r-z2').innerText = zScoreModern.toFixed(2);
+                // 2. Handle Financial Institution Exception
+                if (isFinancial) {
+                    document.getElementById('zScoreMain').innerText = "N/A";
+                    document.getElementById('r-z2').innerText = "N/A";
+                    document.getElementById('riskSummary').innerHTML = `<strong>Note:</strong> The Altman Z-Score model is not applicable to financial institutions like ${profile.symbol}. Their high leverage is a structural part of banking operations, making traditional bankruptcy formulas misleading. Focus on Liquidity and ROE instead.`;
+                    
+                    // Reset UI Elements for N/A
+                    ['z-safe', 'z-grey', 'z-risk'].forEach(id => document.getElementById(id).classList.remove('active'));
+                    document.getElementById('s-z2').innerText = "➖";
+                } else {
+                    // 3. Normal Industry Logic
+                    document.getElementById('zScoreMain').innerText = zScore.toFixed(2);
+                    document.getElementById('r-z2').innerText = zScoreModern.toFixed(2);
 
+                    // Update Traffic Lights (Classic Z)
+                    ['z-safe', 'z-grey', 'z-risk'].forEach(id => document.getElementById(id).classList.remove('active'));
+                    if(zScore > 2.99) document.getElementById('z-safe').classList.add('active');
+                    else if(zScore > 1.8) document.getElementById('z-grey').classList.add('active');
+                    else document.getElementById('z-risk').classList.add('active');
+
+                    // Update Modern Z'' Status Emoji
+                    document.getElementById('s-z2').innerText = (zScoreModern > 5.85) ? "✅" : (zScoreModern > 4.15 ? "🟡" : "⚠️");
+
+                    // Dynamic Risk Summary
+                    let summary = "";
+                    if (zScore > 2.99) {
+                        summary = `${profile.symbol} is financially bulletproof (Z-Score: ${zScore.toFixed(2)}). Its ${roeVal > 15 ? 'superb ROE' : 'stable earnings'} provide a massive safety buffer.`;
+                    } else if (zScore > 1.8) {
+                        summary = `${profile.symbol} is in the 'Grey Zone' (${zScore.toFixed(2)}). While stable, the ${deR > 2 ? 'leverage' : 'liquidity'} needs monitoring.`;
+                    } else {
+                        summary = `URGENT: ${profile.symbol} is in the 'Distress Zone' (${zScore.toFixed(2)}). Solvency risk is high due to ${margin < 0 ? 'losses' : 'heavy debt burden'}.`;
+                    }
+                    document.getElementById('riskSummary').innerText = summary;
+                }
+
+                // 4. Global Supplementary Status Check
                 document.getElementById('s-liq').innerText = (cr > 1.2 && quickR > 1.0) ? "✅" : "⚠️";
                 document.getElementById('s-lev').innerText = (deR < 2.0 && intCov > 3) ? "✅" : "⚠️";
                 document.getElementById('s-pro').innerText = (roeVal > 10) ? "✅" : "⚠️";
-                document.getElementById('s-z2').innerText = (zScoreModern > 5.85) ? "✅" : (zScoreModern > 4.15 ? "🟡" : "⚠️");
 
-                // Update Summary text (Same as before)
-                let summary = "";
-                if (zScore > 2.99) {
-                    summary = `${profile.symbol} is financially bulletproof (Z-Score: ${zScore.toFixed(2)}). Its ${roeVal > 15 ? 'superb ROE' : 'stable earnings'} provide a massive safety buffer. **Action:** Focus on long-term expansion or returning capital to shareholders.`;
-                } else if (zScore > 1.8) {
-                    summary = `${profile.symbol} is in the 'Grey Zone' (${zScore.toFixed(2)}). While stable, the ${deR > 2 ? 'leverage' : 'liquidity'} needs monitoring. **Action:** Improve operational efficiency and prioritize paying down expensive debt to boost interest coverage.`;
-                } else {
-                    summary = `URGENT: ${profile.symbol} is in the 'Distress Zone' (${zScore.toFixed(2)}). Solvency risk is high due to ${margin < 0 ? 'losses' : 'debt burden'}. **Action:** Restructure debt, cut non-essential costs, and explore asset sales to preserve cash.`;
-                }
-                document.getElementById('riskSummary').innerText = summary;
-
-
-                // Traffic Light Rectification
-                ['z-safe', 'z-grey', 'z-risk'].forEach(id => document.getElementById(id).classList.remove('active'));
-                if(zScore > 2.99) document.getElementById('z-safe').classList.add('active');
-                else if(zScore > 1.8) document.getElementById('z-grey').classList.add('active');
-                else document.getElementById('z-risk').classList.add('active');
-
-                // Z-Score Bar Chart Rectification
+                // 5. Z-Score Bar Chart Rendering
                 const zCtx = document.getElementById('zScoreChart').getContext('2d');
                 if (zChart) zChart.destroy();
                 zChart = new Chart(zCtx, {
                     type: 'bar',
                     data: {
                         labels: ['A', 'B', 'C', 'D', 'E'],
-                        datasets: [{ data: [A, B, C, D, E], backgroundColor: themeColor, borderRadius: 4 }]
+                        datasets: [{ 
+                            data: [A, B, C, D, E], 
+                            backgroundColor: isFinancial ? '#444' : themeColor, 
+                            borderRadius: 4 
+                        }]
                     },
                     options: { 
                         maintainAspectRatio: false, 
@@ -448,20 +473,11 @@
                                 formatter: (val) => val.toFixed(2)
                             }
                         },
-                        scales: { y: { grid: { color: '#2a313d' }, ticks: { font: { size: 10 } } }, x: { grid: { display: false } } }
+                        scales: { 
+                            y: { grid: { color: '#2a313d' }, ticks: { font: { size: 10 } } }, 
+                            x: { grid: { display: false } } 
+                        }
                     }
-                });
-
-                // Price Chart
-                const ctx = document.getElementById('priceChart').getContext('2d');
-                if (priceChart) priceChart.destroy();
-                priceChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: history.map(d => d.date.substring(5)),
-                        datasets: [{ data: history.map(d => d.price), borderColor: themeColor, tension: 0.3, fill: false }]
-                    },
-                    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
                 });
 
                 document.getElementById('mainUI').style.display = 'block';
@@ -471,5 +487,6 @@
     </script>
 </body>
 </html>
+
 
 
