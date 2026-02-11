@@ -7,118 +7,46 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
-    /* 1. CORE THEME & RESET */
-    :root { 
-        --pico-primary: #00a8e8; 
-        --pico-background-color: #0b0e14; 
-        --pico-card-background-color: #151921; 
-        --accent-orange: #f39c12;
-    }
+        :root { --pico-primary: #00a8e8; --pico-background-color: #0b0e14; --pico-card-background-color: #151921; }
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 1rem; }
+        .nav-tabs button { flex: 1; font-size: 0.8rem; padding: 10px; }
+        .nav-tabs button.secondary {background-color: #2a313d; border-color: #2a313d; color: #888;}
+        .nav-tabs button.active {background-color: var(--pico-primary); border-color: var(--pico-primary); color: #fff; }
+        .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1.3fr; gap: 1.5rem; }
+        .risk-grid { display: grid; grid-template-columns: 1.3fr 1.2fr; gap: 1.5rem; }
+        .sts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        .sts-card { background: var(--pico-card-background-color); padding: 1rem; border-radius: 8px; border-top: 3px solid var(--pico-primary); }
+        .traffic-light { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin: 4px 0; color: #fff; opacity: 0.2; transition: all 0.3s; border: 2px solid transparent; }
+        .traffic-light.active { opacity: 1; border: 2px solid #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 5px 0; font-size: 0.85rem; }
+        .chart-wrapper { height: 300px; width: 100%; position: relative; }
+        .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #fff; white-space: nowrap; }
+        .section-sub { font-size: 0.75rem; color: #888; margin-bottom: 10px; display: block; }
+        .fy-anchor { font-weight: bold; color: var(--pico-primary); font-size: 0.85rem; background: #1c222d; padding: 2px 8px; border-radius: 4px; }
+        progress { display: none; margin: 10px 0; }
+        .z-bar-container { background: #1c222d; padding: 15px; border-radius: 8px; }
+        
+        /* UPDATED: Resilience Table Styling */
+        .sup-table { font-size: 0.8rem; margin-bottom: 0; width: 100%; }
+        .sup-table th, .sup-table td { padding: 8px 4px; vertical-align: middle; }
+        
+        /* NEW: Centering the Goal and Status columns for readability */
+        .sup-table th:nth-child(3), .sup-table td:nth-child(3),
+        .sup-table th:nth-child(4), .sup-table td:nth-child(4) { 
+            text-align: center; 
+        }
+        
+        /* NEW: Subtle separator for the Goal column */
+        .sup-table th:nth-child(3), .sup-table td:nth-child(3) {
+            border-left: 1px solid #2a313d;
+            color: #888;
+            white-space: nowrap;
+        }
 
-    .container { 
-        max-width: 1450px !important; 
-        padding: 1.5rem 2rem; 
-    }
+        .z-floating-val { background: #2a313d; padding: 5px 15px; border-radius: 8px; border: 1px solid var(--pico-primary); font-family: monospace; font-size: 1.1rem; }
+        .range-label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-bottom: 2px; }
+    </style>
 
-    /* 2. CARD REFINEMENT - Flex Headers for Visibility */
-    article { 
-        border: 1px solid #2a313d; 
-        border-radius: 12px;
-        padding: 1.5rem; 
-        background: var(--pico-card-background-color);
-        margin-bottom: 0;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
-    article header {
-        background: transparent;
-        border-bottom: 1px solid #2a313d;
-        padding: 0 0 1rem 0;
-        margin-bottom: 1rem;
-        display: flex;
-        justify-content: space-between; /* Keeps Title left and Z-Value right */
-        align-items: center;
-        min-height: 3rem; /* Ensures enough space for titles */
-    }
-
-    /* 3. NAVIGATION */
-    .nav-tabs { display: flex; gap: 12px; margin-bottom: 2rem; }
-    .nav-tabs button { flex: 1; font-size: 0.85rem; padding: 10px; border-radius: 8px; }
-    .nav-tabs button.secondary { background-color: #1c222d; border-color: #2a313d; color: #666; }
-    .nav-tabs button.active { background-color: var(--pico-primary); border-color: var(--pico-primary); color: #fff; }
-
-    /* 4. GRID SYSTEM */
-    .dashboard-grid, .risk-grid { 
-        display: grid; 
-        grid-template-columns: 1fr 1fr; 
-        gap: 2rem; 
-        margin-bottom: 2rem;
-    }
-
-    /* 5. RESILIENCE TABLE ALIGNMENT */
-    .sup-table { 
-        font-size: 0.85rem; 
-        width: 100%; 
-        border-collapse: collapse;
-        margin-top: 0.5rem;
-    }
-    
-    .sup-table th { color: #888; text-transform: uppercase; font-size: 0.65rem; padding-bottom: 10px; text-align: left; }
-    .sup-table td { padding: 10px 4px; border-bottom: 1px solid #1c222d; }
-    
-    .sup-table th:nth-child(3), .sup-table td:nth-child(3) { text-align: center; width: 90px; } 
-    .sup-table th:nth-child(4), .sup-table td:nth-child(4) { text-align: center; width: 70px; } 
-    
-    .sup-table td:nth-child(3) { 
-        color: #888; 
-        font-family: monospace; 
-        font-size: 0.75rem;
-        border-left: 1px solid #2a313d; 
-    }
-
-    /* 6. Z-SCORE & CHART VISIBILITY */
-    .chart-wrapper { 
-        height: 320px; 
-        width: 100%; 
-        position: relative;
-        margin-top: 15px;
-        padding-bottom: 10px;
-    }
-
-    .z-floating-val { 
-        background: #1c222d; 
-        padding: 6px 14px; 
-        border-radius: 8px; 
-        border: 1px solid var(--accent-orange); 
-        color: var(--accent-orange);
-        font-family: monospace; 
-        font-size: 1.1rem;
-        font-weight: bold;
-    }
-
-    #riskSummaryContainer, .risk-summary-box { 
-        background: #0d1117; 
-        padding: 1.2rem; 
-        border-radius: 8px; 
-        border-left: 4px solid var(--accent-orange); 
-        margin-top: 1rem;
-        font-size: 0.85rem;
-        line-height: 1.5;
-    }
-
-    /* Metric Rows Styling */
-    .metric-row { 
-        display: flex; 
-        justify-content: space-between; 
-        border-bottom: 1px solid #1c222d; 
-        padding: 10px 0; 
-        font-size: 0.85rem; 
-    }
-
-    .range-label { font-size: 0.65rem; color: #555; text-transform: uppercase; text-align: center; margin-top: 5px; }
-</style>
 </head>
 <body>
     <main class="container">
@@ -530,6 +458,7 @@
     </script>
 </body>
 </html>
+
 
 
 
