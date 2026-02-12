@@ -142,8 +142,11 @@
                 <div class="risk-grid">
                     <article>
                         <header style="display: flex; justify-content: space-between; align-items: center;">
-                            <strong>Altman's Z-Score (Z")</strong>
-                            <div class="z-floating-val" id="zScoreMain">-</div>
+                            <div> <strong>Company Health Indicator</strong> <div style="font-size: 0.75rem; color: #666;">Using Altman Z‑Score</div> </div>
+                            <div style="text-align: right;">
+                                <div class="z-floating-val" id="zScoreMain">-</div>
+                                <div id="zProb" style="font-size: 0.75rem; color: #888; margin-top: 4px;">Prob. of Distress: -</div>
+                            </div>
                         </header>
                         <div style="display: flex; gap: 8px; margin-bottom: 1.5rem;">
                             <div style="flex:1; text-align:center;">
@@ -380,6 +383,21 @@
             const latestZ = zHistory[zHistory.length - 1];
             document.getElementById('zScoreMain').innerText = latestZ.score.toFixed(2);
 
+            const zVal = latestZ.score;
+            let probDistress = 0;
+            
+            // Logistic transformation approximation for bankruptcy probability
+            probDistress = (1 / (1 + Math.exp(zVal))) * 100;
+            
+            // Display the result
+            const probEl = document.getElementById('zProb');
+            probEl.innerText = `P(): ${probDistress.toFixed(1)}%`;
+            
+            // Dynamic Color Coding for the probability
+            if (probDistress > 50) probEl.style.color = "#ff4d4d"; // High Risk (Red)
+            else if (probDistress > 20) probEl.style.color = "#ffcc00"; // Caution (Yellow)
+            else probEl.style.color = "#00e676"; // Healthy (Green)
+
             // 1. Calculate ratios with safety fallbacks to prevent NaN
             const quickR = ((bs.cashAndCashEquivalents || 0) + (bs.netReceivables || 0)) / (bs.totalCurrentLiabilities || 1);
             const deR = (bs.totalLiabilities || 0) / (bs.totalStockholdersEquity || 1);
@@ -429,7 +447,7 @@
                     labels: ['WC', 'RE', 'EBIT', 'EQ', 'Sales'],
                     datasets: [{ data: [latestZ.A, latestZ.B, latestZ.C, latestZ.D, latestZ.E], backgroundColor: themeColor }]
                 },
-                options: { maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false }, title: {display: true, text:'Component breakdown'}datalabels: { display: false } } }
             });
 
             if (zTrendChart) zTrendChart.destroy();
@@ -439,7 +457,7 @@
                     labels: zHistory.map(z => z.year),
                     datasets: [{ label: 'Z-Score', data: zHistory.map(z => z.score), borderColor: themeColor, fill: true }]
                 },
-                options: { maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false }, title: {display: true, text:'Z-score trend'}, datalabels: { display: false } } }
             });
 
             if (priceChart) priceChart.destroy();
@@ -465,4 +483,3 @@
     </script>
 </body>
 </html>
-
