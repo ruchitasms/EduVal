@@ -285,157 +285,108 @@
         }
 
         async function runAnalysis(ticker) {
-            document.getElementById('loader').style.display = 'block';
-            try {
-                const [pRes, mRes, hRes, incRes, bsRes, cfRes] = await Promise.all([
-                    fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/key-metrics?symbol=${ticker}&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/income-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/balance-sheet-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`)
-                ]);
+    document.getElementById('loader').style.display = 'block';
+    try {
+        const [pRes, mRes, hRes, incRes, bsRes, cfRes] = await Promise.all([
+            fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`),
+            fetch(`https://financialmodelingprep.com/stable/key-metrics?symbol=${ticker}&apikey=${API_KEY}`),
+            fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}&apikey=${API_KEY}`),
+            fetch(`https://financialmodelingprep.com/stable/income-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`),
+            fetch(`https://financialmodelingprep.com/stable/balance-sheet-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`),
+            fetch(`https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`)
+        ]);
 
-                const profile = (await pRes.json())[0];
-                const metrics = (await mRes.json())[0];
-                const historyData = await hRes.json();
-                const history = (historyData.historical || historyData).slice(0, 7).reverse();
-                const incs = await incRes.json();
-                const bss = await bsRes.json();
-                const cfs = await cfRes.json();
+        const profile = (await pRes.json())[0];
+        const metrics = (await mRes.json())[0];
+        const historyData = await hRes.json();
+        const history = (historyData.historical || historyData).slice(0, 7).reverse();
+        const incs = await incRes.json();
+        const bss = await bsRes.json();
+        const cfs = await cfRes.json();
 
-                const bs = bss[0]; const inc = incs[0]; const cf = cfs[0];
-                const industry = document.getElementById('tickerSelect').selectedOptions[0].text.match(/\(([^)]+)\)/)[1];
-                const themeColor = sectorThemes[industry] || '#00a8e8';
-                document.documentElement.style.setProperty('--pico-primary', themeColor);
+        // 1. Correct Variable Mapping
+        const bs = bss[0]; 
+        const inc = incs[0]; 
+        const cf = cfs[0];
+        const prevInc = incs[1] || incs[0]; // Fallback if only 1 year exists
 
-                // --- DATA POPULATION ---
-                document.getElementById('compName').innerText = profile.companyName;
-                document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
-                document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
-                document.getElementById('mktCapVal').innerText = `Cap: $${(profile.marketCap / 1e9).toFixed(1)}B`;
-                document.getElementById('val-fy').innerText = `Audited: FY ${bs.fiscalYear}`;
-                document.getElementById('sts-fy').innerText = `Fiscal Year: ${bs.fiscalYear}`;
+        const industry = document.getElementById('tickerSelect').selectedOptions[0].text.match(/\(([^)]+)\)/)[1];
+        const themeColor = sectorThemes[industry] || '#00a8e8';
+        document.documentElement.style.setProperty('--pico-primary', themeColor);
 
-                const evEbitda = metrics.evToEBITDA;
-                document.getElementById('evEbitdaDisplay').innerText = evEbitda.toFixed(2) + 'x';
-                const vBadge = document.getElementById('verdictBadge');
-                vBadge.innerText = evEbitda < 10 ? "Value Play" : (evEbitda < 25 ? "Fair Value" : "Premium Growth");
-                vBadge.style.background = evEbitda < 10 ? "#004d26" : (evEbitda < 25 ? "#664d00" : "#3b1e6e");
-                
-                const cr = bs.totalCurrentAssets / bs.totalCurrentLiabilities;
-                document.getElementById('currRatioVal').innerText = cr.toFixed(2);
-                document.getElementById('crLight').style.background = cr > 1.2 ? "#004d26" : "#4d0000";
-                document.getElementById('crLight').innerText = cr > 1.2 ? "Healthy" : "Risk";
+        // UI Population
+        document.getElementById('compName').innerText = profile.companyName;
+        document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
+        document.getElementById('mktCapVal').innerText = `Cap: $${(profile.marketCap / 1e9).toFixed(1)}B`;
+        document.getElementById('val-fy').innerText = `Audited: FY ${bs.fiscalYear}`;
+        document.getElementById('sts-fy').innerText = `Fiscal Year: ${bs.fiscalYear}`;
 
-                const ebitda = inc.ebitda || (inc.operatingIncome + (inc.depreciationAndAmortization || 0));
-                document.getElementById('ebitdaValSts').innerText = `$${(ebitda / 1e9).toFixed(1)}B`;
-                const margin = (inc.netIncome / inc.revenue) * 100;
-                document.getElementById('netMarginVal').innerText = margin.toFixed(1) + '%';
-                document.getElementById('incLight').style.background = margin > 15 ? "#004d26" : "#664d00";
-                document.getElementById('incLight').innerText = margin > 15 ? "High Moat" : "Standard";
+        const evEbitda = metrics.evToEBITDA;
+        document.getElementById('evEbitdaDisplay').innerText = evEbitda.toFixed(2) + 'x';
+        
+        const cr = bs.totalCurrentAssets / bs.totalCurrentLiabilities;
+        document.getElementById('currRatioVal').innerText = cr.toFixed(2);
+        
+        // 2. Fixed 'inc[0]' references to 'inc'
+        const ebitda = inc.ebitda || (inc.operatingIncome + (inc.depreciationAndAmortization || 0));
+        document.getElementById('ebitdaValSts').innerText = `$${(ebitda / 1e9).toFixed(1)}B`;
+        
+        const margin = (inc.netIncome / inc.revenue) * 100;
+        document.getElementById('netMarginVal').innerText = margin.toFixed(1) + '%';
+        
+        const epsGrowth = ((inc.eps - prevInc.eps) / Math.abs(prevInc.eps || 1)) * 100;
+        document.getElementById('epsGrowthVal').innerText = epsGrowth.toFixed(1) + '%';
 
-                const fcf = cf.operatingCashFlow - cf.capitalExpenditure;
-                const conv = fcf / inc.netIncome;
-                document.getElementById('cashConvVal').innerText = conv.toFixed(2) + 'x';
-                document.getElementById('cfLight').style.background = conv >= 1.0 ? "#004d26" : "#4d0000";
-                document.getElementById('cfLight').innerText = conv >= 1.0 ? "High Quality" : "Accrual Warning";
+        const fcf = cf.operatingCashFlow - cf.capitalExpenditure;
+        const conv = fcf / (inc.netIncome || 1);
+        document.getElementById('cashConvVal').innerText = conv.toFixed(2) + 'x';
 
-                // Tables
-                document.getElementById('leverageVal').innerText = metrics.netDebtToEBITDA.toFixed(2) + 'x';
-                document.getElementById('rangeVal').innerText = profile.range;
-                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
-                document.getElementById('assetsVal').innerText = `$${(bs.totalAssets / 1e9).toFixed(1)}B`;
-                document.getElementById('liabVal').innerText = `$${(bs.totalLiabilities / 1e9).toFixed(1)}B`;
-                document.getElementById('revVal').innerText = `$${(inc.revenue / 1e9).toFixed(1)}B`;
-                document.getElementById('netIncVal').innerText = `$${(inc.netIncome / 1e9).toFixed(1)}B`;
-                document.getElementById('ocfVal').innerText = `$${(cf.operatingCashFlow / 1e9).toFixed(1)}B`;
-                document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
+        // 3. Risk Calculation Trend
+        const zHistory = bss.map((b, i) => {
+            const yearInc = incs[i] || incs[0];
+            const A = (b.totalCurrentAssets - b.totalCurrentLiabilities) / b.totalAssets;
+            const B = b.retainedEarnings / b.totalAssets;
+            const C = yearInc.operatingIncome / b.totalAssets;
+            const D = profile.marketCap / b.totalLiabilities;
+            const E = yearInc.revenue / b.totalAssets;
+            return { 
+                year: b.fiscalYear, 
+                score: (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E), 
+                A, B, C, D, E 
+            };
+        }).reverse();
 
-                // --- RISK ANALYSIS (Trend for 5 Years) ---
-                const zHistory = bss.map((b, i) => {
-                    const yearInc = incs[i];
-                    if(!yearInc) return { score: 0 };
-                    const A = (b.totalCurrentAssets - b.totalCurrentLiabilities) / b.totalAssets;
-                    const B = b.retainedEarnings / b.totalAssets;
-                    const C = yearInc.operatingIncome / b.totalAssets;
-                    const D = profile.marketCap / b.totalLiabilities;
-                    const E = yearInc.revenue / b.totalAssets;
-                    return { year: b.fiscalYear, score: (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E), A, B, C, D, E };
-                }).reverse();
+        const latestZ = zHistory[zHistory.length - 1];
+        document.getElementById('zScoreMain').innerText = latestZ.score.toFixed(2);
 
-                const latestZ = zHistory[zHistory.length - 1];
-                document.getElementById('zScoreMain').innerText = latestZ.score.toFixed(2);
-
-                // Supplementary Metrics
-                const deR = bs.totalLiabilities / bs.totalStockholdersEquity;
-                const roeVal = (inc.netIncome / bs.totalStockholdersEquity) * 100;
-                document.getElementById('r-curr').innerText = cr.toFixed(2);
-                document.getElementById('r-de').innerText = deR.toFixed(2);
-                document.getElementById('r-roe').innerText = roeVal.toFixed(1) + '%';
-                document.getElementById('r-eps').innerText = `$${inc.eps.toFixed(2)}`;
-
-                // Traffic Lights Logic
-                ['z-safe', 'z-grey', 'z-risk'].forEach(id => document.getElementById(id).classList.remove('active'));
-                if(latestZ.score > 2.99) document.getElementById('z-safe').classList.add('active');
-                else if(latestZ.score > 1.8) document.getElementById('z-grey').classList.add('active');
-                else document.getElementById('z-risk').classList.add('active');
-
-                let summary = "";
-                if (zScore > 2.99) {
-                    summary = `${profile.symbol} is financially bulletproof (Z-Score: ${zScore.toFixed(2)}). Its ${roeVal > 15 ? 'superb ROE' : 'stable earnings'} provide a massive safety buffer. **Action:** Focus on long-term expansion or returning capital to shareholders.`;
-                } else if (zScore > 1.8) {
-                    summary = `${profile.symbol} is in the 'Grey Zone' (${zScore.toFixed(2)}). While stable, the ${deR > 2 ? 'leverage' : 'liquidity'} needs monitoring. **Action:** Improve operational efficiency and prioritize paying down expensive debt to boost interest coverage.`;
-                } else {
-                    summary = `URGENT: ${profile.symbol} is in the 'Distress Zone' (${zScore.toFixed(2)}). Solvency risk is high due to ${margin < 0 ? 'losses' : 'debt burden'}. **Action:** Restructure debt, cut non-essential costs, and explore asset sales to preserve cash.`;
-                }
-                document.getElementById('riskSummary').innerText = summary;
-
-                // --- CHARTS ---
-                if (zChart) zChart.destroy();
-                zChart = new Chart(document.getElementById('zScoreChart'), {
-                    type: 'bar',
-                    data: {
-                        labels: ['WC', 'RE', 'EBIT', 'EQ', 'Sales'],
-                        datasets: [{ data: [latestZ.A, latestZ.B, latestZ.C, latestZ.D, latestZ.E], backgroundColor: themeColor, borderRadius: 4 }]
-                    },
-                    options: { 
-                        maintainAspectRatio: false, 
-                        plugins: { legend: { display: false }, datalabels: { display: true, formatter: v => v.toFixed(2), color: '#fff' } }
-                    }
-                });
-
-                if (zTrendChart) zTrendChart.destroy();
-                zTrendChart = new Chart(document.getElementById('zTrendChart'), {
-                    type: 'line',
-                    data: {
-                        labels: zHistory.map(z => z.year),
-                        datasets: [{ label: 'Z-Score', data: zHistory.map(z => z.score), borderColor: themeColor, fill: true, tension: 0.4 }]
-                    },
-                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
-
-                if (priceChart) priceChart.destroy();
-                priceChart = new Chart(document.getElementById('priceChart'), {
-                    type: 'line',
-                    data: {
-                        labels: history.map(d => d.date.substring(5)),
-                        datasets: [{ data: history.map(d => d.price || d.close), borderColor: themeColor, tension: 0.3 }]
-                    },
-                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
-
-                document.getElementById('mainUI').style.display = 'block';
-                switchTab('val');
-
-            } catch (e) { 
-                console.error(e); 
-                alert("Failed to fetch data. Ensure your API key is valid.");
-            } finally { 
-                document.getElementById('loader').style.display = 'none'; 
-            }
+        // 4. Fixed 'zScore' variable to 'latestZ.score'
+        let summaryText = "";
+        const deR = bs.totalLiabilities / bs.totalStockholdersEquity;
+        
+        if (latestZ.score > 2.99) {
+            summaryText = `${profile.symbol} is financially bulletproof (Z-Score: ${latestZ.score.toFixed(2)}).`;
+        } else if (latestZ.score > 1.8) {
+            summaryText = `${profile.symbol} is in the 'Grey Zone' (${latestZ.score.toFixed(2)}). Monitor leverage.`;
+        } else {
+            summaryText = `URGENT: ${profile.symbol} is in the 'Distress Zone' (${latestZ.score.toFixed(2)}). Solvency risk is high.`;
         }
+        document.getElementById('riskSummary').innerText = summaryText;
+
+        // Trigger Charts (same logic as before)
+        updateCharts(latestZ, zHistory, history, themeColor);
+
+        document.getElementById('mainUI').style.display = 'block';
+        switchTab('val');
+
+    } catch (e) { 
+        console.error("Fetch Error Detail:", e); 
+        alert("Error: " + e.message); 
+    } finally { 
+        document.getElementById('loader').style.display = 'none'; 
+    }
+}
     </script>
 </body>
 </html>
+
 
