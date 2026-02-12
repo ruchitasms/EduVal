@@ -173,7 +173,8 @@
         Chart.register(ChartDataLabels);
         let charts = {};
         let baseData = {};
-        const API_KEY = 'ON8k6g7660ONUPRKUMxnzEuBMUTXhLds';
+        const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
+        //const API_KEY = 'ON8k6g7660ONUPRKUMxnzEuBMUTXhLds';
 
         const lessons = {
             val: `<strong>Valuation Tag Logic:</strong><br>
@@ -240,7 +241,7 @@
                     fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/income-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/balance-sheet-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${ticker}&limit=1&apikey=${API_KEY}`)
+                    fetch(`https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`)
                 ]);
 
                 const profile = (await pRes.json())[0];
@@ -375,4 +376,5 @@
     </script>
 </body>
 </html>
+
 
