@@ -431,10 +431,13 @@
             // Risk Summary Logic
             let summary = "";
             if (latestZ.score > 2.99) {
-                summary = `${profile.symbol} is financially bulletproof (Z-Score: ${latestZ.score.toFixed(2)}). Its ${r-roe > 15 ? 'superb ROE' : 'stable earnings'} provide a massive safety buffer.`;
+                // FIX: Use roeVal instead of r-roe
+                summary = `${profile.symbol} is financially bulletproof (Z-Score: ${latestZ.score.toFixed(2)}). Its ${roeVal > 15 ? 'superb ROE' : 'stable earnings'} provide a massive safety buffer.`;
             } else if (latestZ.score > 1.8) {
+                // FIX: Use deR instead of deR (ensure variable names match)
                 summary = `${profile.symbol} is in the 'Grey Zone' (${latestZ.score.toFixed(2)}). While stable, the ${deR > 2 ? 'leverage' : 'liquidity'} needs monitoring.`;
             } else {
+                // FIX: Use margin instead of margin
                 summary = `URGENT: ${profile.symbol} is in the 'Distress Zone' (${latestZ.score.toFixed(2)}). Solvency risk is high due to ${margin < 0 ? 'losses' : 'debt burden'}.`;
             }
             document.getElementById('riskSummary').innerText = summary;
@@ -484,6 +487,7 @@
     </script>
 </body>
 </html>
+
 
 
 
