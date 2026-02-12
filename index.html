@@ -447,7 +447,7 @@
                     labels: ['WC', 'RE', 'EBIT', 'EQ', 'Sales'],
                     datasets: [{ data: [latestZ.A, latestZ.B, latestZ.C, latestZ.D, latestZ.E], backgroundColor: themeColor }]
                 },
-                options: { maintainAspectRatio: false, plugins: { legend: { display: false }, title: {display: true, text:'Component breakdown'}datalabels: { display: false } } }
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false }, title: {display: true, text:'Component breakdown'} } }
             });
 
             if (zTrendChart) zTrendChart.destroy();
@@ -457,7 +457,7 @@
                     labels: zHistory.map(z => z.year),
                     datasets: [{ label: 'Z-Score', data: zHistory.map(z => z.score), borderColor: themeColor, fill: true }]
                 },
-                options: { maintainAspectRatio: false, plugins: { legend: { display: false }, title: {display: true, text:'Z-score trend'}, datalabels: { display: false } } }
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false }, title: {display: true, text:'Z-score trend'} } }
             });
 
             if (priceChart) priceChart.destroy();
@@ -467,7 +467,7 @@
                     labels: history.map(d => d.date.substring(5)),
                     datasets: [{ data: history.map(d => d.price || d.close), borderColor: themeColor }]
                 },
-                options: { maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
             document.getElementById('mainUI').style.display = 'block';
@@ -483,3 +483,4 @@
     </script>
 </body>
 </html>
+
