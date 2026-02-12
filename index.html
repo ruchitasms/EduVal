@@ -156,10 +156,14 @@
             </div>
 
             <div id="view-risk" style="display:none;">
+                <article style="padding: 1rem;">
+                <header><strong>5-Year Health Trajectory (Altman Z-Score)</strong></header>
+                <div style="height: 180px;"><canvas id="zTrendChart"></canvas></div>
+                </article>
                 <div class="risk-grid">
                     <article>
                         <header style="display: flex; justify-content: space-between; align-items: center;">
-                            <strong>Altman's Z-Score (Z")</strong>
+                            <strong>Altman's Z-Score</strong>
                             <div class="z-floating-val" id="zScoreMain">-</div>
                         </header>
                         <div style="display: flex; gap: 8px; margin-bottom: 1.5rem;">
@@ -185,38 +189,42 @@
                     <article>
                         <header><strong>Supplementary Analysis</strong></header>
                         <table class="sup-table" role="grid">
-    <thead>
-        <tr>
-            <th>Category</th>
-            <th>Key Metrics</th>
-            <th style="text-align:center;">Goal</th> <th style="text-align:center;">Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><strong>Liquidity</strong></td>
-            <td>Current: <span id="r-curr">-</span><br>Quick: <span id="r-quick">-</span></td>
-            <td style="text-align:center; font-size:0.7rem; color:#888;">> 1.2<br>> 1.0</td> <td id="s-liq" style="text-align:center; font-size:1.2rem;">-</td>
-        </tr>
-        <tr>
-            <td><strong>Leverage</strong></td>
-            <td>D/E: <span id="r-de">-</span><br>Int. Cov: <span id="r-ic">-</span></td>
-            <td style="text-align:center; font-size:0.7rem; color:#888;">< 2.0<br>> 3.0x</td> <td id="s-lev" style="text-align:center; font-size:1.2rem;">-</td>
-        </tr>
-        <tr>
-            <td><strong>Profit</strong></td>
-            <td>ROE: <span id="r-roe">-</span><br>EPS: <span id="r-eps">-</span></td>
-            <td style="text-align:center; font-size:0.7rem; color:#888;">> 10%<br>Positive</td> <td id="s-pro" style="text-align:center; font-size:1.2rem;">-</td>
-        </tr>
-        <tr>
-            <td><strong>Modern Z''</strong></td>
-            <td>Non-Mfg Score: <span id="r-z2">-</span></td>
-            <td style="text-align:center; font-size:0.7rem; color:#888;">> 5.85</td> 
-            <td id="s-z2" style="text-align:center; font-size:1.2rem;">-</td>
-        </tr>
-    </tbody>
-</table>
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Key Metrics</th>
+                                    <th style="text-align:center;">Goal</th> <th style="text-align:center;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Liquidity</strong></td>                                  
+                                    <td>Current: <span id="r-curr">-</span><br>Quick: <span id="r-quick">-</span></td>
+                                    <td style="text-align:center; font-size:0.7rem; color:#888;">> 1.2<br>> 1.0</td> <td id="s-liq" style="text-align:center; font-size:1.2rem;">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Leverage</strong></td>
+                                    <td>D/E: <span id="r-de">-</span><br>Int. Cov: <span id="r-ic">-</span></td>
+                                    <td style="text-align:center; font-size:0.7rem; color:#888;">< 2.0<br>> 3.0x</td> <td id="s-lev" style="text-align:center; font-size:1.2rem;">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Profit</strong></td>
+                                    <td>ROE: <span id="r-roe">-</span><br>EPS: <span id="r-eps">-</span></td>
+                                    <td style="text-align:center; font-size:0.7rem; color:#888;">> 10%<br>Positive</td> <td id="s-pro" style="text-align:center; font-size:1.2rem;">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Modern Z''</strong></td>
+                                    <td>Non-Mfg Score: <span id="r-z2">-</span></td>
+                                    <td style="text-align:center; font-size:0.7rem; color:#888;">> 5.85</td> 
+                                    <td id="s-z2" style="text-align:center; font-size:1.2rem;">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
                         <div style="background:#1c222d; padding:12px; border-radius:8px; border-left:4px solid var(--pico-primary); margin-top:10px;">
+                            <label style="font-size:0.8rem;">📉 Stress Test: Revenue Drop (<span id="stressVal">0</span>%)</label>
+                            <input type="range" id="stressSlider" min="0" max="50" value="0" step="5" oninput="applyStress(this.value)">
+                            <p id="stressResult" style="font-size:0.75rem; margin:0; color:#888;">Slide to see how a revenue hit impacts the Z-Score.</p>
+                        </div>
                             <strong>Risk Summary & Corrective Actions:</strong>
                             <p id="riskSummary" style="font-size:0.8rem; margin:5px 0 0 0; line-height:1.4; color:#ccc;">Select a company to see report.</p>
                         </div>
@@ -280,14 +288,13 @@
           <strong>Formulas:</strong><br>
           • Debt-to-Equity: Total Liabilities / Shareholder Equity<br> (Goal < 2)<br>
           • Interest Coverage: Operating Income / Interest Expense (Goal > 3x)<br>
-          • ROE: Net Income / Shareholder Equity (Goal > 10%)`
-};
+          • ROE: Net Income / Shareholder Equity (Goal > 10%)`};
 
         function switchTab(tabId) {
-    // 1. Handle View Visibility
-    ['view-val', 'view-sts', 'view-risk'].forEach(v => {
-        document.getElementById(v).style.display = 'none';
-    });
+            // 1. Handle View Visibility
+            ['view-val', 'view-sts', 'view-risk'].forEach(v => {
+                document.getElementById(v).style.display = 'none';
+            });
     
     // Display the selected view
     const targetView = document.getElementById(`view-${tabId}`);
@@ -305,9 +312,32 @@
             btn.classList.add('secondary');
         }
     });
-
+            
+    let currentZBase = 0; 
+    let assetBase = 1;
+    
+    function applyStress(percent) {
+        document.getElementById('stressVal').innerText = percent;
+        // Revenue is weight "E" in Z-score (Weight = 1.0)
+        // Formula impact: Reduction in Revenue / Total Assets
+        const reduction = (percent / 100) * (originalRevenue / assetBase);
+        const newZ = currentZBase - reduction;
+        
+        const resultEl = document.getElementById('stressResult');
+        if (newZ < 1.81) {
+            resultEl.innerHTML = `⚠️ <strong>CRITICAL:</strong> Z-Score drops to ${newZ.toFixed(2)}. Bankruptcy risk becomes HIGH.`;
+            resultEl.style.color = "#ff4d4d";
+        } else {
+            resultEl.innerHTML = `✅ <strong>RESILIENT:</strong> Z-Score stays at ${newZ.toFixed(2)}. Company likely survives.`;
+            resultEl.style.color = "#888";
+        }
+    }
     // 3. Update Lesson Content
     document.getElementById('lessonContent').innerHTML = (learnings[tabId] || "");}
+        // Store these at the top of runAnalysis so the slider can use them
+        window.currentZBase = zScore; // The latest score
+        window.originalRevenue = inc[0].revenue;
+        window.assetBase = bs[0].totalAssets;
 
         async function runAnalysis(ticker) {
             document.getElementById('loader').style.display = 'block';
@@ -316,10 +346,11 @@
                     fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/key-metrics?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/income-statement?symbol=${ticker}&limit=2&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/balance-sheet-statement?symbol=${ticker}&limit=1&apikey=${API_KEY}`),
+                    fetch(`https://financialmodelingprep.com/stable/income-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`),
+                    fetch(`https://financialmodelingprep.com/stable/balance-sheet-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${ticker}&limit=1&apikey=${API_KEY}`)
                 ]);
+                
 
                 const profile = (await pRes.json())[0];
                 const metrics = (await mRes.json())[0];
@@ -332,6 +363,20 @@
                 const industry = document.getElementById('tickerSelect').selectedOptions[0].text.match(/\(([^)]+)\)/)[1];
                 const themeColor = sectorThemes[industry] || '#00a8e8';
                 document.documentElement.style.setProperty('--pico-primary', themeColor);
+
+                // Map through the 5 years of data to create the trend
+                const zTrendData = inc.map((yearData, i) => {
+                    const b = bs[i]; // Matching the income year with the balance sheet year
+                    
+                    const A = (b.totalCurrentAssets - b.totalCurrentLiabilities) / b.totalAssets;
+                    const B = b.retainedEarnings / b.totalAssets;
+                    const C = yearData.operatingIncome / b.totalAssets;
+                    const D = profile.marketCap / b.totalLiabilities; 
+                    const E = yearData.revenue / b.totalAssets;
+                    
+                    return (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E);
+                }).reverse(); // Reverse so the chart goes from oldest -> newest
+                const zLabels = inc.map(yearData => yearData.calendarYear).reverse();
 
                 // --- DATA POPULATION (Omitted duplicate logic for brevity) ---
                 document.getElementById('compName').innerText = profile.companyName;
@@ -471,4 +516,5 @@
     </script>
 </body>
 </html>
+
 
