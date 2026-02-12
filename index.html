@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>EduVal - Financial Literacy Pro</title>
+    <title>EduVal - The Complete Financial Suite</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -13,27 +13,20 @@
         .nav-tabs button.secondary {background-color: #2a313d; border-color: #2a313d; color: #888;}
         .nav-tabs button.active {background-color: var(--pico-primary); border-color: var(--pico-primary); color: #fff; }
         .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1.3fr; gap: 1.5rem; }
-        .risk-grid { display: grid; grid-template-columns: 1.3fr 1.2fr; gap: 1.5rem; }
+        .risk-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.5rem; }
         .sts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
         .sts-card { background: var(--pico-card-background-color); padding: 1rem; border-radius: 8px; border-top: 3px solid var(--pico-primary); }
         .traffic-light { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin: 4px 0; color: #fff; opacity: 0.2; transition: all 0.3s; border: 2px solid transparent; }
-        .traffic-light.active { opacity: 1; border: 2px solid #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .traffic-light.active { opacity: 1; border: 2px solid #fff; }
         .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 5px 0; font-size: 0.85rem; }
-        .chart-wrapper { height: 300px; width: 100%; position: relative; }
-        .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #fff; white-space: nowrap; }
-        .section-sub { font-size: 0.75rem; color: #888; margin-bottom: 10px; display: block; }
-        .fy-anchor { font-weight: bold; color: var(--pico-primary); font-size: 0.85rem; background: #1c222d; padding: 2px 8px; border-radius: 4px; }
-        progress { display: none; margin: 10px 0; }
-        .z-bar-container { background: #1c222d; padding: 15px; border-radius: 8px; margin-bottom: 1rem;}
-        .sup-table { font-size: 0.8rem; margin-bottom: 0; width: 100%; }
-        .sup-table th, .sup-table td { padding: 8px 4px; vertical-align: middle; }
+        .chart-wrapper { height: 260px; width: 100%; position: relative; }
+        .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #fff; }
         .z-floating-val { background: #2a313d; padding: 5px 15px; border-radius: 8px; border: 1px solid var(--pico-primary); font-family: monospace; font-size: 1.1rem; }
-        .range-label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-bottom: 2px; }
-        
-        /* New Stress Test Styles */
-        .stress-control { background: #1c222d; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px dashed #444; }
-        .stress-control label { font-size: 0.7rem; color: #aaa; margin-bottom: 0; }
-        .stress-control input { margin-bottom: 5px; }
+        .sup-table { font-size: 0.8rem; margin-bottom: 0; width: 100%; }
+        .stress-box { background: rgba(255, 255, 255, 0.03); border: 1px dashed #444; padding: 15px; border-radius: 8px; margin-top: 15px; }
+        .summary-box { background:#1c222d; padding:15px; border-radius:8px; border-left:4px solid var(--pico-primary); margin-top:20px; }
+        .summary-box strong { color: var(--pico-primary); text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 5px; }
+        input[type="range"] { height: 8px; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -54,7 +47,7 @@
                 <option value="INTC">Intel (Semiconductors)</option>
                 <option value="SOFI">SoFi (Fintech)</option>
             </select>
-            <progress id="loader"></progress>
+            <progress id="loader" style="display:none;"></progress>
         </header>
 
         <div id="mainUI" style="display:none;">
@@ -64,7 +57,7 @@
                 <button id="btn-risk" class="secondary" onclick="switchTab('risk')">Resilience</button>
             </div>
 
-            <details id="lessonBox" style="background: #1c222d; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+            <details id="lessonBox" open style="background: #1c222d; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                 <summary>Formulas & Rules of Thumb</summary>
                 <div id="lessonContent" style="font-size: 0.85rem; margin-top: 10px; line-height: 1.6;"></div>
             </details>
@@ -85,22 +78,12 @@
                         <tr class="metric-row"><td>52-Week Range</td><td id="rangeVal" align="right">-</td></tr>
                         <tr class="metric-row"><td>Enterprise Value</td><td id="evVal" align="right">-</td></tr>
                     </table>
-                    <footer><span class="fy-anchor" id="val-fy">Audited: -</span></footer>
                 </article>
                 <article>
-                    <header>
-                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                            <strong>7-Day Momentum (2026)</strong>
-                            <div>
-                                <span id="priceDisplay" style="color:var(--pico-primary); font-weight:bold; margin-right:15px;">Price: -</span><br>
-                                <small id="mktCapVal" style="color:#888;">Cap: -</small>
-                            </div>
-                        </div>
-                    </header>  
+                    <header><strong>Price Momentum (7-Day)</strong></header>
                     <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
                 </article>
             </div>
-
             <div id="view-sts" style="display:none;">
                 <div style="margin-bottom: 10px;"><span class="fy-anchor" id="sts-fy">Fiscal Year: -</span></div>
                 <div class="sts-grid">
@@ -141,77 +124,41 @@
                         <div class="metric-row"><span>Free Cash Flow</span><span id="fcfVal" style="color:var(--pico-primary)">-</span></div>
                     </div>
                 </div>
-            </div>
-
+            </div>          
+            
             <div id="view-risk" style="display:none;">
                 <div class="risk-grid">
                     <article>
-                        <header style="display: flex; justify-content: space-between; align-items: center;">
-                            <strong>5-Year Altman Z-Score Trend</strong>
+                        <header style="display: flex; justify-content: space-between;">
+                            <strong>Altman's Z-Score</strong>
                             <div class="z-floating-val" id="zScoreMain">-</div>
                         </header>
-                        <div style="display: flex; gap: 8px; margin-bottom: 1rem;">
-                            <div style="flex:1; text-align:center;">
-                                <div id="z-safe" class="traffic-light" style="background:#004d26; width:100%;">Safe (>2.99)</div>
-                            </div>
-                            <div style="flex:1; text-align:center;">
-                                <div id="z-grey" class="traffic-light" style="background:#664d00; width:100%;">Grey (1.8-2.9)</div>
-                            </div>
-                            <div style="flex:1; text-align:center;">
-                                <div id="z-risk" class="traffic-light" style="background:#4d0000; width:100%;">Risk (<1.8)</div>
-                            </div>
+                        <div style="display: flex; gap: 5px; margin: 15px 0;">
+                            <div id="z-safe" class="traffic-light" style="background:#004d26; flex:1; text-align:center;">Safe</div>
+                            <div id="z-grey" class="traffic-light" style="background:#664d00; flex:1; text-align:center;">Grey</div>
+                            <div id="z-risk" class="traffic-light" style="background:#4d0000; flex:1; text-align:center;">Risk</div>
                         </div>
-                        <div class="z-bar-container">
-                            <canvas id="zTrendChart" height="220"></canvas>
-                        </div>
-                        
-                        <div class="stress-control">
+                        <div style="height: 200px;"><canvas id="zComponentsChart"></canvas></div>
+                        <div class="stress-box">
                             <strong>🛠️ Composure Stress-Test Simulator</strong>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top:10px;">
-                                <div>
-                                    <label>Revenue Shock: <span id="revShockVal">0</span>%</label>
-                                    <input type="range" id="revShock" min="0" max="50" value="0" oninput="applyStress()">
-                                </div>
-                                <div>
-                                    <label>Market Cap Crash: <span id="mktShockVal">0</span>%</label>
-                                    <input type="range" id="mktShock" min="0" max="70" value="0" oninput="applyStress()">
-                                </div>
-                            </div>
-                            <small style="color:var(--pico-primary); font-size:0.75rem;">Simulated Z-Score: <b id="simZScore">-</b></small>
+                            <label>Revenue Shock: <span id="revShockVal">0</span>%</label>
+                            <input type="range" id="revShock" min="0" max="50" value="0" oninput="updateSimulation()">
+                            <label>Market Cap Crash: <span id="capShockVal">0</span>%</label>
+                            <input type="range" id="capShock" min="0" max="80" value="0" oninput="updateSimulation()">
+                            <small>Simulated Z: <span id="simZ" style="color:#ffeb3b; font-weight:bold;">-</span></small>
                         </div>
                     </article>
 
                     <article>
-                        <header><strong>Supplementary Analysis</strong></header>
+                        <header><strong>Diagnostic & Trend</strong></header>
+                        <div style="height:150px; margin-bottom:15px;"><canvas id="zTrendChart"></canvas></div>
                         <table class="sup-table" role="grid">
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th>Key Metrics</th>
-                                    <th style="text-align:center;">Goal</th> <th style="text-align:center;">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Liquidity</strong></td>
-                                    <td>Current: <span id="r-curr">-</span><br>Quick: <span id="r-quick">-</span></td>
-                                    <td style="text-align:center; font-size:0.7rem; color:#888;">> 1.2<br>> 1.0</td> <td id="s-liq" style="text-align:center; font-size:1.2rem;">-</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Leverage</strong></td>
-                                    <td>D/E: <span id="r-de">-</span><br>Int. Cov: <span id="r-ic">-</span></td>
-                                    <td style="text-align:center; font-size:0.7rem; color:#888;">< 2.0<br>> 3.0x</td> <td id="s-lev" style="text-align:center; font-size:1.2rem;">-</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Profit</strong></td>
-                                    <td>ROE: <span id="r-roe">-</span><br>EPS: <span id="r-eps">-</span></td>
-                                    <td style="text-align:center; font-size:0.7rem; color:#888;">> 10%<br>Positive</td> <td id="s-pro" style="text-align:center; font-size:1.2rem;">-</td>
-                                </tr>
-                            </tbody>
+                            <thead><tr><th>Category</th><th>Metric</th><th>Goal</th><th>Status</th></tr></thead>
+                            <tbody id="riskTableBody"></tbody>
                         </table>
-                        <div style="background:#1c222d; padding:12px; border-radius:8px; border-left:4px solid var(--pico-primary); margin-top:10px;">
-                            <strong>Risk Summary & Corrective Actions:</strong>
-                            <p id="riskSummary" style="font-size:0.8rem; margin:5px 0 0 0; line-height:1.4; color:#ccc;">Select a company to see report.</p>
+                        <div class="summary-box">
+                            <strong>Risk Summary & Corrective Actions</strong>
+                            <p id="riskSummary" style="font-size:0.85rem; margin:0; line-height:1.5;">Select a company...</p>
                         </div>
                     </article>
                 </div>
@@ -221,13 +168,11 @@
 
     <script>
         Chart.register(ChartDataLabels);
-        let priceChart = null;
-        let zTrendChart = null;
-        let currentCompanyData = null; // Global store for stress test
+        let charts = {};
+        let baseData = {};
         const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
-        const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#ffffff', 'Fintech': '#ffcc00' };
-
-        const learnings = {
+        
+        const lessons = {
             val: `<strong>Valuation Tag Logic:</strong><br>
           <strong>Introduction</strong><br>
           • Enterprise Value: It represents the total price tag of a company, calculated as Market Cap + Total Debt - Cash. Here, Market Cap = (Current Share Price x Current Outstanding Shares)<br>
@@ -273,19 +218,14 @@
           <strong>Formulas:</strong><br>
           • Debt-to-Equity: Total Liabilities / Shareholder Equity<br> (Goal < 2)<br>
           • Interest Coverage: Operating Income / Interest Expense (Goal > 3x)<br>
-          • ROE: Net Income / Shareholder Equity (Goal > 10%)
-          • <strong>Stress Test:</strong> How would the Z-Score react if Revenue dropped by 30%? This tests the "floor" of the company's health.`
+          • ROE: Net Income / Shareholder Equity (Goal > 10%)`
         };
 
         function switchTab(tabId) {
             ['view-val', 'view-sts', 'view-risk'].forEach(v => document.getElementById(v).style.display = 'none');
-            const targetView = document.getElementById(`view-${tabId}`);
-            targetView.style.display = (tabId === 'sts') ? 'block' : (tabId === 'risk' ? 'block' : 'grid');
-            ['val', 'sts', 'risk'].forEach(t => {
-                const btn = document.getElementById(`btn-${t}`);
-                btn.className = t === tabId ? 'active' : 'secondary';
-            });
-            document.getElementById('lessonContent').innerHTML = (learnings[tabId] || "");
+            document.getElementById(`view-${tabId}`).style.display = (tabId === 'sts') ? 'block' : 'grid';
+            ['val', 'sts', 'risk'].forEach(t => document.getElementById(`btn-${t}`).className = (t === tabId ? 'active' : 'secondary'));
+            document.getElementById('lessonContent').innerHTML = lessons[tabId];
         }
 
         async function runAnalysis(ticker) {
@@ -297,137 +237,118 @@
                     fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/income-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/balance-sheet-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`)
+                    fetch(`https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${ticker}&limit=1&apikey=${API_KEY}`)
                 ]);
 
                 const profile = (await pRes.json())[0];
                 const metrics = (await mRes.json())[0];
-                const historyData = await hRes.json();
-                const history = (historyData.historical || historyData).slice(0, 7).reverse();
-                const inc = await incRes.json();
-                const bs = await bsRes.json();
-                const cf = await cfRes.json();
+                const hist = (await hRes.json()).historical.slice(0, 7).reverse();
+                const incs = await incRes.json();
+                const bss = await bsRes.json();
+                const cf = (await cfRes.json())[0];
 
-                currentCompanyData = { profile, inc, bs, metrics }; // Store for stress test
+                baseData = {
+                    symbol: profile.symbol, assets: bss[0].totalAssets, liab: bss[0].totalLiabilities,
+                    equity: bss[0].totalStockholdersEquity, rev: incs[0].revenue, ebit: incs[0].operatingIncome,
+                    re: bss[0].retainedEarnings, mktCap: profile.marketCap, netInc: incs[0].netIncome,
+                    wc: bss[0].totalCurrentAssets - bss[0].totalCurrentLiabilities
+                };
 
-                const industry = document.getElementById('tickerSelect').selectedOptions[0].text.match(/\(([^)]+)\)/)[1];
-                const themeColor = sectorThemes[industry] || '#00a8e8';
-                document.documentElement.style.setProperty('--pico-primary', themeColor);
-
-                // --- TAB 1 & 2 POPULATION ---
+                // Populate UI
                 document.getElementById('compName').innerText = profile.companyName;
-                document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
-                document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
-                document.getElementById('mktCapVal').innerText = `Cap: $${(profile.marketCap / 1e9).toFixed(1)}B`;
-                document.getElementById('val-fy').innerText = `Audited: FY ${bs[0].fiscalYear}`;
-                document.getElementById('sts-fy').innerText = `Fiscal Year: ${bs[0].fiscalYear}`;
-
-                const evEbitda = metrics.evToEBITDA;
-                document.getElementById('evEbitdaDisplay').innerText = evEbitda.toFixed(2) + 'x';
+                document.getElementById('industryLabel').innerText = `${profile.industry} | ${ticker}`;
+                document.getElementById('evEbitdaDisplay').innerText = metrics.evToEBITDA.toFixed(2) + 'x';
+                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
+                document.getElementById('leverageVal').innerText = metrics.netDebtToEBITDA.toFixed(2) + 'x';
+                document.getElementById('rangeVal').innerText = profile.range;
                 
-                // --- CALC 5-YEAR Z-SCORE TREND ---
-                const zTrend = bs.map((yearBS, idx) => {
-                    const yearInc = inc[idx];
-                    const A = (yearBS.totalCurrentAssets - yearBS.totalCurrentLiabilities) / yearBS.totalAssets;
-                    const B = yearBS.retainedEarnings / yearBS.totalAssets;
-                    const C = yearInc.operatingIncome / yearBS.totalAssets;
-                    const D = (idx === 0 ? profile.marketCap : yearBS.totalStockholdersEquity) / yearBS.totalLiabilities;
-                    const E = yearInc.revenue / yearBS.totalAssets;
-                    return { year: yearBS.fiscalYear, score: (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E) };
-                }).reverse();
+                // Statements
+                document.getElementById('currRatioVal').innerText = (bss[0].totalCurrentAssets / bss[0].totalCurrentLiabilities).toFixed(2);
+                document.getElementById('netMarginVal').innerText = ((incs[0].netIncome / incs[0].revenue) * 100).toFixed(1) + '%';
+                document.getElementById('fcfVal').innerText = `$${((cf.operatingCashFlow - cf.capitalExpenditure)/1e9).toFixed(1)}B`;
 
-                const latestZ = zTrend[zTrend.length - 1].score;
-                document.getElementById('zScoreMain').innerText = latestZ.toFixed(2);
+                renderCharts(hist, incs, bss);
+                updateSimulation();
                 
-                // --- RENDER Z TREND CHART ---
-                const zCtx = document.getElementById('zTrendChart').getContext('2d');
-                if (zTrendChart) zTrendChart.destroy();
-                zTrendChart = new Chart(zCtx, {
-                    type: 'line',
-                    data: {
-                        labels: zTrend.map(d => d.year),
-                        datasets: [{ 
-                            label: 'Z-Score',
-                            data: zTrend.map(d => d.score), 
-                            borderColor: themeColor, 
-                            backgroundColor: themeColor + '22',
-                            fill: true,
-                            tension: 0.2
-                        }]
-                    },
-                    options: {
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false }, datalabels: { display: true, align: 'top', color: '#fff' } },
-                        scales: { y: { grid: { color: '#222' } } }
-                    }
-                });
-
-                // Reset Stress Sliders
-                document.getElementById('revShock').value = 0;
-                document.getElementById('mktShock').value = 0;
-                applyStress();
-
-                // Update Risk Lights & Summary
-                ['z-safe', 'z-grey', 'z-risk'].forEach(id => document.getElementById(id).classList.remove('active'));
-                if(latestZ > 2.99) document.getElementById('z-safe').classList.add('active');
-                else if(latestZ > 1.8) document.getElementById('z-grey').classList.add('active');
-                else document.getElementById('z-risk').classList.add('active');
-
-                // Supplementary data
-                const curBS = bs[0];
-                const curInc = inc[0];
-                const cr = curBS.totalCurrentAssets / curBS.totalCurrentLiabilities;
-                const quickR = (curBS.cashAndCashEquivalents + curBS.netReceivables) / curBS.totalCurrentLiabilities;
-                document.getElementById('r-curr').innerText = cr.toFixed(2);
-                document.getElementById('r-quick').innerText = quickR.toFixed(2);
-                document.getElementById('r-de').innerText = (curBS.totalLiabilities / curBS.totalStockholdersEquity).toFixed(2);
-                document.getElementById('r-roe').innerText = ((curInc.netIncome / curBS.totalStockholdersEquity) * 100).toFixed(1) + '%';
-                document.getElementById('s-liq').innerText = (cr > 1.2) ? "✅" : "⚠️";
-
-                // Price Chart
-                const ctx = document.getElementById('priceChart').getContext('2d');
-                if (priceChart) priceChart.destroy();
-                priceChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: history.map(d => d.date.substring(5)),
-                        datasets: [{ data: history.map(d => d.price), borderColor: themeColor, tension: 0.3, fill: false }]
-                    },
-                    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
-                });
-
                 document.getElementById('mainUI').style.display = 'block';
                 switchTab('val');
-            } catch (e) { console.error(e); } finally { document.getElementById('loader').style.display = 'none'; }
+            } catch (e) { console.error(e); alert("API Limit or Error."); }
+            document.getElementById('loader').style.display = 'none';
         }
 
-        function applyStress() {
-            if (!currentCompanyData) return;
-            const revShock = document.getElementById('revShock').value / 100;
-            const mktShock = document.getElementById('mktShock').value / 100;
+        function updateSimulation() {
+            const rDrop = document.getElementById('revShock').value / 100;
+            const cDrop = document.getElementById('capShock').value / 100;
+            document.getElementById('revShockVal').innerText = (rDrop * 100).toFixed(0);
+            document.getElementById('capShockVal').innerText = (cDrop * 100).toFixed(0);
+
+            const sRev = baseData.rev * (1 - rDrop);
+            const sMkt = baseData.mktCap * (1 - cDrop);
+            const sEbit = baseData.ebit - (baseData.rev * rDrop * 0.4);
+
+            const A = baseData.wc / baseData.assets;
+            const B = baseData.re / baseData.assets;
+            const C = sEbit / baseData.assets;
+            const D = sMkt / baseData.liab;
+            const E = sRev / baseData.assets;
+            const z = (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E);
+
+            document.getElementById('simZ').innerText = z.toFixed(2);
+            document.getElementById('zScoreMain').innerText = z.toFixed(2);
             
-            document.getElementById('revShockVal').innerText = (revShock * 100).toFixed(0);
-            document.getElementById('mktShockVal').innerText = (mktShock * 100).toFixed(0);
+            // Sync Lights
+            ['z-safe', 'z-grey', 'z-risk'].forEach(id => document.getElementById(id).classList.remove('active'));
+            if(z > 2.99) document.getElementById('z-safe').classList.add('active');
+            else if(z > 1.8) document.getElementById('z-grey').classList.add('active');
+            else document.getElementById('z-risk').classList.add('active');
 
-            const b = currentCompanyData.bs[0];
-            const i = currentCompanyData.inc[0];
-            const p = currentCompanyData.profile;
+            // Bar Chart Update
+            renderBar([A, B, C, D, E]);
 
-            // Simulated components
-            const simRev = i.revenue * (1 - revShock);
-            const simEbit = i.operatingIncome * (1 - (revShock * 1.5)); // EBIT usually falls faster than revenue
-            const simMktCap = p.marketCap * (1 - mktShock);
+            // Summary Text
+            const de = baseData.liab / baseData.equity;
+            const roe = (baseData.netInc / baseData.equity) * 100;
+            let summ = "";
+            if (z > 2.99) summ = `**${baseData.symbol} is financially bulletproof** (Z: ${z.toFixed(2)}). Its ${roe > 15 ? 'superb ROE' : 'stable earnings'} provide a massive safety buffer. **Action:** Focus on long-term expansion.`;
+            else if (z > 1.8) summ = `**${baseData.symbol} is in the 'Grey Zone'** (${z.toFixed(2)}). While stable, the ${de > 2 ? 'leverage' : 'liquidity'} needs monitoring. **Action:** Improve operational efficiency.`;
+            else summ = `**URGENT:** ${baseData.symbol} is in the 'Distress Zone' (${z.toFixed(2)}). Solvency risk is high. **Action:** Restructure debt and preserve cash.`;
+            
+            document.getElementById('riskSummary').innerHTML = summ.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            document.getElementById('riskTableBody').innerHTML = `<tr><td>Liquidity</td><td>${(baseData.wc/baseData.assets).toFixed(2)}</td><td>> 0.1</td><td>${(baseData.wc/baseData.assets) > 0.1 ? '✅' : '⚠️'}</td></tr><tr><td>Profit</td><td>${roe.toFixed(1)}%</td><td>> 10%</td><td>${roe > 10 ? '✅' : '⚠️'}</td></tr>`;
+        }
 
-            const A = (b.totalCurrentAssets - b.totalCurrentLiabilities) / b.totalAssets;
-            const B = b.retainedEarnings / b.totalAssets;
-            const C = simEbit / b.totalAssets;
-            const D = simMktCap / b.totalLiabilities;
-            const E = simRev / b.totalAssets;
+        function renderCharts(hist, incs, bss) {
+            // Price Chart
+            const ctxP = document.getElementById('priceChart').getContext('2d');
+            if(charts.price) charts.price.destroy();
+            charts.price = new Chart(ctxP, {
+                type: 'line',
+                data: { labels: hist.map(h => h.date.slice(5)), datasets: [{ data: hist.map(h => h.close), borderColor: '#00a8e8', tension: 0.3 }] },
+                options: { maintainAspectRatio: false, plugins: { legend: {display:false}, datalabels: {display:false} }}
+            });
 
-            const simZ = (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E);
-            const simEl = document.getElementById('simZScore');
-            simEl.innerText = simZ.toFixed(2);
-            simEl.style.color = simZ < 1.8 ? "#ff4d4d" : (simZ < 2.9 ? "#ffcc00" : "#00e676");
+            // Trend Chart
+            const historyZ = incs.map((inc, i) => {
+                const b = bss[i];
+                return (1.2 * ((b.totalCurrentAssets-b.totalCurrentLiabilities)/b.totalAssets)) + (1.4 * (b.retainedEarnings/b.totalAssets)) + (3.3 * (inc.operatingIncome/b.totalAssets)) + (0.6 * (baseData.mktCap/b.totalLiabilities)) + (inc.revenue/b.totalAssets);
+            }).reverse();
+            const ctxT = document.getElementById('zTrendChart').getContext('2d');
+            if(charts.trend) charts.trend.destroy();
+            charts.trend = new Chart(ctxT, {
+                type: 'line',
+                data: { labels: bss.map(b => b.calendarYear).reverse(), datasets: [{ data: historyZ, borderColor: '#ff4081', fill:true, backgroundColor:'rgba(255,64,129,0.1)' }] },
+                options: { maintainAspectRatio: false, plugins: { legend: {display:false}, datalabels: {color:'#fff', formatter: v => v.toFixed(2)} }}
+            });
+        }
+
+        function renderBar(data) {
+            const ctxB = document.getElementById('zComponentsChart').getContext('2d');
+            if(charts.bar) charts.bar.destroy();
+            charts.bar = new Chart(ctxB, {
+                type: 'bar',
+                data: { labels: ['WC', 'RE', 'EBIT', 'Cap', 'Sales'], datasets: [{ data: data, backgroundColor: '#00a8e8' }] },
+                options: { maintainAspectRatio: false, plugins: { legend: {display:false}, datalabels: {color:'#fff', formatter: v => v.toFixed(2)} }}
+            });
         }
     </script>
 </body>
