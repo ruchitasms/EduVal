@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>EduVal - Financial Literacy Pro</title>
+    <title>EduVal - Financial Literacy bridged with Data Science</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -110,6 +110,9 @@
                         <div class="metric-row"><span>Quick Ratio</span><span id="quickRatioVal">-</span></div>
                         <div class="metric-row"><span>Total Assets</span><span id="assetsVal">-</span></div>
                         <div class="metric-row"><span>Total Liab.</span><span id="liabVal">-</span></div>
+                        <div class="metric-row" style="border-top: 1px dashed #444; margin-top:5px;">
+                            <span>Enterprise Value</span><span id="evValSts" style="color:var(--pico-primary)">-</span>
+                        </div>
                     </div>
                     <div class="sts-card">
                         <h6>Income Statement</h6>
@@ -119,6 +122,9 @@
                         <div class="metric-row"><span>EPS Growth</span><span id="epsGrowthVal">-</span></div>
                         <div class="metric-row"><span>Revenue</span><span id="revVal">-</span></div>
                         <div class="metric-row"><span>Net Income</span><span id="netIncVal">-</span></div>
+                        <div class="metric-row" style="border-top: 1px dashed #444; margin-top:5px;">
+                            <span>EBITDA</span><span id="ebitdaValSts" style="color:var(--pico-primary)">-</span>
+                        </div>
                     </div>
                     <div class="sts-card">
                         <h6>Cash Flow</h6>
@@ -186,9 +192,52 @@
         const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#ffffff', 'Fintech': '#ffcc00' };
 
         const learnings = {
-            val: `<strong>Valuation:</strong> EV/EBITDA helps compare value regardless of debt structure. < 10x is often considered a "Value Play".`,
-            sts: `<strong>Statements:</strong> The health check. Current Ratio measures liquidity, while Cash Conversion ensures profits are real cash.`,
-            risk: `<strong>Resilience:</strong> The Altman Z-Score predicts bankruptcy risk. Scores > 2.99 are safe, while < 1.81 indicate distress.`
+            val: `<strong>Valuation Tag Logic:</strong><br>
+          <strong>Introduction</strong><br>
+          • Enterprise Value: It represents the total price tag of a company, calculated as Market Cap + Total Debt - Cash. Here, Market Cap = (Current Share Price x Current Outstanding Shares)<br>
+          • Relative Valuation: This involves comparing a company's value to its peers using multiples like EV/EBITDA (used across industries because it neutralizes the effects of different debt levels and tax environments)<br>
+          <br><strong>Reading Values:</strong><br>
+          • <strong>Value Play (< 10x):</strong> "Cheap" relative to cash profits. (Ex: Energy/Banking)<br>
+          • <strong>Fair Value (10x-25x):</strong> Balanced market expectation. (Ex: Microsoft/Alphabet)<br>
+          • <strong>Premium Growth (> 25x):</strong> Market expects future earnings explosion. (Ex: NVIDIA/Tesla)<br><br>
+          <strong>Formulas:</strong><br>
+          • EV/EBITDA: Enterprise Value / EBITDA<br>
+          • Net Debt/EBITDA: (Total Debt - Cash) / EBITDA`,
+
+    sts: `• These are the "report cards" of a company, consisting of the Balance Sheet (what you own/owe), Income Statement (profitability), and Cash Flow Statement (actual cash moving in and out).<br>
+          <br><strong>Financial Statement Tags:</strong><br>
+          • <strong>Liquidity (Current Ratio):</strong> This measures a company’s "cash cushion" or its ability to pay off its immediate, short-term debts using assets that can be quickly converted into cash. Goal > 1.2 (Current Assets / Current Liab).<br>
+          • <strong>Efficiency (Net Margin):</strong> This tracks how well a company manages its resources to generate profit, often measured by "Net Margin" to see how much profit is kept from every dollar of revenue. Goal > 15% (Net Income / Revenue).<br>
+          • <strong>Quality (Cash Conv):</strong> This determines if reported profits are "real" by checking if the company is actually generating hard cash (Cash Conversion) rather than just accounting entries. Goal ≥ 1.0 (Free Cash Flow / Net Income).<br><br>
+          <strong>Formulas:</strong><br>
+          • Current Ratio: Current Assets / Current Liab<br>
+          • Quick Ratio(Acid Test): (Cash + Receivables) / Current Liab (Goal > 2)<br>
+          • Working Capital: Current Assets - Current Liabilities (Goal - 1.2 to 2)<br>
+          • Cash Conversion: Free Cash Flow / Net Income<br>
+          • PS: The EV displayed here is as of the share price while the statements data was made available, hence the calculation here and on the valuation page may differ.`,
+
+    risk: `<strong>Risk & Solvency Analysis:</strong><br>
+          <strong>Introduction</strong><br>
+          • <strong>Altman Z-Score:</strong> A "crystal ball" formula used to predict the likelihood of bankruptcy within 2 years. It combines five ratios covering liquidity, profitability, and leverage to provide a single health score.<br>
+          • <strong>Supplementary Analysis:</strong> While the Z-Score looks at the "big picture," these individual categories act as a diagnostic tool to find the specific source of financial stress.<br>
+          • Z = 1.2(A) + 1.4(B) + 3.3(C) + 0.6(D) + 1.0(E). The weights assigned are different because each component statistically contributes differently to Bankrupcy, determined using MDA (Multiple Discriminant Analysis) & to reduce TypeI - TypeII errors in prediction.<br>
+                              - A =   Working Capital / Total Assets (Weight 1.2) <br>
+                              - B = Retained Earnings / Total Assets (Weight 1.4) <br>
+                              - C = EBIT / Total Assets (Weight 3.3)<br>
+                              - D = Cap / Total Liab. (Weight 0.6)<br>
+                              - E =  Sales / Total Assets (Weight 1.0) <br>
+          *Note: The modern Z = 6.56(A) + 3.26(B) + 6.72(C) + 1.05(D) + 3.25 is the modern version used for non-US based, non-financial companies with less stricter classification*<br>
+          <br><strong>Reading Values (Z-Score):</strong><br>
+          • <strong>Safe Zone (> 2.99):</strong> High vitality. The company is structured and composed, with low risk of insolvency.<br>
+          • <strong>Grey Zone (1.81 - 2.99):</strong> Cautious flow. The company isn't in immediate danger but has "cracks" in its financial composure.<br>
+          • <strong>Distress Zone (< 1.81):</strong> High stress. Significant risk of bankruptcy; urgent corrective measures are needed to survive.<br><br>
+          <strong>Core Categories:</strong><br>
+          • <strong>Leverage (D/E & Int. Cov):</strong> Measures if the company is strong or drowning in debt. We look at whether they can actually afford the interest they owe.<br>
+          • <strong>Profitability (ROE):</strong> Measures how efficiently the company harnesses shareholder capital to create growth.<br><br>
+          <strong>Formulas:</strong><br>
+          • Debt-to-Equity: Total Liabilities / Shareholder Equity<br> (Goal < 2)<br>
+          • Interest Coverage: Operating Income / Interest Expense (Goal > 3x)<br>
+          • ROE: Net Income / Shareholder Equity (Goal > 10%)`
         };
 
         function switchTab(tabId) {
