@@ -470,6 +470,7 @@
                 options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
+            // Final Step: Show UI and set default tab
             document.getElementById('mainUI').style.display = 'block';
             switchTab('val');
 
@@ -479,8 +480,7 @@
         } finally { 
             document.getElementById('loader').style.display = 'none'; 
         }
-    }
+    } // This bracket closes the runAnalysis function
     </script>
 </body>
 </html>
-
