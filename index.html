@@ -1,4 +1,3 @@
-//Z-Trend
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -28,9 +27,6 @@
         .z-bar-container { background: #1c222d; padding: 15px; border-radius: 8px; }
         .sup-table { font-size: 0.8rem; margin-bottom: 0; width: 100%; }
         .sup-table th, .sup-table td { padding: 8px 4px; vertical-align: middle; }
-        .sup-table th:nth-child(3), .sup-table td:nth-child(3),
-        .sup-table th:nth-child(4), .sup-table td:nth-child(4) { text-align: center; }
-        .sup-table th:nth-child(3), .sup-table td:nth-child(3) { border-left: 1px solid #2a313d; color: #888; white-space: nowrap; }
         .z-floating-val { background: #2a313d; padding: 5px 15px; border-radius: 8px; border: 1px solid var(--pico-primary); font-family: monospace; font-size: 1.1rem; }
         .range-label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-bottom: 2px; }
         .trend-chart-container { height: 180px; width: 100%; margin-bottom: 15px; background: #1c222d; border-radius: 8px; padding: 10px; }
@@ -174,11 +170,9 @@
 
                     <article>
                         <header><strong>Supplementary Analysis & Trend</strong></header>
-                        
                         <div class="trend-chart-container">
                             <canvas id="zTrendChart"></canvas>
                         </div>
-
                         <table class="sup-table" role="grid">
                             <thead>
                                 <tr>
@@ -293,7 +287,6 @@
         async function runAnalysis(ticker) {
             document.getElementById('loader').style.display = 'block';
             try {
-                // Fetching 5 years of statements for the trend chart
                 const [pRes, mRes, hRes, incRes, bsRes, cfRes] = await Promise.all([
                     fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/key-metrics?symbol=${ticker}&apikey=${API_KEY}`),
@@ -311,20 +304,12 @@
                 const bss = await bsRes.json();
                 const cfs = await cfRes.json();
 
+                const bs = bss[0]; const inc = incs[0]; const cf = cfs[0];
                 const industry = document.getElementById('tickerSelect').selectedOptions[0].text.match(/\(([^)]+)\)/)[1];
                 const themeColor = sectorThemes[industry] || '#00a8e8';
                 document.documentElement.style.setProperty('--pico-primary', themeColor);
 
-                // --- DATA POPULATION (Current Year) ---
-                const bs = bss[0]; const inc = incs[0]; const cf = cfs[0];
-                document.getElementById('compName').innerText = profile.companyName;
-                document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
-                document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
-                document.getElementById('mktCapVal').innerText = `Cap: $${(profile.marketCap / 1e9).toFixed(1)}B`;
-                document.getElementById('val-fy').innerText = `Audited: FY ${bs.fiscalYear}`;
-                document.getElementById('sts-fy').innerText = `Fiscal Year: ${bs.fiscalYear}`;
-
-                // Valuation
+                // --- DATA POPULATION ---
                 document.getElementById('compName').innerText = profile.companyName;
                 document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
                 document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
@@ -342,41 +327,39 @@
                 document.getElementById('currRatioVal').innerText = cr.toFixed(2);
                 document.getElementById('crLight').style.background = cr > 1.2 ? "#004d26" : "#4d0000";
                 document.getElementById('crLight').innerText = cr > 1.2 ? "Healthy" : "Risk";
-                document.getElementById('evValSts').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
-                const ebitda = inc[0].ebitda || (inc[0].operatingIncome + (inc[0].depreciationAndAmortization || 0));
+
+                const ebitda = inc.ebitda || (inc.operatingIncome + (inc.depreciationAndAmortization || 0));
                 document.getElementById('ebitdaValSts').innerText = `$${(ebitda / 1e9).toFixed(1)}B`;
-                const margin = (inc[0].netIncome / inc[0].revenue) * 100;
+                const margin = (inc.netIncome / inc.revenue) * 100;
                 document.getElementById('netMarginVal').innerText = margin.toFixed(1) + '%';
                 document.getElementById('incLight').style.background = margin > 15 ? "#004d26" : "#664d00";
                 document.getElementById('incLight').innerText = margin > 15 ? "High Moat" : "Standard";
-                const epsGrowth = ((inc[0].eps - inc[1].eps) / Math.abs(inc[1].eps)) * 100;
-                document.getElementById('epsGrowthVal').innerText = epsGrowth.toFixed(1) + '%';
+
                 const fcf = cf.operatingCashFlow - cf.capitalExpenditure;
-                const conv = fcf / inc[0].netIncome;
+                const conv = fcf / inc.netIncome;
                 document.getElementById('cashConvVal').innerText = conv.toFixed(2) + 'x';
                 document.getElementById('cfLight').style.background = conv >= 1.0 ? "#004d26" : "#4d0000";
                 document.getElementById('cfLight').innerText = conv >= 1.0 ? "High Quality" : "Accrual Warning";
-                const workingCap = bs.totalCurrentAssets - bs.totalCurrentLiabilities;
-                document.getElementById('workingCapVal').innerText = `$${(workingCap / 1e9).toFixed(1)}B`;
 
+                // Tables
                 document.getElementById('leverageVal').innerText = metrics.netDebtToEBITDA.toFixed(2) + 'x';
                 document.getElementById('rangeVal').innerText = profile.range;
                 document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
-                document.getElementById('quickRatioVal').innerText = ((bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities).toFixed(2);
                 document.getElementById('assetsVal').innerText = `$${(bs.totalAssets / 1e9).toFixed(1)}B`;
                 document.getElementById('liabVal').innerText = `$${(bs.totalLiabilities / 1e9).toFixed(1)}B`;
-                document.getElementById('revVal').innerText = `$${(inc[0].revenue / 1e9).toFixed(1)}B`;
-                document.getElementById('netIncVal').innerText = `$${(inc[0].netIncome / 1e9).toFixed(1)}B`;
+                document.getElementById('revVal').innerText = `$${(inc.revenue / 1e9).toFixed(1)}B`;
+                document.getElementById('netIncVal').innerText = `$${(inc.netIncome / 1e9).toFixed(1)}B`;
                 document.getElementById('ocfVal').innerText = `$${(cf.operatingCashFlow / 1e9).toFixed(1)}B`;
                 document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
 
-                // --- RISK CALCULATION (Trend for 5 Years) ---
+                // --- RISK ANALYSIS (Trend for 5 Years) ---
                 const zHistory = bss.map((b, i) => {
                     const yearInc = incs[i];
+                    if(!yearInc) return { score: 0 };
                     const A = (b.totalCurrentAssets - b.totalCurrentLiabilities) / b.totalAssets;
                     const B = b.retainedEarnings / b.totalAssets;
                     const C = yearInc.operatingIncome / b.totalAssets;
-                    const D = profile.marketCap / b.totalLiabilities; // Note: simplified using current Cap
+                    const D = profile.marketCap / b.totalLiabilities;
                     const E = yearInc.revenue / b.totalAssets;
                     return { year: b.fiscalYear, score: (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E), A, B, C, D, E };
                 }).reverse();
@@ -384,28 +367,15 @@
                 const latestZ = zHistory[zHistory.length - 1];
                 document.getElementById('zScoreMain').innerText = latestZ.score.toFixed(2);
 
-                // Supplementary Table
-                const quickR = (bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities;
+                // Supplementary Metrics
                 const deR = bs.totalLiabilities / bs.totalStockholdersEquity;
-                const intCov = inc.operatingIncome / Math.abs(inc.interestExpense || 1);
                 const roeVal = (inc.netIncome / bs.totalStockholdersEquity) * 100;
-
                 document.getElementById('r-curr').innerText = cr.toFixed(2);
-                document.getElementById('r-quick').innerText = quickR.toFixed(2);
                 document.getElementById('r-de').innerText = deR.toFixed(2);
-                document.getElementById('r-ic').innerText = intCov.toFixed(1) + 'x';
                 document.getElementById('r-roe').innerText = roeVal.toFixed(1) + '%';
                 document.getElementById('r-eps').innerText = `$${inc.eps.toFixed(2)}`;
 
-                const zScoreModern = (6.56 * latestZ.A) + (3.26 * latestZ.B) + (6.72 * latestZ.C) + (1.05 * latestZ.D) + 3.25;
-                document.getElementById('r-z2').innerText = zScoreModern.toFixed(2);
-
-                document.getElementById('s-liq').innerText = (cr > 1.2 && quickR > 1.0) ? "✅" : "⚠️";
-                document.getElementById('s-lev').innerText = (deR < 2.0 && intCov > 3) ? "✅" : "⚠️";
-                document.getElementById('s-pro').innerText = (roeVal > 10) ? "✅" : "⚠️";
-                document.getElementById('s-z2').innerText = (zScoreModern > 5.85) ? "✅" : "⚠️";
-
-                // Traffic Lights
+                // Traffic Lights Logic
                 ['z-safe', 'z-grey', 'z-risk'].forEach(id => document.getElementById(id).classList.remove('active'));
                 if(latestZ.score > 2.99) document.getElementById('z-safe').classList.add('active');
                 else if(latestZ.score > 1.8) document.getElementById('z-grey').classList.add('active');
@@ -422,7 +392,6 @@
                 document.getElementById('riskSummary').innerText = summary;
 
                 // --- CHARTS ---
-                // 1. Z-Score Component Bar Chart
                 if (zChart) zChart.destroy();
                 zChart = new Chart(document.getElementById('zScoreChart'), {
                     type: 'bar',
@@ -432,56 +401,40 @@
                     },
                     options: { 
                         maintainAspectRatio: false, 
-                        plugins: { legend: { display: false }, datalabels: { display: true, formatter: v => v.toFixed(2), color: '#fff', font: {size: 9} } }
+                        plugins: { legend: { display: false }, datalabels: { display: true, formatter: v => v.toFixed(2), color: '#fff' } }
                     }
                 });
 
-                // 2. NEW: Z-Score Trend Chart
                 if (zTrendChart) zTrendChart.destroy();
                 zTrendChart = new Chart(document.getElementById('zTrendChart'), {
                     type: 'line',
                     data: {
                         labels: zHistory.map(z => z.year),
-                        datasets: [{ 
-                            label: 'Z-Score Trend',
-                            data: zHistory.map(z => z.score), 
-                            borderColor: themeColor, 
-                            backgroundColor: themeColor + '33',
-                            fill: true,
-                            tension: 0.4 
-                        }]
+                        datasets: [{ label: 'Z-Score', data: zHistory.map(z => z.score), borderColor: themeColor, fill: true, tension: 0.4 }]
                     },
-                    options: { 
-                        maintainAspectRatio: false, 
-                        plugins: { legend: { display: false }, datalabels: { display: false } },
-                        scales: { y: { grid: { color: '#2a313d' } } }
-                    }
+                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
 
-                // 3. Price Chart
                 if (priceChart) priceChart.destroy();
                 priceChart = new Chart(document.getElementById('priceChart'), {
                     type: 'line',
                     data: {
                         labels: history.map(d => d.date.substring(5)),
-                        datasets: [{ data: history.map(d => d.price), borderColor: themeColor, tension: 0.3 }]
+                        datasets: [{ data: history.map(d => d.price || d.close), borderColor: themeColor, tension: 0.3 }]
                     },
-                    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
+                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
 
                 document.getElementById('mainUI').style.display = 'block';
                 switchTab('val');
-                
-                // Risk Summary
-                let summary = "";
-                if (latestZ.score > 2.99) summary = `${profile.symbol} is financially bulletproof (Z-Score: ${latestZ.score.toFixed(2)}).`;
-                else if (latestZ.score > 1.8) summary = `${profile.symbol} is in the 'Grey Zone' (${latestZ.score.toFixed(2)}). Monitor leverage.`;
-                else summary = `URGENT: ${profile.symbol} is in the 'Distress Zone' (${latestZ.score.toFixed(2)}). Solvency risk is high.`;
-                document.getElementById('riskSummary').innerText = summary;
 
-            } catch (e) { console.error(e); } finally { document.getElementById('loader').style.display = 'none'; }
+            } catch (e) { 
+                console.error(e); 
+                alert("Failed to fetch data. Ensure your API key is valid.");
+            } finally { 
+                document.getElementById('loader').style.display = 'none'; 
+            }
         }
     </script>
 </body>
 </html>
-
