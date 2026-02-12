@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>EduVal - Financial Literacy bridged with Data Science</title>
+    <title>EduVal - Financial Literacy Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -19,12 +19,30 @@
         
         .sts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
         .sts-card { background: var(--pico-card-background-color); padding: 1rem; border-radius: 8px; border-top: 3px solid var(--pico-primary); }
-        .traffic-light { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin: 4px 0; color: #fff; opacity: 0.2; transition: all 0.3s; border: 2px solid transparent; }
-        .traffic-light.active { opacity: 1; border: 2px solid #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        
+        /* FIXED TRAFFIC LIGHTS CSS */
+        .traffic-light { 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            font-size: 0.75rem; 
+            display: inline-block; 
+            margin: 4px 0; 
+            color: #fff; 
+            opacity: 0.15; /* Dim when inactive */
+            transition: all 0.3s ease; 
+            border: 2px solid transparent;
+            text-align: center;
+        }
+        .traffic-light.active { 
+            opacity: 1 !important; /* Force bright when active */
+            border: 2px solid rgba(255,255,255,0.5); 
+            box-shadow: 0 0 12px rgba(255,255,255,0.1); 
+        }
+
         .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 5px 0; font-size: 0.85rem; }
         .chart-wrapper { height: 200px; width: 100%; position: relative; margin-bottom: 10px; }
         .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #fff; white-space: nowrap; }
-        .section-sub { font-size: 0.75rem; color: #888; margin-bottom: 10px; display: block; }
         .fy-anchor { font-weight: bold; color: var(--pico-primary); font-size: 0.85rem; background: #1c222d; padding: 2px 8px; border-radius: 4px; }
         progress { display: none; margin: 10px 0; }
         .z-bar-container { background: #1c222d; padding: 10px; border-radius: 8px; height: 180px; }
@@ -105,31 +123,25 @@
                     <div class="sts-card">
                         <h6>Balance Sheet</h6>
                         <div class="metric-row"><span>Current Ratio</span><span id="currRatioVal">-</span></div>
-                        <div id="crLight" class="traffic-light active">-</div>
+                        <div id="crLight" class="traffic-light active">Pending</div>
                         <hr>
                         <div class="metric-row"><span>Quick Ratio</span><span id="quickRatioVal">-</span></div>
                         <div class="metric-row"><span>Total Assets</span><span id="assetsVal">-</span></div>
                         <div class="metric-row"><span>Total Liab.</span><span id="liabVal">-</span></div>
-                        <div class="metric-row" style="border-top: 1px dashed #444; margin-top:5px;">
-                            <span>Enterprise Value</span><span id="evValSts" style="color:var(--pico-primary)">-</span>
-                        </div>
                     </div>
                     <div class="sts-card">
                         <h6>Income Statement</h6>
                         <div class="metric-row"><span>Net Margin</span><span id="netMarginVal">-</span></div>
-                        <div id="incLight" class="traffic-light active">-</div>
+                        <div id="incLight" class="traffic-light active">Pending</div>
                         <hr>
                         <div class="metric-row"><span>EPS Growth</span><span id="epsGrowthVal">-</span></div>
                         <div class="metric-row"><span>Revenue</span><span id="revVal">-</span></div>
                         <div class="metric-row"><span>Net Income</span><span id="netIncVal">-</span></div>
-                        <div class="metric-row" style="border-top: 1px dashed #444; margin-top:5px;">
-                            <span>EBITDA</span><span id="ebitdaValSts" style="color:var(--pico-primary)">-</span>
-                        </div>
                     </div>
                     <div class="sts-card">
                         <h6>Cash Flow</h6>
                         <div class="metric-row"><span>Cash Conversion</span><span id="cashConvVal">-</span></div>
-                        <div id="cfLight" class="traffic-light active">-</div>
+                        <div id="cfLight" class="traffic-light active">Pending</div>
                         <hr>
                         <div class="metric-row"><span>Operating CF</span><span id="ocfVal">-</span></div>
                         <div class="metric-row"><span>Working Cap</span><span id="workingCapVal">-</span></div>
@@ -244,7 +256,6 @@
             ['view-val', 'view-sts', 'view-risk'].forEach(v => document.getElementById(v).style.display = 'none');
             const targetView = document.getElementById(`view-${tabId}`);
             targetView.style.display = (tabId === 'sts' || tabId === 'risk') ? 'block' : 'grid';
-            if(tabId === 'risk') targetView.style.display = 'block'; // Ensure grid handles correctly
 
             ['val', 'sts', 'risk'].forEach(t => {
                 const btn = document.getElementById(`btn-${t}`);
@@ -262,7 +273,7 @@
                     fetch(`https://financialmodelingprep.com/stable/historical-price-eod/light?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/income-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/balance-sheet-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`),
-                    fetch(`https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${ticker}&limit=1&apikey=${API_KEY}`)
+                    fetch(`https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${ticker}&limit=5&apikey=${API_KEY}`)
                 ]);
 
                 const profile = (await pRes.json())[0];
@@ -271,61 +282,110 @@
                 const history = (historyData.historical || historyData).slice(0, 7).reverse();
                 const incs = await incRes.json();
                 const bss = await bsRes.json();
-                const cf = (await cfRes.json())[0];
+                const cfs = await cfRes.json();
 
                 const industry = document.getElementById('tickerSelect').selectedOptions[0].text.match(/\(([^)]+)\)/)[1];
                 const themeColor = sectorThemes[industry] || '#00a8e8';
                 document.documentElement.style.setProperty('--pico-primary', themeColor);
 
-                // Populate UI (Valuation & Statements)
+                // Populate Valuation Data
                 document.getElementById('compName').innerText = profile.companyName;
                 document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
                 document.getElementById('evEbitdaDisplay').innerText = metrics.evToEBITDA.toFixed(2) + 'x';
-                document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
-                document.getElementById('mktCapVal').innerText = `Cap: $${(profile.marketCap / 1e9).toFixed(1)}B`;
+                document.getElementById('leverageVal').innerText = metrics.netDebtToEBITDA.toFixed(2) + 'x';
+                document.getElementById('rangeVal').innerText = profile.range;
+                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
+                document.getElementById('val-fy').innerText = `Audited: FY ${bss[0].calendarYear}`;
+
+                // Populate Statements Data
+                const cr = bss[0].totalCurrentAssets / bss[0].totalCurrentLiabilities;
+                const margin = (incs[0].netIncome / incs[0].revenue) * 100;
+                const fcf = cfs[0].operatingCashFlow - cfs[0].capitalExpenditure;
+                const conv = fcf / incs[0].netIncome;
+
+                document.getElementById('currRatioVal').innerText = cr.toFixed(2);
+                document.getElementById('quickRatioVal').innerText = ((bss[0].cashAndCashEquivalents + bss[0].netReceivables) / bss[0].totalCurrentLiabilities).toFixed(2);
+                document.getElementById('assetsVal').innerText = `$${(bss[0].totalAssets / 1e9).toFixed(1)}B`;
+                document.getElementById('liabVal').innerText = `$${(bss[0].totalLiabilities / 1e9).toFixed(1)}B`;
                 
-                // Resilience Calculations
+                document.getElementById('netMarginVal').innerText = margin.toFixed(1) + '%';
+                document.getElementById('epsGrowthVal').innerText = (((incs[0].eps - incs[1].eps)/Math.abs(incs[1].eps))*100).toFixed(1) + '%';
+                document.getElementById('revVal').innerText = `$${(incs[0].revenue / 1e9).toFixed(1)}B`;
+                document.getElementById('netIncVal').innerText = `$${(incs[0].netIncome / 1e9).toFixed(1)}B`;
+
+                document.getElementById('cashConvVal').innerText = conv.toFixed(2) + 'x';
+                document.getElementById('ocfVal').innerText = `$${(cfs[0].operatingCashFlow / 1e9).toFixed(1)}B`;
+                document.getElementById('workingCapVal').innerText = `$${((bss[0].totalCurrentAssets - bss[0].totalCurrentLiabilities)/1e9).toFixed(1)}B`;
+                document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
+                document.getElementById('sts-fy').innerText = `Fiscal Year: ${bss[0].calendarYear}`;
+
+                // FIX 1: STATEMENTS LIGHTS
+                const crLight = document.getElementById('crLight');
+                crLight.style.background = cr > 1.2 ? "#004d26" : "#4d0000";
+                crLight.innerText = cr > 1.2 ? "Healthy" : "Low Liquidity";
+                crLight.classList.add('active');
+
+                const incLight = document.getElementById('incLight');
+                incLight.style.background = margin > 15 ? "#004d26" : "#664d00";
+                incLight.innerText = margin > 15 ? "High Moat" : "Standard";
+                incLight.classList.add('active');
+
+                const cfLight = document.getElementById('cfLight');
+                cfLight.style.background = conv >= 1.0 ? "#004d26" : "#4d0000";
+                cfLight.innerText = conv >= 1.0 ? "High Quality" : "Accrual Risk";
+                cfLight.classList.add('active');
+
+                // FIX 2: RESILIENCE CALCULATIONS & LIGHTS
                 const calcZ = (i, b, m) => {
                     const A = (b.totalCurrentAssets - b.totalCurrentLiabilities) / b.totalAssets;
                     const B = b.retainedEarnings / b.totalAssets;
                     const C = i.operatingIncome / b.totalAssets;
                     const D = m / b.totalLiabilities;
                     const E = i.revenue / b.totalAssets;
-                    return (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E);
+                    return [(1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E), A, B, C, D, E];
                 };
 
-                const currentZ = calcZ(incs[0], bss[0], profile.marketCap);
+                const [currentZ, zA, zB, zC, zD, zE] = calcZ(incs[0], bss[0], profile.marketCap);
                 document.getElementById('zScoreMain').innerText = currentZ.toFixed(2);
-                document.getElementById('probDisplay').innerText = `P(): ${currentZ > 3 ? '<1%' : (currentZ < 1.8 ? '>70%' : '15%')}`;
+                document.getElementById('probDisplay').innerText = `P(): ${currentZ > 2.99 ? '<1%' : (currentZ < 1.81 ? '>70%' : '15%')}`;
                 
-                // Traffic Lights
+                // Clear and Set Resilience Lights
                 ['z-safe', 'z-grey', 'z-risk'].forEach(id => document.getElementById(id).classList.remove('active'));
                 if(currentZ > 2.99) document.getElementById('z-safe').classList.add('active');
-                else if(currentZ > 1.8) document.getElementById('z-grey').classList.add('active');
+                else if(currentZ > 1.81) document.getElementById('z-grey').classList.add('active');
                 else document.getElementById('z-risk').classList.add('active');
 
-                // Supplemental Table
-                document.getElementById('r-curr').innerText = (bss[0].totalCurrentAssets / bss[0].totalCurrentLiabilities).toFixed(2);
-                document.getElementById('r-de').innerText = (bss[0].totalLiabilities / bss[0].totalStockholdersEquity).toFixed(2);
-                document.getElementById('r-roe').innerText = ((incs[0].netIncome / bss[0].totalStockholdersEquity)*100).toFixed(1) + '%';
-                document.getElementById('s-liq').innerText = (bss[0].totalCurrentAssets / bss[0].totalCurrentLiabilities) > 1.2 ? "✅" : "⚠️";
-                document.getElementById('s-lev').innerText = (bss[0].totalLiabilities / bss[0].totalStockholdersEquity) < 2 ? "✅" : "⚠️";
-                document.getElementById('s-pro').innerText = (incs[0].netIncome / bss[0].totalStockholdersEquity) > 0.1 ? "✅" : "⚠️";
+                // Supplemental Table Metrics
+                const roe = (incs[0].netIncome / bss[0].totalStockholdersEquity) * 100;
+                const de = bss[0].totalLiabilities / bss[0].totalStockholdersEquity;
+                
+                document.getElementById('r-curr').innerText = cr.toFixed(2);
+                document.getElementById('r-de').innerText = de.toFixed(2);
+                document.getElementById('r-roe').innerText = roe.toFixed(1) + '%';
+                
+                document.getElementById('s-liq').innerText = cr > 1.2 ? "✅" : "⚠️";
+                document.getElementById('s-lev').innerText = de < 2.0 ? "✅" : "⚠️";
+                document.getElementById('s-pro').innerText = roe > 10 ? "✅" : "⚠️";
 
-                // Z-Score Weights Bar Chart
+                // Update Summary
+                document.getElementById('riskSummary').innerText = currentZ > 2.99 ? 
+                    `${ticker} is financially bulletproof. High vitality and low insolvency risk.` : 
+                    (currentZ > 1.81 ? `${ticker} is in the Grey Zone. Stable, but monitor debt levels.` : 
+                    `URGENT: ${ticker} shows high distress. Immediate cash preservation needed.`);
+
+                // CHARTS
                 const zCtx = document.getElementById('zScoreChart').getContext('2d');
                 if (zChart) zChart.destroy();
                 zChart = new Chart(zCtx, {
                     type: 'bar',
                     data: {
                         labels: ['Liq', 'Reten', 'EBIT', 'Cap', 'Sales'],
-                        datasets: [{ data: [1.2, 1.4, 3.3, 0.6, 1.0], backgroundColor: themeColor }]
+                        datasets: [{ data: [zA*1.2, zB*1.4, zC*3.3, zD*0.6, zE*1.0], backgroundColor: themeColor }]
                     },
                     options: { maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
                 });
 
-                // Z-Score Trend Chart (The "Bell Curve" Style Movement)
-                const trendData = bss.map((b, idx) => calcZ(incs[idx], b, profile.marketCap)).reverse();
+                const trendData = bss.map((b, idx) => calcZ(incs[idx], b, profile.marketCap)[0]).reverse();
                 const trendCtx = document.getElementById('zTrendChart').getContext('2d');
                 if (zTrendChart) zTrendChart.destroy();
                 zTrendChart = new Chart(trendCtx, {
@@ -333,7 +393,6 @@
                     data: {
                         labels: bss.map(b => b.calendarYear).reverse(),
                         datasets: [{ 
-                            label: 'Z-Score Trend', 
                             data: trendData, 
                             borderColor: themeColor, 
                             backgroundColor: themeColor + '33',
@@ -344,7 +403,6 @@
                     options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
 
-                // Price Chart
                 const pCtx = document.getElementById('priceChart').getContext('2d');
                 if (priceChart) priceChart.destroy();
                 priceChart = new Chart(pCtx, {
