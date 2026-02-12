@@ -325,29 +325,50 @@
                 document.getElementById('sts-fy').innerText = `Fiscal Year: ${bs.fiscalYear}`;
 
                 // Valuation
+                document.getElementById('compName').innerText = profile.companyName;
+                document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
+                document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
+                document.getElementById('mktCapVal').innerText = `Cap: $${(profile.marketCap / 1e9).toFixed(1)}B`;
+                document.getElementById('val-fy').innerText = `Audited: FY ${bs.fiscalYear}`;
+                document.getElementById('sts-fy').innerText = `Fiscal Year: ${bs.fiscalYear}`;
+
                 const evEbitda = metrics.evToEBITDA;
                 document.getElementById('evEbitdaDisplay').innerText = evEbitda.toFixed(2) + 'x';
                 const vBadge = document.getElementById('verdictBadge');
                 vBadge.innerText = evEbitda < 10 ? "Value Play" : (evEbitda < 25 ? "Fair Value" : "Premium Growth");
                 vBadge.style.background = evEbitda < 10 ? "#004d26" : (evEbitda < 25 ? "#664d00" : "#3b1e6e");
                 
-                // Statements
                 const cr = bs.totalCurrentAssets / bs.totalCurrentLiabilities;
                 document.getElementById('currRatioVal').innerText = cr.toFixed(2);
                 document.getElementById('crLight').style.background = cr > 1.2 ? "#004d26" : "#4d0000";
                 document.getElementById('crLight').innerText = cr > 1.2 ? "Healthy" : "Risk";
                 document.getElementById('evValSts').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
-                const ebitda = inc.ebitda || (inc.operatingIncome + (inc.depreciationAndAmortization || 0));
+                const ebitda = inc[0].ebitda || (inc[0].operatingIncome + (inc[0].depreciationAndAmortization || 0));
                 document.getElementById('ebitdaValSts').innerText = `$${(ebitda / 1e9).toFixed(1)}B`;
-                const margin = (inc.netIncome / inc.revenue) * 100;
+                const margin = (inc[0].netIncome / inc[0].revenue) * 100;
                 document.getElementById('netMarginVal').innerText = margin.toFixed(1) + '%';
                 document.getElementById('incLight').style.background = margin > 15 ? "#004d26" : "#664d00";
                 document.getElementById('incLight').innerText = margin > 15 ? "High Moat" : "Standard";
-                
+                const epsGrowth = ((inc[0].eps - inc[1].eps) / Math.abs(inc[1].eps)) * 100;
+                document.getElementById('epsGrowthVal').innerText = epsGrowth.toFixed(1) + '%';
                 const fcf = cf.operatingCashFlow - cf.capitalExpenditure;
-                document.getElementById('cashConvVal').innerText = (fcf / inc.netIncome).toFixed(2) + 'x';
-                document.getElementById('cfLight').style.background = (fcf / inc.netIncome) >= 1.0 ? "#004d26" : "#4d0000";
-                document.getElementById('cfLight').innerText = (fcf / inc.netIncome) >= 1.0 ? "High Quality" : "Accrual Warning";
+                const conv = fcf / inc[0].netIncome;
+                document.getElementById('cashConvVal').innerText = conv.toFixed(2) + 'x';
+                document.getElementById('cfLight').style.background = conv >= 1.0 ? "#004d26" : "#4d0000";
+                document.getElementById('cfLight').innerText = conv >= 1.0 ? "High Quality" : "Accrual Warning";
+                const workingCap = bs.totalCurrentAssets - bs.totalCurrentLiabilities;
+                document.getElementById('workingCapVal').innerText = `$${(workingCap / 1e9).toFixed(1)}B`;
+
+                document.getElementById('leverageVal').innerText = metrics.netDebtToEBITDA.toFixed(2) + 'x';
+                document.getElementById('rangeVal').innerText = profile.range;
+                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
+                document.getElementById('quickRatioVal').innerText = ((bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities).toFixed(2);
+                document.getElementById('assetsVal').innerText = `$${(bs.totalAssets / 1e9).toFixed(1)}B`;
+                document.getElementById('liabVal').innerText = `$${(bs.totalLiabilities / 1e9).toFixed(1)}B`;
+                document.getElementById('revVal').innerText = `$${(inc[0].revenue / 1e9).toFixed(1)}B`;
+                document.getElementById('netIncVal').innerText = `$${(inc[0].netIncome / 1e9).toFixed(1)}B`;
+                document.getElementById('ocfVal').innerText = `$${(cf.operatingCashFlow / 1e9).toFixed(1)}B`;
+                document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
 
                 // --- RISK CALCULATION (Trend for 5 Years) ---
                 const zHistory = bss.map((b, i) => {
@@ -389,6 +410,16 @@
                 if(latestZ.score > 2.99) document.getElementById('z-safe').classList.add('active');
                 else if(latestZ.score > 1.8) document.getElementById('z-grey').classList.add('active');
                 else document.getElementById('z-risk').classList.add('active');
+
+                let summary = "";
+                if (zScore > 2.99) {
+                    summary = `${profile.symbol} is financially bulletproof (Z-Score: ${zScore.toFixed(2)}). Its ${roeVal > 15 ? 'superb ROE' : 'stable earnings'} provide a massive safety buffer. **Action:** Focus on long-term expansion or returning capital to shareholders.`;
+                } else if (zScore > 1.8) {
+                    summary = `${profile.symbol} is in the 'Grey Zone' (${zScore.toFixed(2)}). While stable, the ${deR > 2 ? 'leverage' : 'liquidity'} needs monitoring. **Action:** Improve operational efficiency and prioritize paying down expensive debt to boost interest coverage.`;
+                } else {
+                    summary = `URGENT: ${profile.symbol} is in the 'Distress Zone' (${zScore.toFixed(2)}). Solvency risk is high due to ${margin < 0 ? 'losses' : 'debt burden'}. **Action:** Restructure debt, cut non-essential costs, and explore asset sales to preserve cash.`;
+                }
+                document.getElementById('riskSummary').innerText = summary;
 
                 // --- CHARTS ---
                 // 1. Z-Score Component Bar Chart
@@ -453,3 +484,4 @@
     </script>
 </body>
 </html>
+
