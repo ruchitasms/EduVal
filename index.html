@@ -1,3 +1,4 @@
+//Z-Trend
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -13,49 +14,31 @@
         .nav-tabs button.secondary {background-color: #2a313d; border-color: #2a313d; color: #888;}
         .nav-tabs button.active {background-color: var(--pico-primary); border-color: var(--pico-primary); color: #fff; }
         .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1.3fr; gap: 1.5rem; }
-        
-        /* Updated Risk Grid to match sketch */
-        .risk-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.5rem; }
-        
+        .risk-grid { display: grid; grid-template-columns: 1.1fr 1.4fr; gap: 1.5rem; }
         .sts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
         .sts-card { background: var(--pico-card-background-color); padding: 1rem; border-radius: 8px; border-top: 3px solid var(--pico-primary); }
-        
-        /* FIXED TRAFFIC LIGHTS CSS */
-        .traffic-light { 
-            padding: 4px 8px; 
-            border-radius: 4px; 
-            font-weight: bold; 
-            font-size: 0.75rem; 
-            display: inline-block; 
-            margin: 4px 0; 
-            color: #fff; 
-            opacity: 0.15; /* Dim when inactive */
-            transition: all 0.3s ease; 
-            border: 2px solid transparent;
-            text-align: center;
-        }
-        .traffic-light.active { 
-            opacity: 1 !important; /* Force bright when active */
-            border: 2px solid rgba(255,255,255,0.5); 
-            box-shadow: 0 0 12px rgba(255,255,255,0.1); 
-        }
-
+        .traffic-light { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; display: inline-block; margin: 4px 0; color: #fff; opacity: 0.2; transition: all 0.3s; border: 2px solid transparent; }
+        .traffic-light.active { opacity: 1; border: 2px solid #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
         .metric-row { display: flex; justify-content: space-between; border-bottom: 1px solid #2a313d; padding: 5px 0; font-size: 0.85rem; }
-        .chart-wrapper { height: 200px; width: 100%; position: relative; margin-bottom: 10px; }
+        .chart-wrapper { height: 300px; width: 100%; position: relative; }
         .verdict-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #fff; white-space: nowrap; }
+        .section-sub { font-size: 0.75rem; color: #888; margin-bottom: 10px; display: block; }
         .fy-anchor { font-weight: bold; color: var(--pico-primary); font-size: 0.85rem; background: #1c222d; padding: 2px 8px; border-radius: 4px; }
         progress { display: none; margin: 10px 0; }
-        .z-bar-container { background: #1c222d; padding: 10px; border-radius: 8px; height: 180px; }
-        .sup-table { font-size: 0.75rem; margin-bottom: 0; width: 100%; }
+        .z-bar-container { background: #1c222d; padding: 15px; border-radius: 8px; }
+        .sup-table { font-size: 0.8rem; margin-bottom: 0; width: 100%; }
+        .sup-table th, .sup-table td { padding: 8px 4px; vertical-align: middle; }
+        .sup-table th:nth-child(3), .sup-table td:nth-child(3),
+        .sup-table th:nth-child(4), .sup-table td:nth-child(4) { text-align: center; }
+        .sup-table th:nth-child(3), .sup-table td:nth-child(3) { border-left: 1px solid #2a313d; color: #888; white-space: nowrap; }
         .z-floating-val { background: #2a313d; padding: 5px 15px; border-radius: 8px; border: 1px solid var(--pico-primary); font-family: monospace; font-size: 1.1rem; }
-        .range-label { font-size: 0.6rem; color: #888; text-transform: uppercase; }
-        .prob-label { font-size: 0.8rem; font-weight: bold; color: var(--pico-primary); margin: 10px 0; }
+        .range-label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-bottom: 2px; }
+        .trend-chart-container { height: 180px; width: 100%; margin-bottom: 15px; background: #1c222d; border-radius: 8px; padding: 10px; }
     </style>
 </head>
 <body>
     <main class="container">
         <h2>EduVal - Let's learn Finance Together! 🦉</h2>
-        
         <header>
             <select id="tickerSelect" onchange="runAnalysis(this.value)">
                 <option value="" disabled selected>Select Company to Start Analysis...</option>
@@ -106,14 +89,14 @@
                 <article>
                     <header>
                         <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                            <strong>7-Day Momentum</strong>
+                            <strong>7-Day Momentum (2026)</strong>
                             <div>
                                 <span id="priceDisplay" style="color:var(--pico-primary); font-weight:bold; margin-right:15px;">Price: -</span><br>
                                 <small id="mktCapVal" style="color:#888;">Cap: -</small>
                             </div>
                         </div>
                     </header>  
-                    <div class="chart-wrapper" style="height:300px;"><canvas id="priceChart"></canvas></div>
+                    <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
                 </article>
             </div>
 
@@ -121,27 +104,36 @@
                 <div style="margin-bottom: 10px;"><span class="fy-anchor" id="sts-fy">Fiscal Year: -</span></div>
                 <div class="sts-grid">
                     <div class="sts-card">
-                        <h6>Balance Sheet</h6>
+                        <h6 style="margin:0;">Balance Sheet</h6>
+                        <span class="section-sub">Company's Net Worth</span>
                         <div class="metric-row"><span>Current Ratio</span><span id="currRatioVal">-</span></div>
-                        <div id="crLight" class="traffic-light active">Pending</div>
+                        <div id="crLight" class="traffic-light active">-</div>
                         <hr>
                         <div class="metric-row"><span>Quick Ratio</span><span id="quickRatioVal">-</span></div>
                         <div class="metric-row"><span>Total Assets</span><span id="assetsVal">-</span></div>
                         <div class="metric-row"><span>Total Liab.</span><span id="liabVal">-</span></div>
+                        <div class="metric-row" style="border-top: 1px dashed #444; margin-top:5px;">
+                            <span>Enterprise Value</span><span id="evValSts" style="color:var(--pico-primary)">-</span>
+                        </div>
                     </div>
                     <div class="sts-card">
-                        <h6>Income Statement</h6>
+                        <h6 style="margin:0;">Income Statement</h6>
+                        <span class="section-sub">Company's Profitability</span>
                         <div class="metric-row"><span>Net Margin</span><span id="netMarginVal">-</span></div>
-                        <div id="incLight" class="traffic-light active">Pending</div>
+                        <div id="incLight" class="traffic-light active">-</div>
                         <hr>
                         <div class="metric-row"><span>EPS Growth</span><span id="epsGrowthVal">-</span></div>
                         <div class="metric-row"><span>Revenue</span><span id="revVal">-</span></div>
                         <div class="metric-row"><span>Net Income</span><span id="netIncVal">-</span></div>
+                        <div class="metric-row" style="border-top: 1px dashed #444; margin-top:5px;">
+                            <span>EBITDA</span><span id="ebitdaValSts" style="color:var(--pico-primary)">-</span>
+                        </div>
                     </div>
                     <div class="sts-card">
-                        <h6>Cash Flow</h6>
+                        <h6 style="margin:0;">Cash Flow</h6>
+                        <span class="section-sub">Company's Cash Generation</span>
                         <div class="metric-row"><span>Cash Conversion</span><span id="cashConvVal">-</span></div>
-                        <div id="cfLight" class="traffic-light active">Pending</div>
+                        <div id="cfLight" class="traffic-light active">-</div>
                         <hr>
                         <div class="metric-row"><span>Operating CF</span><span id="ocfVal">-</span></div>
                         <div class="metric-row"><span>Working Cap</span><span id="workingCapVal">-</span></div>
@@ -153,42 +145,74 @@
             <div id="view-risk" style="display:none;">
                 <div class="risk-grid">
                     <article>
-                        <header><strong>Current Z-Score</strong></header>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <header style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong>Altman's Z-Score (Z")</strong>
                             <div class="z-floating-val" id="zScoreMain">-</div>
-                            <div class="prob-label" id="probDisplay">P(): -</div>
+                        </header>
+                        <div style="display: flex; gap: 8px; margin-bottom: 1.5rem;">
+                            <div style="flex:1; text-align:center;">
+                                <div class="range-label">Range > 2.99</div>
+                                <div id="z-safe" class="traffic-light" style="background:#004d26; width:100%;">Safe</div>
+                            </div>
+                            <div style="flex:1; text-align:center;">
+                                <div class="range-label">1.81 - 2.99</div>
+                                <div id="z-grey" class="traffic-light" style="background:#664d00; width:100%;">Grey</div>
+                            </div>
+                            <div style="flex:1; text-align:center;">
+                                <div class="range-label">Range < 1.81</div>
+                                <div id="z-risk" class="traffic-light" style="background:#4d0000; width:100%;">Risk</div>
+                            </div>
                         </div>
-                        
-                        <div style="display: flex; gap: 4px; margin: 1rem 0;">
-                            <div style="flex:1; text-align:center;"><div class="range-label">>2.99</div><div id="z-safe" class="traffic-light" style="background:#004d26; width:100%;">Safe</div></div>
-                            <div style="flex:1; text-align:center;"><div class="range-label">1.8-3</div><div id="z-grey" class="traffic-light" style="background:#664d00; width:100%;">Grey</div></div>
-                            <div style="flex:1; text-align:center;"><div class="range-label"><1.81</div><div id="z-risk" class="traffic-light" style="background:#4d0000; width:100%;">Risk</div></div>
-                        </div>
-
                         <div class="z-bar-container">
-                            <canvas id="zScoreChart"></canvas>
+                            <canvas id="zScoreChart" height="200"></canvas>
                         </div>
-                        
-                        <div style="background:#1c222d; padding:10px; border-radius:8px; margin-top:10px; border-left: 4px solid #444;">
+                        <div style="background:#1c222d; padding:12px; border-radius:8px; border-left:4px solid var(--pico-primary); margin-top:10px;">
                             <strong>Risk Summary:</strong>
-                            <p id="riskSummary" style="font-size:0.75rem; margin:5px 0 0 0; color:#ccc;">Select company...</p>
+                            <p id="riskSummary" style="font-size:0.8rem; margin:5px 0 0 0; line-height:1.4; color:#ccc;">Select a company to see report.</p>
                         </div>
                     </article>
 
                     <article>
-                        <header><strong>Supplementary Analysis</strong></header>
-                        <div class="chart-wrapper">
+                        <header><strong>Supplementary Analysis & Trend</strong></header>
+                        
+                        <div class="trend-chart-container">
                             <canvas id="zTrendChart"></canvas>
                         </div>
-                        
+
                         <table class="sup-table" role="grid">
                             <thead>
-                                <tr><th>Category</th><th>Key Metrics</th><th>Goal</th><th>Stat</th></tr>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Key Metrics</th>
+                                    <th>Goal</th> 
+                                    <th>Status</th>
+                                </tr>
                             </thead>
                             <tbody>
-                                <tr><td><strong>Liq</strong></td><td>Cur: <span id="r-curr">-</span></td><td>>1.2</td><td id="s-liq">-</td></tr>
-                                <tr><td><strong>Lev</strong></td><td>D/E: <span id="r-de">-</span></td><td><2.0</td><td id="s-lev">-</td></tr>
-                                <tr><td><strong>Prof</strong></td><td>ROE: <span id="r-roe">-</span></td><td>>10%</td><td id="s-pro">-</td></tr>
+                                <tr>
+                                    <td><strong>Liquidity</strong></td>
+                                    <td>Curr: <span id="r-curr">-</span> | Quick: <span id="r-quick">-</span></td>
+                                    <td style="font-size:0.7rem;">> 1.2<br>> 1.0</td> 
+                                    <td id="s-liq" style="font-size:1.2rem;">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Leverage</strong></td>
+                                    <td>D/E: <span id="r-de">-</span> | Int: <span id="r-ic">-</span></td>
+                                    <td style="font-size:0.7rem;">< 2.0<br>> 3.0x</td> 
+                                    <td id="s-lev" style="font-size:1.2rem;">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Profit</strong></td>
+                                    <td>ROE: <span id="r-roe">-</span> | EPS: <span id="r-eps">-</span></td>
+                                    <td style="font-size:0.7rem;">> 10%<br>Pos.</td> 
+                                    <td id="s-pro" style="font-size:1.2rem;">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Modern Z''</strong></td>
+                                    <td>Non-Mfg Score: <span id="r-z2">-</span></td>
+                                    <td style="font-size:0.7rem;">> 5.85</td> 
+                                    <td id="s-z2" style="font-size:1.2rem;">-</td>
+                                </tr>
                             </tbody>
                         </table>
                     </article>
@@ -199,9 +223,11 @@
 
     <script>
         Chart.register(ChartDataLabels);
-        let priceChart, zChart, zTrendChart;
+        let priceChart = null;
+        let zChart = null;
+        let zTrendChart = null;
         const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
-        const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#ffffff', 'Fintech': '#ffcc00' };
+        const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#fff0ff', 'Fintech': '#ffcc00' };
 
         const learnings = {
             val: `<strong>Valuation Tag Logic:</strong><br>
@@ -261,12 +287,13 @@
                 const btn = document.getElementById(`btn-${t}`);
                 btn.className = (t === tabId) ? 'active' : 'secondary';
             });
-            document.getElementById('lessonContent').innerHTML = learnings[tabId];
+            document.getElementById('lessonContent').innerHTML = (learnings[tabId] || "");
         }
 
         async function runAnalysis(ticker) {
             document.getElementById('loader').style.display = 'block';
             try {
+                // Fetching 5 years of statements for the trend chart
                 const [pRes, mRes, hRes, incRes, bsRes, cfRes] = await Promise.all([
                     fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${API_KEY}`),
                     fetch(`https://financialmodelingprep.com/stable/key-metrics?symbol=${ticker}&apikey=${API_KEY}`),
@@ -288,134 +315,139 @@
                 const themeColor = sectorThemes[industry] || '#00a8e8';
                 document.documentElement.style.setProperty('--pico-primary', themeColor);
 
-                // Populate Valuation Data
+                // --- DATA POPULATION (Current Year) ---
+                const bs = bss[0]; const inc = incs[0]; const cf = cfs[0];
                 document.getElementById('compName').innerText = profile.companyName;
                 document.getElementById('industryLabel').innerText = `${industry} | ${ticker}`;
-                document.getElementById('evEbitdaDisplay').innerText = metrics.evToEBITDA.toFixed(2) + 'x';
-                document.getElementById('leverageVal').innerText = metrics.netDebtToEBITDA.toFixed(2) + 'x';
-                document.getElementById('rangeVal').innerText = profile.range;
-                document.getElementById('evVal').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
-                document.getElementById('val-fy').innerText = `Audited: FY ${bss[0].calendarYear}`;
+                document.getElementById('priceDisplay').innerText = `Price: $${profile.price.toFixed(2)}`;
+                document.getElementById('mktCapVal').innerText = `Cap: $${(profile.marketCap / 1e9).toFixed(1)}B`;
+                document.getElementById('val-fy').innerText = `Audited: FY ${bs.fiscalYear}`;
+                document.getElementById('sts-fy').innerText = `Fiscal Year: ${bs.fiscalYear}`;
 
-                // Populate Statements Data
-                const cr = bss[0].totalCurrentAssets / bss[0].totalCurrentLiabilities;
-                const margin = (incs[0].netIncome / incs[0].revenue) * 100;
-                const fcf = cfs[0].operatingCashFlow - cfs[0].capitalExpenditure;
-                const conv = fcf / incs[0].netIncome;
-
-                document.getElementById('currRatioVal').innerText = cr.toFixed(2);
-                document.getElementById('quickRatioVal').innerText = ((bss[0].cashAndCashEquivalents + bss[0].netReceivables) / bss[0].totalCurrentLiabilities).toFixed(2);
-                document.getElementById('assetsVal').innerText = `$${(bss[0].totalAssets / 1e9).toFixed(1)}B`;
-                document.getElementById('liabVal').innerText = `$${(bss[0].totalLiabilities / 1e9).toFixed(1)}B`;
+                // Valuation
+                const evEbitda = metrics.evToEBITDA;
+                document.getElementById('evEbitdaDisplay').innerText = evEbitda.toFixed(2) + 'x';
+                const vBadge = document.getElementById('verdictBadge');
+                vBadge.innerText = evEbitda < 10 ? "Value Play" : (evEbitda < 25 ? "Fair Value" : "Premium Growth");
+                vBadge.style.background = evEbitda < 10 ? "#004d26" : (evEbitda < 25 ? "#664d00" : "#3b1e6e");
                 
+                // Statements
+                const cr = bs.totalCurrentAssets / bs.totalCurrentLiabilities;
+                document.getElementById('currRatioVal').innerText = cr.toFixed(2);
+                document.getElementById('crLight').style.background = cr > 1.2 ? "#004d26" : "#4d0000";
+                document.getElementById('crLight').innerText = cr > 1.2 ? "Healthy" : "Risk";
+                document.getElementById('evValSts').innerText = `$${(metrics.enterpriseValue / 1e9).toFixed(1)}B`;
+                const ebitda = inc.ebitda || (inc.operatingIncome + (inc.depreciationAndAmortization || 0));
+                document.getElementById('ebitdaValSts').innerText = `$${(ebitda / 1e9).toFixed(1)}B`;
+                const margin = (inc.netIncome / inc.revenue) * 100;
                 document.getElementById('netMarginVal').innerText = margin.toFixed(1) + '%';
-                document.getElementById('epsGrowthVal').innerText = (((incs[0].eps - incs[1].eps)/Math.abs(incs[1].eps))*100).toFixed(1) + '%';
-                document.getElementById('revVal').innerText = `$${(incs[0].revenue / 1e9).toFixed(1)}B`;
-                document.getElementById('netIncVal').innerText = `$${(incs[0].netIncome / 1e9).toFixed(1)}B`;
+                document.getElementById('incLight').style.background = margin > 15 ? "#004d26" : "#664d00";
+                document.getElementById('incLight').innerText = margin > 15 ? "High Moat" : "Standard";
+                
+                const fcf = cf.operatingCashFlow - cf.capitalExpenditure;
+                document.getElementById('cashConvVal').innerText = (fcf / inc.netIncome).toFixed(2) + 'x';
+                document.getElementById('cfLight').style.background = (fcf / inc.netIncome) >= 1.0 ? "#004d26" : "#4d0000";
+                document.getElementById('cfLight').innerText = (fcf / inc.netIncome) >= 1.0 ? "High Quality" : "Accrual Warning";
 
-                document.getElementById('cashConvVal').innerText = conv.toFixed(2) + 'x';
-                document.getElementById('ocfVal').innerText = `$${(cfs[0].operatingCashFlow / 1e9).toFixed(1)}B`;
-                document.getElementById('workingCapVal').innerText = `$${((bss[0].totalCurrentAssets - bss[0].totalCurrentLiabilities)/1e9).toFixed(1)}B`;
-                document.getElementById('fcfVal').innerText = `$${(fcf / 1e9).toFixed(1)}B`;
-                document.getElementById('sts-fy').innerText = `Fiscal Year: ${bss[0].calendarYear}`;
-
-                // FIX 1: STATEMENTS LIGHTS
-                const crLight = document.getElementById('crLight');
-                crLight.style.background = cr > 1.2 ? "#004d26" : "#4d0000";
-                crLight.innerText = cr > 1.2 ? "Healthy" : "Low Liquidity";
-                crLight.classList.add('active');
-
-                const incLight = document.getElementById('incLight');
-                incLight.style.background = margin > 15 ? "#004d26" : "#664d00";
-                incLight.innerText = margin > 15 ? "High Moat" : "Standard";
-                incLight.classList.add('active');
-
-                const cfLight = document.getElementById('cfLight');
-                cfLight.style.background = conv >= 1.0 ? "#004d26" : "#4d0000";
-                cfLight.innerText = conv >= 1.0 ? "High Quality" : "Accrual Risk";
-                cfLight.classList.add('active');
-
-                // FIX 2: RESILIENCE CALCULATIONS & LIGHTS
-                const calcZ = (i, b, m) => {
+                // --- RISK CALCULATION (Trend for 5 Years) ---
+                const zHistory = bss.map((b, i) => {
+                    const yearInc = incs[i];
                     const A = (b.totalCurrentAssets - b.totalCurrentLiabilities) / b.totalAssets;
                     const B = b.retainedEarnings / b.totalAssets;
-                    const C = i.operatingIncome / b.totalAssets;
-                    const D = m / b.totalLiabilities;
-                    const E = i.revenue / b.totalAssets;
-                    return [(1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E), A, B, C, D, E];
-                };
+                    const C = yearInc.operatingIncome / b.totalAssets;
+                    const D = profile.marketCap / b.totalLiabilities; // Note: simplified using current Cap
+                    const E = yearInc.revenue / b.totalAssets;
+                    return { year: b.fiscalYear, score: (1.2 * A) + (1.4 * B) + (3.3 * C) + (0.6 * D) + (1.0 * E), A, B, C, D, E };
+                }).reverse();
 
-                const [currentZ, zA, zB, zC, zD, zE] = calcZ(incs[0], bss[0], profile.marketCap);
-                document.getElementById('zScoreMain').innerText = currentZ.toFixed(2);
-                document.getElementById('probDisplay').innerText = `P(): ${currentZ > 2.99 ? '<1%' : (currentZ < 1.81 ? '>70%' : '15%')}`;
-                
-                // Clear and Set Resilience Lights
+                const latestZ = zHistory[zHistory.length - 1];
+                document.getElementById('zScoreMain').innerText = latestZ.score.toFixed(2);
+
+                // Supplementary Table
+                const quickR = (bs.cashAndCashEquivalents + bs.netReceivables) / bs.totalCurrentLiabilities;
+                const deR = bs.totalLiabilities / bs.totalStockholdersEquity;
+                const intCov = inc.operatingIncome / Math.abs(inc.interestExpense || 1);
+                const roeVal = (inc.netIncome / bs.totalStockholdersEquity) * 100;
+
+                document.getElementById('r-curr').innerText = cr.toFixed(2);
+                document.getElementById('r-quick').innerText = quickR.toFixed(2);
+                document.getElementById('r-de').innerText = deR.toFixed(2);
+                document.getElementById('r-ic').innerText = intCov.toFixed(1) + 'x';
+                document.getElementById('r-roe').innerText = roeVal.toFixed(1) + '%';
+                document.getElementById('r-eps').innerText = `$${inc.eps.toFixed(2)}`;
+
+                const zScoreModern = (6.56 * latestZ.A) + (3.26 * latestZ.B) + (6.72 * latestZ.C) + (1.05 * latestZ.D) + 3.25;
+                document.getElementById('r-z2').innerText = zScoreModern.toFixed(2);
+
+                document.getElementById('s-liq').innerText = (cr > 1.2 && quickR > 1.0) ? "✅" : "⚠️";
+                document.getElementById('s-lev').innerText = (deR < 2.0 && intCov > 3) ? "✅" : "⚠️";
+                document.getElementById('s-pro').innerText = (roeVal > 10) ? "✅" : "⚠️";
+                document.getElementById('s-z2').innerText = (zScoreModern > 5.85) ? "✅" : "⚠️";
+
+                // Traffic Lights
                 ['z-safe', 'z-grey', 'z-risk'].forEach(id => document.getElementById(id).classList.remove('active'));
-                if(currentZ > 2.99) document.getElementById('z-safe').classList.add('active');
-                else if(currentZ > 1.81) document.getElementById('z-grey').classList.add('active');
+                if(latestZ.score > 2.99) document.getElementById('z-safe').classList.add('active');
+                else if(latestZ.score > 1.8) document.getElementById('z-grey').classList.add('active');
                 else document.getElementById('z-risk').classList.add('active');
 
-                // Supplemental Table Metrics
-                const roe = (incs[0].netIncome / bss[0].totalStockholdersEquity) * 100;
-                const de = bss[0].totalLiabilities / bss[0].totalStockholdersEquity;
-                
-                document.getElementById('r-curr').innerText = cr.toFixed(2);
-                document.getElementById('r-de').innerText = de.toFixed(2);
-                document.getElementById('r-roe').innerText = roe.toFixed(1) + '%';
-                
-                document.getElementById('s-liq').innerText = cr > 1.2 ? "✅" : "⚠️";
-                document.getElementById('s-lev').innerText = de < 2.0 ? "✅" : "⚠️";
-                document.getElementById('s-pro').innerText = roe > 10 ? "✅" : "⚠️";
-
-                // Update Summary
-                document.getElementById('riskSummary').innerText = currentZ > 2.99 ? 
-                    `${ticker} is financially bulletproof. High vitality and low insolvency risk.` : 
-                    (currentZ > 1.81 ? `${ticker} is in the Grey Zone. Stable, but monitor debt levels.` : 
-                    `URGENT: ${ticker} shows high distress. Immediate cash preservation needed.`);
-
-                // CHARTS
-                const zCtx = document.getElementById('zScoreChart').getContext('2d');
+                // --- CHARTS ---
+                // 1. Z-Score Component Bar Chart
                 if (zChart) zChart.destroy();
-                zChart = new Chart(zCtx, {
+                zChart = new Chart(document.getElementById('zScoreChart'), {
                     type: 'bar',
                     data: {
-                        labels: ['Liq', 'Reten', 'EBIT', 'Cap', 'Sales'],
-                        datasets: [{ data: [zA*1.2, zB*1.4, zC*3.3, zD*0.6, zE*1.0], backgroundColor: themeColor }]
+                        labels: ['WC', 'RE', 'EBIT', 'EQ', 'Sales'],
+                        datasets: [{ data: [latestZ.A, latestZ.B, latestZ.C, latestZ.D, latestZ.E], backgroundColor: themeColor, borderRadius: 4 }]
                     },
-                    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
+                    options: { 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false }, datalabels: { display: true, formatter: v => v.toFixed(2), color: '#fff', font: {size: 9} } }
+                    }
                 });
 
-                const trendData = bss.map((b, idx) => calcZ(incs[idx], b, profile.marketCap)[0]).reverse();
-                const trendCtx = document.getElementById('zTrendChart').getContext('2d');
+                // 2. NEW: Z-Score Trend Chart
                 if (zTrendChart) zTrendChart.destroy();
-                zTrendChart = new Chart(trendCtx, {
+                zTrendChart = new Chart(document.getElementById('zTrendChart'), {
                     type: 'line',
                     data: {
-                        labels: bss.map(b => b.calendarYear).reverse(),
+                        labels: zHistory.map(z => z.year),
                         datasets: [{ 
-                            data: trendData, 
+                            label: 'Z-Score Trend',
+                            data: zHistory.map(z => z.score), 
                             borderColor: themeColor, 
                             backgroundColor: themeColor + '33',
                             fill: true,
                             tension: 0.4 
                         }]
                     },
-                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    options: { 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false }, datalabels: { display: false } },
+                        scales: { y: { grid: { color: '#2a313d' } } }
+                    }
                 });
 
-                const pCtx = document.getElementById('priceChart').getContext('2d');
+                // 3. Price Chart
                 if (priceChart) priceChart.destroy();
-                priceChart = new Chart(pCtx, {
+                priceChart = new Chart(document.getElementById('priceChart'), {
                     type: 'line',
                     data: {
                         labels: history.map(d => d.date.substring(5)),
                         datasets: [{ data: history.map(d => d.price), borderColor: themeColor, tension: 0.3 }]
                     },
-                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
                 });
 
                 document.getElementById('mainUI').style.display = 'block';
                 switchTab('val');
+                
+                // Risk Summary
+                let summary = "";
+                if (latestZ.score > 2.99) summary = `${profile.symbol} is financially bulletproof (Z-Score: ${latestZ.score.toFixed(2)}).`;
+                else if (latestZ.score > 1.8) summary = `${profile.symbol} is in the 'Grey Zone' (${latestZ.score.toFixed(2)}). Monitor leverage.`;
+                else summary = `URGENT: ${profile.symbol} is in the 'Distress Zone' (${latestZ.score.toFixed(2)}). Solvency risk is high.`;
+                document.getElementById('riskSummary').innerText = summary;
+
             } catch (e) { console.error(e); } finally { document.getElementById('loader').style.display = 'none'; }
         }
     </script>
