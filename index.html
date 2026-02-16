@@ -57,7 +57,7 @@
                 <button id="btn-val" class="active" onclick="switchTab('val')">Valuation</button>
                 <button id="btn-sts" class="secondary" onclick="switchTab('sts')">Statements</button>
                 <button id="btn-risk" class="secondary" onclick="switchTab('risk')">Resilience</button>
-                <button id="btn-strat" class="secondary" onclick="switchTab('strat')">Strategy</button>
+                <button id="btn-strat" class="secondary" onclick="switchTab('strat')">Strategic Positioning</button>
             </div>
 
             <details id="lessonBox" style="background: #1c222d; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
@@ -148,7 +148,7 @@
                         <div style="height: 180px;"><canvas id="smlChart"></canvas></div>
                         <div style="margin-top: 15px; font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; display: flex; justify-content: space-between; color: var(--pico-muted-color);">
                             <span>Beta: <strong id="footerBeta" style="color: var(--pico-primary);">-</strong></span>
-                            <span>Return: <strong id="footerReturn" style="color: var(--pico-primary);">-</strong></span>
+                            <span>Actual Return: <strong id="footerReturn" style="color: var(--pico-primary);">-</strong></span>
                         </div>
                     </div>
             
@@ -604,7 +604,7 @@
                 type: 'line',
                 data: {
                     labels: zHistory.map(z => z.year),
-                    datasets: [{ label: 'Z-Score', data: zHistory.map(z => z.score), borderColor: themeColor, fill: true }]
+                    datasets: [{ label: 'Z-Score', data: zHistory.map(z => z.score), borderColor: themeColor, fill: true, tension: 0.3}]
                 },
                 options: { maintainAspectRatio: false, plugins: { legend: { display: false }, title: {display: true, text:'Z-score trend'},datalabels: { display: false } } }
             });
@@ -614,7 +614,7 @@
                 type: 'line',
                 data: {
                     labels: history.map(d => d.date.substring(5)),
-                    datasets: [{ data: history.map(d => d.price || d.close), borderColor: themeColor }]
+                    datasets: [{ data: history.map(d => d.price || d.close), borderColor: themeColor, tension: 0.3}]
                 },
                 options: { maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
             });
@@ -635,7 +635,7 @@
                 },
                 options: { 
                     maintainAspectRatio: false, 
-                    scales: { x: {min:0, max:5, title: {display:true, text:'Beta'}, min:0, max:2}, y: {min:0, max:yMax, title: {display:true, text:'Return %'}} },
+                    scales: { x: {title: {display:true, text:'Beta'}, min:0, max:5}, y: {min:0, max:yMax, title: {display:true, text:'Return %'}} },
                     plugins: {datalabels: { display: false }, legend: { display: false }}
                 }
             });
@@ -696,4 +696,3 @@
     </script>
 </body>
 </html>
-
