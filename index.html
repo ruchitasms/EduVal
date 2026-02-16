@@ -30,8 +30,6 @@
         .z-floating-val { background: #2a313d; padding: 5px 15px; border-radius: 8px; border: 1px solid var(--pico-primary); font-family: monospace; font-size: 1.1rem; }
         .range-label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-bottom: 2px; }
         .trend-chart-container { height: 180px; width: 100%; margin-bottom: 15px; background: #1c222d; border-radius: 8px; padding: 10px; }
-        #view-strat .grid {margin-top: 0.5rem !important; }/* Tighten the padding inside the strategy articles */
-        #view-strat article {padding: 0.75rem;  margin-bottom: 0.5rem;  }
     </style>
 </head>
 <body>
@@ -144,51 +142,39 @@
             <div id="view-strat" style="display:none;">
                 <div class="grid">
                     <article>
-                        <header><strong>Strategic Risk vs. Return (SML)</strong></header>
-                        <div style="height: 250px;"><canvas id="smlChart"></canvas></div>
-                        <footer><small>Plots Alpha (Outperformance) vs. Beta (Risk)</small></footer>
+                        <header><strong>Security Market Line Chart</strong></header>
+                        <div style="height: 200px;"><canvas id="smlChart"></canvas></div>
+                        <footer><small>Risk vs. Return</small></footer>
                     </article>
             
                     <article>
-                        <header><strong>Capital Structure & WACC</strong></header>
-                        <div style="height: 250px;"><canvas id="capStructureChart"></canvas></div>
+                        <header><strong>Capital Structure</strong></header>
+                        <div style="height: 200px;"><canvas id="capStructureChart"></canvas></div>
                         <footer style="text-align:center;">
-                            <small id="waccLabel" style="color: var(--pico-primary); font-weight: bold;">Calculating Cost of Capital...</small>
+                            <small id="waccLabel" style="color: var(--pico-primary); font-weight: bold;">WACC: --</small>
                         </footer>
                     </article>
-                </div>
             
-                <div class="grid">
                     <article>
-                        <header><strong>Performance Metrics</strong></header>
-                        <table class="condensed" style="margin: 0; font-size: 0.85rem;">
-                            <thead>
-                                <tr>
-                                    <th>Metric</th>
-                                    <th>Value</th>
-                                </tr>
-                            </thead>
+                        <header><strong>Performance</strong></header>
+                        <table class="condensed" style="margin: 0; font-size: 0.8rem;">
                             <tbody>
-                                <tr><td>Market Beta (Systematic Risk)</td><td id="tdBeta">-</td></tr>
-                                <tr><td>Hurdle Rate (Cost of Equity)</td><td id="tdHurdle">-</td></tr>
-                                <tr><td>Actual Return (ROIC)</td><td id="tdRoic">-</td></tr>
-                                <tr style="border-top: 1px solid #444;">
-                                    <td><strong>Value Spread (Alpha)</strong></td>
-                                    <td><mark id="tdAlpha" style="padding: 2px 6px; border-radius: 4px;">-</mark></td>
-                                </tr>
+                                <tr><td>Beta</td><td id="tdBeta">-</td></tr>
+                                <tr><td>Hurdle</td><td id="tdHurdle">-</td></tr>
+                                <tr><td>ROIC</td><td id="tdRoic">-</td></tr>
+                                <tr><td>Alpha</td><td id="tdAlpha">-</td></tr>
                             </tbody>
                         </table>
                     </article>
-            
-                    <article>
-                        <header><strong>Executive Strategy Insight</strong></header>
-                        <div id="stratExecutiveSummary" style="font-size: 0.85rem; line-height: 1.6; min-height: 120px;">
-                            Enter a ticker to generate strategic analysis...
-                        </div>
-                    </article>
                 </div>
-            </div>
             
+                <article>
+                    <header><strong>Recommendations</strong></header>
+                    <div id="stratExecutiveSummary" style="font-size: 0.9rem; line-height: 1.6;">
+                        Generate analysis to view the strategic verdict.
+                    </div>
+                </article>
+            </div>
             
             <div id="view-risk" style="display:none;">
                 <div class="risk-grid">
@@ -507,12 +493,15 @@
             const beta = profile.beta; 
             const hurdleRate = rf + (beta * (rm - rf)); // CAPM Formula
 
-            const marketCap = metrics.marketCap || 0;
+            const totalEquity = bs.totalEquity || 0;
             const totalDebt = bs.totalDebt || 0;
-            const totalCapital = marketCap + totalDebt;
-            const weightEquity = marketCap / totalCapital;
+            const totalCapital = totalEquity + totalDebt;
+            const weightEquity = totalEquity / totalCapital;
             const weightDebt = totalDebt / totalCapital;
             const costOfDebt = 0.06 * (1 - 0.21); // Tax-adjusted cost of debt (21% tax rate)
+
+            const debtPct = (totalDebt / totalCapital) * 100;
+            const equityPct = (totalEquity / totalCapital) * 100;
 
             let actualReturn = metrics.returnOnInvestedCapital || 0;
             if (actualReturn === 0 && inc && bs) {
@@ -612,19 +601,49 @@
                 }
             });
             
-            // B. Capital Structure Doughnut
+            // B. Capital Structure Stacked Bar Chart
             if (window.capChart) window.capChart.destroy();
+            // Calculations for a 100% stacked visualization
             window.capChart = new Chart(document.getElementById('capStructureChart'), {
-                type: 'doughnut',
+                type: 'bar',
                 data: {
-                    labels: ['Debt', 'Equity'],
-                    datasets: [{
-                        data: [totalDebt, marketCap],
-                        backgroundColor: ['#E6676B', '#e1e2e4'],
-                        borderWidth: 0
-                    }]
+                    labels: ['Capital Mix'],
+                    datasets: [
+                        {
+                            label: 'Debt',
+                            data: [debtPct],
+                            backgroundColor: '#E6676B',
+                        },
+                        {
+                            label: 'Equity',
+                            data: [equityPct],
+                            backgroundColor: '#e1e2e4',
+                        }
+                    ]
                 },
-                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, datalabels: { display: false } } }
+                options: {
+                    indexAxis: 'y', // Makes it a horizontal bar like your sketch
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: ${context.raw.toFixed(1)}%`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            display: false, // Clean look like your drawing
+                            max: 100
+                        },
+                        y: {
+                            stacked: true,
+                            display: false
+                        }
+                    }
+                }
             });
 
             // Final Step: Show UI and set default tab
@@ -641,5 +660,3 @@
     </script>
 </body>
 </html>
-
-
