@@ -547,7 +547,7 @@
                     datasets: [
                         {
                             label: 'Security Market Line',
-                            data: [{x: 0, y: rf * 100}, {x: 2, y: (rf + 2 * equityRiskPremium) * 100}],
+                            data: [{x: 0, y: rf * 100}, {x: 2, y: (rf + 2 * (rm-rf) * 100}],
                             type: 'line',
                             borderColor: '#444',
                             borderDash: [5, 5],
@@ -589,6 +589,7 @@
     </script>
 </body>
 </html>
+
 
 
 
