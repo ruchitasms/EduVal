@@ -483,31 +483,38 @@
             const rm = 0.10;  // Standard 10% Market Return benchmark
             const beta = profile.beta; 
             const hurdleRate = rf + (beta * (rm - rf)); // CAPM Formula
-            
-            // 2. Define Actual Return Proxy
-            // Note: We use ROIC (Return on Invested Capital) to see how well the business uses money vs what the market demands.
-            const actualReturn = metrics.returnOnInvestedCapitalTTM || 0;
+
+            const actualReturn = metrics.returnOnInvestedCapital || 0;
             const alpha = actualReturn - hurdleRate;
             
-            // 3. Update UI Elements
-            document.getElementById('betaVal').innerText = beta.toFixed(2);
-            document.getElementById('hurdleVal').innerText = (hurdleRate * 100).toFixed(1) + "%";
-            document.getElementById('actualReturnVal').innerText = (actualReturn * 100).toFixed(1) + "%";
+            const expected = (hurdleRate * 100).toFixed(1);
+            const actual = (actualReturn * 100).toFixed(1);
+            const alphaValue = (alpha * 100).toFixed(1);
             
-            const alphaBadge = document.getElementById('alphaBadge');
-            alphaBadge.innerText = (alpha * 100).toFixed(1) + "%";
-            alphaBadge.style.color = alpha > 0 ? "#00ff88" : "#ff4d4d";
+            let storyVerdict = "";
+            let colorClass = "";
             
-            // 4. Executive Summary Logic
-            let summ_str = "";
             if (alpha > 0.02) {
-                summ_str = `<strong>Strategic Outperformer:</strong> This asset generates positive Alpha, meaning it delivers returns higher than its risk profile suggests. It is effectively "beating" the market math.`;
+                storyVerdict = `🚀 <strong>Elite Efficiency:</strong> Disney is clearing its ${expected}% hurdle rate by a wide margin. For every unit of market risk taken, management is squeezing out an extra ${alphaValue}% of "pure" profit (Alpha).`;
+                colorClass = "#00ff88";
             } else if (alpha < -0.02) {
-                summ_str = `<strong>Efficiency Gap:</strong> The asset is underperforming relative to its systematic risk. Leadership should investigate if the cost of capital is too high or if operations are lagging.`;
+                storyVerdict = `⚠️ <strong>The Risk Trap:</strong> While the company is profitable, it isn't profitable <em>enough</em>. It's failing to meet its ${expected}% hurdle. In a market downturn, its high Beta will hurt more than its low returns can help.`;
+                colorClass = "#ff4d4d";
             } else {
-                summ_str = `<strong>Market Aligned:</strong> The asset is priced fairly for its risk. Its returns are perfectly in line with the Security Market Line equilibrium.`;
+                storyVerdict = `⚖️ <strong>Market Equilibrium:</strong> The company is performing exactly as expected. It is a 'Fair Bet'—you get exactly the return the risk suggests, no more, no less.`;
+                colorClass = "#ffaa00";
             }
-            document.getElementById('stratExecutiveSummary').innerHTML = summ_str;
+            
+            document.getElementById('stratExecutiveSummary').innerHTML = `
+                <div style="border-left: 4px solid ${colorClass}; padding-left: 15px;">
+                    ${storyVerdict}
+                    <br><br>
+                    <small style="color: #888;">
+                        <strong>Data Bridge:</strong> The Hurdle Rate is the "Cost of Equity." When Actual Return > Hurdle, 
+                        the company is creating wealth. When it is lower, it is technically losing value relative to the market.
+                    </small>
+                </div>
+            `;
 
             // Render Charts
             if (zChart) zChart.destroy();
@@ -589,6 +596,7 @@
     </script>
 </body>
 </html>
+
 
 
 
