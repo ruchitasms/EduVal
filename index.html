@@ -142,49 +142,48 @@
             <div id="view-strat" style="display:none;">
                 <div class="grid">
                     
-                    <article style="border-top: 2px solid #3b82f6;">
-                        <header><strong>Security Market Line</strong></header>
-                        <div style="height: 200px;"><canvas id="smlChart"></canvas></div>
-                        <footer style="font-size: 0.8rem; border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>Beta: <strong id="footerBeta">-</strong></span>
-                                <span>Return: <strong id="footerReturn">-</strong></span>
-                            </div>
-                        </footer>
-                    </article>
+                    <div style="border-top: 2px solid var(--pico-primary); background: rgba(255,255,255,0.02); padding: 15px; border-radius: 0 0 8px 8px;">
+                        <p style="margin-bottom: 10px; color: var(--pico-contrast);"><strong>Security Market Line</strong></p>
+                        <div style="height: 180px;"><canvas id="smlChart"></canvas></div>
+                        <div style="margin-top: 15px; font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; display: flex; justify-content: space-between; color: var(--pico-muted-color);">
+                            <span>Beta: <strong id="footerBeta" style="color: var(--pico-primary);">-</strong></span>
+                            <span>Return: <strong id="footerReturn" style="color: var(--pico-primary);">-</strong></span>
+                        </div>
+                    </div>
             
-                    <article style="border-top: 2px solid #3b82f6;">
-                        <header><strong>Capital Structure</strong></header>
-                        <div style="height: 200px; display: flex; align-items: center;">
+                    <div style="border-top: 2px solid var(--pico-primary); background: rgba(255,255,255,0.02); padding: 15px; border-radius: 0 0 8px 8px;">
+                        <p style="margin-bottom: 10px; color: var(--pico-contrast);"><strong>Capital Structure</strong></p>
+                        <div style="height: 180px; display: flex; align-items: center;">
                             <canvas id="capStructureChart"></canvas>
                         </div>
-                        <footer style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
-                            <small id="waccLabel" style="color: #3b82f6; font-weight: bold;">WACC: --</small>
-                        </footer>
-                    </article>
+                        <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+                            <small id="waccLabel" style="color: var(--pico-primary); font-weight: bold;">WACC: --</small>
+                        </div>
+                    </div>
             
-                    <article style="border-top: 2px solid #3b82f6;">
-                        <header><strong>Strategic Performance</strong></header>
-                        <table class="condensed" style="margin: 0; font-size: 0.85rem;">
+                    <div style="border-top: 2px solid var(--pico-primary); background: rgba(255,255,255,0.02); padding: 15px; border-radius: 0 0 8px 8px;">
+                        <p style="margin-bottom: 10px; color: var(--pico-contrast);"><strong>Performance</strong></p>
+                        <table class="condensed" style="margin: 0; font-size: 0.85rem; width: 100%;">
                             <tbody>
                                 <tr><td>Market Beta</td><td id="tdBeta" style="text-align:right;">-</td></tr>
                                 <tr><td>Hurdle Rate</td><td id="tdHurdle" style="text-align:right;">-</td></tr>
-                                <tr style="border-bottom: 1px solid #333;"><td>Actual ROIC</td><td id="tdRoic" style="text-align:right;">-</td></tr>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td>Actual ROIC</td><td id="tdRoic" style="text-align:right;">-</td></tr>
                                 <tr>
-                                    <td style="font-weight:bold; color: #10b981;">Alpha Spread</td>
+                                    <td style="font-weight:bold;">Alpha Spread</td>
                                     <td id="tdAlpha" style="text-align:right; font-weight:bold; color: #10b981;">-</td>
                                 </tr>
                             </tbody>
                         </table>
-                        <div style="margin-top: 12px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 4px; border-left: 3px solid #3b82f6;">
-                            <p id="stratExecutiveSummary" style="font-size: 0.75rem; line-height: 1.4; margin: 0; color: #94a3b8;">
-                                Analysis pending...
+                        <div style="margin-top: 12px; padding: 8px; background: var(--pico-code-background-color); border-left: 3px solid var(--pico-primary);">
+                            <p id="stratExecutiveSummary" style="font-size: 0.7rem; line-height: 1.3; margin: 0; color: var(--pico-color);">
+                                Generating analysis...
                             </p>
                         </div>
-                    </article>
+                    </div>
+                    
                 </div>
             </div>
-            
+      
             <div id="view-risk" style="display:none;">
                 <div class="risk-grid">
                     <article>
@@ -604,7 +603,7 @@
                 data: {
                     datasets: [
                         { label: 'SML', data: [{x: 0, y: rf*100}, {x: 2, y: (rf+2*(rm-rf))*100}], type: 'line', borderColor: '#888', borderDash: [5,5], pointRadius: 0 },
-                        { label: ticker, data: [{x: beta, y: actualReturn*100}], backgroundColor: themeColor, pointRadius: 50 }
+                        { label: ticker, data: [{x: beta, y: actualReturn*100}], backgroundColor: themeColor, pointRadius: 20 }
                     ]
                 },
                 options: { 
@@ -670,6 +669,7 @@
     </script>
 </body>
 </html>
+
 
 
 
