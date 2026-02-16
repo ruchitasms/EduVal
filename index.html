@@ -144,6 +144,7 @@
                     
                     <div style="border-top: 2px solid var(--pico-primary); background: rgba(255,255,255,0.02); padding: 15px; border-radius: 4px;">
                         <p style="margin-bottom: 10px; color: var(--pico-contrast);"><strong>Security Market Line</strong></p>
+                        <p style="font-size: 0.75rem; color: var(--pico-muted-color); margin-bottom: 10px;">Variation between expected vs actual return</p>
                         <div style="height: 180px;"><canvas id="smlChart"></canvas></div>
                         <div style="margin-top: 15px; font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; display: flex; justify-content: space-between; color: var(--pico-muted-color);">
                             <span>Beta: <strong id="footerBeta" style="color: var(--pico-primary);">-</strong></span>
@@ -153,6 +154,7 @@
             
                     <div style="border-top: 2px solid var(--pico-primary); background: rgba(255,255,255,0.02); padding: 15px; border-radius: 4px;">
                         <p style="margin-bottom: 10px; color: var(--pico-contrast);"><strong>Capital Structure</strong></p>
+                        <p style="font-size: 0.75rem; color: var(--pico-muted-color); margin-bottom: 10px;">Ratio mix of company's funding</p>
                         <div style="height: 180px; display: flex; align-items: center;">
                             <canvas id="capStructureChart"></canvas>
                         </div>
@@ -163,13 +165,14 @@
             
                     <div style="border-top: 2px solid var(--pico-primary); background: rgba(255,255,255,0.02); padding: 15px; border-radius: 4px;">
                         <p style="margin-bottom: 10px; color: var(--pico-contrast);"><strong>Performance</strong></p>
+                        <p style="font-size: 0.75rem; color: var(--pico-muted-color); margin-bottom: 10px;">Company results vs market expectations</p>
                         <table class="condensed" style="margin: 0; font-size: 0.85rem; width: 100%;">
                             <tbody>
                                 <tr><td>Market Beta</td><td id="tdBeta" style="text-align:right;">-</td></tr>
                                 <tr><td>Hurdle Rate</td><td id="tdHurdle" style="text-align:right;">-</td></tr>
                                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td>Actual ROIC</td><td id="tdRoic" style="text-align:right;">-</td></tr>
                                 <tr>
-                                    <td style="font-weight:bold;">Alpha Spread</td>
+                                    <td style="font-weight:bold;">Alpha</td>
                                     <td id="tdAlpha" style="text-align:right; font-weight:bold; color: #10b981;">-</td>
                                 </tr>
                             </tbody>
@@ -184,8 +187,6 @@
                     </div>
                 </div>
             </div>
-
-            
       
             <div id="view-risk" style="display:none;">
                 <div class="risk-grid">
@@ -276,7 +277,7 @@
     const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#fff0ff', 'Fintech': '#ffdc00' };
 
     const learnings = {
-        val: `<strong>Valuation Tag Logic:</strong><br>
+    val: `<strong>Valuation Tag Logic:</strong><br>
           <strong>Introduction</strong><br>
           • Enterprise Value: It represents the total price tag of a company, calculated as Market Cap + Total Debt - Cash. Here, Market Cap = (Current Share Price x Current Outstanding Shares)<br>
           • Relative Valuation: This involves comparing a company's value to its peers using multiples like EV/EBITDA (used across industries because it neutralizes the effects of different debt levels and tax environments)<br>
@@ -323,10 +324,32 @@
           • Interest Coverage: Operating Income / Interest Expense (Goal > 3x)<br>
           • ROE: Net Income / Shareholder Equity (Goal > 10%)`,
 
-    strat: `<strong>Phase 4: Market Strategy & Alpha</strong><br>
-          • <b>Consensus:</b> Aggregated view of Wall Street analysts.<br>
-          • <b>Beta:</b> Market sensitivity. We compare this to the <b>SML</b> to find "Alpha".<br>
-          • <b>The Gap:</b> If analysts say "Buy" but our Z-Score is low, the business faces a Sentiment Trap.`
+    strat: `<strong>Strategy with Beta & CAPM</strong><br>
+            <strong>Introduction</strong><br>
+            • Strategy is about one simple question: “Is this company creating value, or just taking risk?”  
+            • Every business takes risk to make money — but the best ones earn more than what the market expects for that risk.  
+            • This section connects three ideas: how risky the stock is (Beta), what return investors expect from company's POV (Hurdle Rate), and what the company actually earns on its capital (ROIC).<br><br>
+            <strong>Reading Values:</strong><br>
+            • <strong>Beta (Risk Level):</strong> Shows how “bouncy” the stock is compared to the market.  
+            &nbsp;&nbsp;• Below 1 → steadier than the market  
+            &nbsp;&nbsp;• Around 1 → moves with the market  
+            &nbsp;&nbsp;• Above 1 → more volatile, usually high‑growth companies<br>
+            • <strong>Hurdle Rate:</strong> The minimum return investors expect because of that risk.  
+            &nbsp;&nbsp;• Think of it as the company’s “pass mark.”<br>
+            • <strong>ROIC (Actual Return):</strong> How much the company actually earns on the money it invests.  
+            &nbsp;&nbsp;• If ROIC is higher than the Hurdle Rate → the company is creating value  
+            &nbsp;&nbsp;• If lower → it’s destroying value<br>
+            • <strong>Alpha Spread:</strong> The difference between ROIC and the Hurdle Rate.  
+            &nbsp;&nbsp;• Positive → management is outperforming expectations  
+            &nbsp;&nbsp;• Negative → the business isn’t earning enough for the risk it takes<br>
+            • <strong>Capital Structure:</strong> Shows how the company funds itself (Debt vs Equity).  
+            &nbsp;&nbsp;• More debt → cheaper but riskier  
+            &nbsp;&nbsp;• More equity → safer but more expensive<br><br>
+            <strong>Formulas:</strong><br>
+            • Hurdle Rate (Cost of Equity): Risk‑Free Rate + Beta × Market Premium<br>
+            • ROIC: NOPAT / Invested Capital<br>
+            • Alpha Spread: ROIC – Hurdle Rate<br>
+            • WACC: Weighted average cost of debt + equity<br>`
     };
 
     function switchTab(tabId) {
@@ -537,7 +560,7 @@
             alphaCell.innerText = (alpha * 100).toFixed(1) + "%";
             alphaCell.style.background = alpha > 0 ? "#004d26" : "#4d0000";
             
-            document.getElementById('waccLabel').innerHTML = `<strong>WACC: ${(wacc * 100).toFixed(1)}%</strong> | Weighted Average Cost of Capital`;
+            document.getElementById('waccLabel').innerHTML = `<strong>WACC: ${(wacc * 100).toFixed(1)}%</strong>`;
 
             let storyVerdict = "";
             let colorClass = "";
@@ -611,7 +634,7 @@
                 },
                 options: { 
                     maintainAspectRatio: false, 
-                    scales: { x: {min:0, max:beta+1, title: {display:true, text:'Beta'}, min:0, max:2}, y: {min:0, max:yMax, title: {display:true, text:'Return %'}} },
+                    scales: { x: {min:0, max:5, title: {display:true, text:'Beta'}, min:0, max:2}, y: {min:0, max:yMax, title: {display:true, text:'Return %'}} },
                     plugins: {datalabels: { display: false }, legend: { display: false }}
                 }
             });
@@ -672,9 +695,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
