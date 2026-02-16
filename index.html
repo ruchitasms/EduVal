@@ -142,37 +142,38 @@
             <div id="view-strat" style="display:none;">
                 <div class="grid">
                     <article>
-                        <header><strong>Security Market Line Chart</strong></header>
+                        <header>Security Market Line Chart</header>
                         <div style="height: 200px;"><canvas id="smlChart"></canvas></div>
                         <footer><small>Risk vs. Return</small></footer>
                     </article>
             
                     <article>
-                        <header><strong>Capital Structure</strong></header>
-                        <div style="height: 200px;"><canvas id="capStructureChart"></canvas></div>
-                        <footer style="text-align:center;">
-                            <small id="waccLabel" style="color: var(--pico-primary); font-weight: bold;">WACC: --</small>
+                        <header>Capital Structure</header>
+                        <div style="height: 200px; display: flex; align-items: center;">
+                            <canvas id="capStructureChart"></canvas>
+                        </div>
+                        <footer>
+                            <small id="waccLabel" style="color: var(--pico-primary);">WACC: --</small>
                         </footer>
                     </article>
             
                     <article>
-                        <header><strong>Performance</strong></header>
-                        <table class="condensed" style="margin: 0; font-size: 0.8rem;">
+                        <header>Performance</header>
+                        <table class="condensed" style="margin: 0; font-size: 0.85rem;">
                             <tbody>
-                                <tr><td>Beta</td><td id="tdBeta">-</td></tr>
-                                <tr><td>Hurdle</td><td id="tdHurdle">-</td></tr>
-                                <tr><td>ROIC</td><td id="tdRoic">-</td></tr>
-                                <tr><td>Alpha</td><td id="tdAlpha">-</td></tr>
+                                <tr><td>Beta</td><td id="tdBeta" style="text-align:right;">-</td></tr>
+                                <tr><td>Hurdle</td><td id="tdHurdle" style="text-align:right;">-</td></tr>
+                                <tr><td>ROIC</td><td id="tdRoic" style="text-align:right;">-</td></tr>
+                                <tr><td style="font-weight:bold;">Alpha</td><td id="tdAlpha" style="text-align:right; font-weight:bold;">-</td></tr>
                             </tbody>
                         </table>
                     </article>
                 </div>
             
-                <article>
-                    <header><strong>Recommendations</strong></header>
-                    <div id="stratExecutiveSummary" style="font-size: 0.9rem; line-height: 1.6;">
-                        Generate analysis to view the strategic verdict.
-                    </div>
+                <article style="margin-top: 20px;">
+                    <header>Strategic Analysis & Recommendations</header>
+                    <div id="stratExecutiveSummary" style="font-size: 0.9rem; line-height: 1.6; color: #cbd5e1;">
+                        </div>
                 </article>
             </div>
             
@@ -597,7 +598,7 @@
                 options: { 
                     maintainAspectRatio: false, 
                     scales: { x: {title: {display:true, text:'Beta'}, min:0, max:2}, y: {title: {display:true, text:'Return %'}} },
-                    datalabels: { display: false }
+                    plugins: {datalabels: { display: false }, legend: { display: false }}
                 }
             });
             
@@ -626,11 +627,8 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: true, position: 'bottom' },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => `${context.dataset.label}: ${context.raw.toFixed(1)}%`
-                            }
-                        }
+                        tooltip: {callbacks: { label: (context) => `${context.dataset.label}: ${context.raw.toFixed(1)}%` }},
+                        datalabels: {display: false}
                     },
                     scales: {
                         x: {
@@ -660,3 +658,4 @@
     </script>
 </body>
 </html>
+
