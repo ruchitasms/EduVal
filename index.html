@@ -500,7 +500,7 @@
             const alphaValue = (alpha * 100).toFixed(1);            
             
             const marketCap = profile.mktCap || 0;
-            const totalDebt = bs[0].totalDebt || 0;
+            const totalDebt = bs.totalDebt || 0;
             const totalCapital = marketCap + totalDebt;
             const weightEquity = marketCap / totalCapital;
             const weightDebt = totalDebt / totalCapital;
@@ -618,3 +618,4 @@
     </script>
 </body>
 </html>
+
