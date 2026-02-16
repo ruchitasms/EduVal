@@ -142,37 +142,32 @@
             </div>
 
             <div id="view-strat" style="display:none;">
-                <div class="dashboard-grid">
-                    <article>
-                        <header><strong>Security Market Line (Risk vs Reward)</strong></header>
-                        <div style="height: 280px;"><canvas id="smlChart"></canvas></div>
-                        <footer><small>Plots Alpha (Outperformance) vs. Beta (Risk)</small></footer>
+                <div class="grid" style="margin-bottom: 1rem;">
+                    <article style="padding: 1rem;">
+                        <header style="margin-bottom: 0.5rem; padding: 0.5rem;"><strong>Strategic Risk vs. Return</strong></header>
+                        <div style="height: 250px;"><canvas id="smlChart"></canvas></div>
                     </article>
-                    <article>
-                        <header><strong>Capital Structure & WACC</strong></header>
-                        <div style="height: 280px;"><canvas id="capStructureChart"></canvas></div>
-                        <footer><small id="waccLabel">Determining the "Price of Capital"</small></footer>
+                    <article style="padding: 1rem;">
+                        <header style="margin-bottom: 0.5rem; padding: 0.5rem;"><strong>Capital Structure</strong></header>
+                        <div style="height: 250px;"><canvas id="capStructureChart"></canvas></div>
                     </article>
                 </div>
             
-                <div class="grid" style="margin-top: 20px;">
-                    <article>
-                        <header><strong>Performance Metrics</strong></header>
-                        <table class="condensed">
+                <div class="grid" style="align-items: start;">
+                    <article style="padding: 1rem;">
+                        <table class="condensed" style="margin: 0; font-size: 0.85rem;">
+                            <thead><tr><th>Metric</th><th>Value</th></tr></thead>
                             <tbody>
-                                <tr><td>Beta (Systematic Risk)</td><td id="tdBeta">-</td></tr>
-                                <tr><td>Hurdle Rate (CAPM)</td><td id="tdHurdle">-</td></tr>
-                                <tr><td>Actual Return (ROIC)</td><td id="tdRoic">-</td></tr>
-                                <tr style="border-top: 2px solid #444;">
-                                    <td><strong>Value Spread (Alpha)</strong></td>
-                                    <td><mark id="tdAlpha">-</mark></td>
-                                </tr>
+                                <tr><td>Beta</td><td id="tdBeta">-</td></tr>
+                                <tr><td>Hurdle Rate</td><td id="tdHurdle">-</td></tr>
+                                <tr><td>Actual ROIC</td><td id="tdRoic">-</td></tr>
+                                <tr><td><strong>Value Alpha</strong></td><td><mark id="tdAlpha" style="padding: 2px 6px;">-</mark></td></tr>
                             </tbody>
                         </table>
                     </article>
-                    <article>
-                        <header><strong>Executive Strategy Insight</strong></header>
-                        <p id="stratExecutiveSummary" style="font-size: 0.9rem; line-height: 1.6;"></p>
+                    <article style="padding: 1rem;">
+                        <div id="stratExecutiveSummary" style="font-size: 0.85rem; border-left: 3px solid var(--pico-primary); padding-left: 1rem;">
+                            </div>
                     </article>
                 </div>
             </div>
@@ -589,12 +584,13 @@
                 data: {
                     datasets: [
                         { label: 'SML', data: [{x: 0, y: rf*100}, {x: 2, y: (rf+2*(rm-rf))*100}], type: 'line', borderColor: '#888', borderDash: [5,5], pointRadius: 0 },
-                        { label: ticker, data: [{x: beta, y: actualReturn*100}], backgroundColor: '#ff007b', pointRadius: 10 }
+                        { label: ticker, data: [{x: beta, y: actualReturn*100}], backgroundColor: themeColor, pointRadius: 50 }
                     ]
                 },
                 options: { 
                     maintainAspectRatio: false, 
-                    scales: { x: {title: {display:true, text:'Beta'}, min:0, max:2}, y: {title: {display:true, text:'Return %'}} }
+                    scales: { x: {title: {display:true, text:'Beta'}, min:0, max:2}, y: {title: {display:true, text:'Return %'}} },
+                    datalabels: { display: false }
                 }
             });
             
@@ -606,11 +602,11 @@
                     labels: ['Debt', 'Equity'],
                     datasets: [{
                         data: [totalDebt, marketCap],
-                        backgroundColor: ['#ff4d4d', '#00a8e8'],
+                        backgroundColor: ['#E6676B', '#e1e2e4'],
                         borderWidth: 0
                     }]
                 },
-                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, datalabels: { display: false } } }
             });
 
             // Final Step: Show UI and set default tab
@@ -627,3 +623,4 @@
     </script>
 </body>
 </html>
+
