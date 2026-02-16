@@ -574,7 +574,7 @@
             });
 
             // A. SML Chart with Zones
-            if (window.smlChart) window.smlChart.destroy();
+            if (window.smlChart instanceof Chart) {window.smlChart.destroy();}
             window.smlChart = new Chart(document.getElementById('smlChart'), {
                 type: 'scatter',
                 data: {
@@ -618,4 +618,5 @@
     </script>
 </body>
 </html>
+
 
