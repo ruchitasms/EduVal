@@ -57,6 +57,7 @@
                 <button id="btn-val" class="active" onclick="switchTab('val')">Valuation</button>
                 <button id="btn-sts" class="secondary" onclick="switchTab('sts')">Statements</button>
                 <button id="btn-risk" class="secondary" onclick="switchTab('risk')">Resilience</button>
+                <button id="btn-strat" class="secondary" onclick="switchTab('strat')">Strategy</button>
             </div>
 
             <details id="lessonBox" style="background: #1c222d; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
@@ -138,6 +139,35 @@
                 </div>
             </div>
 
+            <div id="view-strat" style="display:none;">
+                <div class="dashboard-grid">
+                    <article>
+                        <header><strong>Security Market Line (SML)</strong></header>
+                        <div style="height: 350px;">
+                            <canvas id="smlChart"></canvas>
+                        </div>
+                        <footer>
+                            <small>The diagonal line represents the market's "Fair Return" for a given risk level.</small>
+                        </footer>
+                    </article>
+                    
+                    <article>
+                        <header><strong>Risk-Adjusted Performance</strong></header>
+                        <div class="sts-card" style="border-top: 4px solid #ff007b;">
+                            <div class="metric-row"><span>Systematic Risk (Beta)</span><strong id="betaVal">-</strong></div>
+                            <div class="metric-row"><span>Required Return (CAPM)</span><strong id="hurdleVal">-</strong></div>
+                            <div class="metric-row"><span>Actual Return Proxy (ROIC)</span><strong id="actualReturnVal">-</strong></div>
+                            <hr>
+                            <div class="metric-row">
+                                <span>Performance Alpha</span>
+                                <mark id="alphaBadge" style="background:none; font-weight:bold;">-</mark>
+                            </div>
+                            <p id="stratExecutiveSummary" style="font-size: 0.85rem; margin-top:15px; color:#ccc;"></p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+            
             <div id="view-risk" style="display:none;">
                 <div class="risk-grid">
                     <article>
@@ -442,6 +472,43 @@
             }
             document.getElementById('riskSummary').innerText = summary;
 
+            // 1. Fetch Treasury Rate (Risk-Free Rate)
+            const treasuryRes = await fetch(`https://financialmodelingprep.com/api/v4/treasury?apikey=${API_KEY}`);
+            const treasuryData = await treasuryRes.json();
+            const rf = parseFloat(treasuryData[0].year10) / 100; // e.g., 0.042 for 4.2%
+            
+            // 2. Variables for CAPM
+            const beta = profile.beta; 
+            const rm = 0.10; // Expected Market Return (10% is a standard long-term benchmark)
+            const equityRiskPremium = rm - rf;
+            const expectedReturn = rf + (beta * equityRiskPremium);
+            
+            // 3. Define Actual Return Proxy
+            // Note: We use ROIC (Return on Invested Capital) to see how well the business 
+            // uses money vs what the market demands.
+            const actualReturn = (ratios.returnOnInvestedCapitalTTM) || 0;
+            const alpha = actualReturn - expectedReturn;
+            
+            // 4. Update UI Elements
+            document.getElementById('betaVal').innerText = beta.toFixed(2);
+            document.getElementById('hurdleVal').innerText = (expectedReturn * 100).toFixed(1) + "%";
+            document.getElementById('actualReturnVal').innerText = (actualReturn * 100).toFixed(1) + "%";
+            
+            const alphaBadge = document.getElementById('alphaBadge');
+            alphaBadge.innerText = (alpha * 100).toFixed(1) + "%";
+            alphaBadge.style.color = alpha > 0 ? "#00ff88" : "#ff4d4d";
+            
+            // 5. Executive Summary Logic
+            let summ_str = "";
+            if (alpha > 0.02) {
+                summ_str = `<strong>Strategic Outperformer:</strong> This asset generates positive Alpha, meaning it delivers returns higher than its risk profile suggests. It is effectively "beating" the market math.`;
+            } else if (alpha < -0.02) {
+                summ_str = `<strong>Efficiency Gap:</strong> The asset is underperforming relative to its systematic risk. Leadership should investigate if the cost of capital is too high or if operations are lagging.`;
+            } else {
+                summ_str = `<strong>Market Aligned:</strong> The asset is priced fairly for its risk. Its returns are perfectly in line with the Security Market Line equilibrium.`;
+            }
+            document.getElementById('stratExecutiveSummary').innerHTML = summ_str;
+
             // Render Charts
             if (zChart) zChart.destroy();
             zChart = new Chart(document.getElementById('zScoreChart'), {
@@ -473,6 +540,41 @@
                 options: { maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
             });
 
+            if (window.smlChartObj) window.smlChartObj.destroy();
+            window.smlChartObj = new Chart(document.getElementById('smlChart'), {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Security Market Line',
+                            data: [{x: 0, y: rf * 100}, {x: 2, y: (rf + 2 * equityRiskPremium) * 100}],
+                            type: 'line',
+                            borderColor: '#444',
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            showLine: true
+                        },
+                        {
+                            label: ticker,
+                            data: [{x: beta, y: actualReturn * 100}],
+                            backgroundColor: '#ff007b',
+                            pointRadius: 10,
+                            pointHoverRadius: 12
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Beta (Risk)' }, min: 0, max: 2 },
+                        y: { title: { display: true, text: 'Expected Return (%)' } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
             // Final Step: Show UI and set default tab
             document.getElementById('mainUI').style.display = 'block';
             switchTab('val');
@@ -487,7 +589,3 @@
     </script>
 </body>
 </html>
-
-
-
-
