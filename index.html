@@ -286,10 +286,10 @@
           • <strong>Altman Z-Score:</strong> A "crystal ball" formula used to predict the likelihood of bankruptcy within 2 years. It combines five ratios covering liquidity, profitability, and leverage to provide a single health score.<br>
           • <strong>Supplementary Analysis:</strong> While the Z-Score looks at the "big picture," these individual categories act as a diagnostic tool to find the specific source of financial stress.<br>
           • Z = 1.2(A) + 1.4(B) + 3.3(C) + 0.6(D) + 1.0(E). The weights assigned are different because each component statistically contributes differently to Bankrupcy, determined using MDA (Multiple Discriminant Analysis) & to reduce TypeI - TypeII errors in prediction.<br>
-                              - A =   Working Capital / Total Assets (Weight 1.2) <br>
+                              - A =   Working Capital / Total Assets (Weight 1.2) ;
                               - B = Retained Earnings / Total Assets (Weight 1.4) <br>
-                              - C = EBIT / Total Assets (Weight 3.3)<br>
-                              - D = Cap / Total Liab. (Weight 0.6)<br>
+                              - C = EBIT / Total Assets (Weight 3.3)  ;
+                              - D = Cap / Total Liab. (Weight 0.6)  ;
                               - E =  Sales / Total Assets (Weight 1.0) <br>
           *Note: The modern Z = 6.56(A) + 3.26(B) + 6.72(C) + 1.05(D) + 3.25 is the modern version used for non-US based, non-financial companies with less stricter classification*<br>
           <br><strong>Reading Values (Z-Score):</strong><br>
@@ -302,15 +302,20 @@
           <strong>Formulas:</strong><br>
           • Debt-to-Equity: Total Liabilities / Shareholder Equity<br> (Goal < 2)<br>
           • Interest Coverage: Operating Income / Interest Expense (Goal > 3x)<br>
-          • ROE: Net Income / Shareholder Equity (Goal > 10%)`
+          • ROE: Net Income / Shareholder Equity (Goal > 10%)`,
+
+    strat: `<strong>Phase 4: Market Strategy & Alpha</strong><br>
+          • <b>Consensus:</b> Aggregated view of Wall Street analysts.<br>
+          • <b>Beta:</b> Market sensitivity. We compare this to the <b>SML</b> to find "Alpha".<br>
+          • <b>The Gap:</b> If analysts say "Buy" but our Z-Score is low, the business faces a "Sentiment Trap."`
     };
 
     function switchTab(tabId) {
-        ['view-val', 'view-sts', 'view-risk'].forEach(v => document.getElementById(v).style.display = 'none');
+        ['view-val', 'view-sts', 'view-risk', 'view-strat"].forEach(v => document.getElementById(v).style.display = 'none');
         const targetView = document.getElementById(`view-${tabId}`);
         targetView.style.display = (tabId === 'sts' || tabId === 'risk') ? 'block' : 'grid';
 
-        ['val', 'sts', 'risk'].forEach(t => {
+        ['val', 'sts', 'risk', 'strat'].forEach(t => {
             const btn = document.getElementById(`btn-${t}`);
             btn.className = (t === tabId) ? 'active' : 'secondary';
         });
@@ -472,24 +477,19 @@
             }
             document.getElementById('riskSummary').innerText = summary;
 
-            // 1. Fetch Treasury Rate (Risk-Free Rate)
-            const treasuryRes = await fetch(`https://financialmodelingprep.com/api/v4/treasury?apikey=${API_KEY}`);
-            const treasuryData = await treasuryRes.json();
-            const rf = parseFloat(treasuryData[0].year10) / 100; // e.g., 0.042 for 4.2%
-            
-            // 2. Variables for CAPM
+            // --- PHASE 4: STRATEGIC ANALYSIS (CAPM) ---
+            //1. CAPM varaibales
+            const rf = 0.045; // Hardcoded 4.5% Risk-Free Rate
+            const rm = 0.10;  // Standard 10% Market Return benchmark
             const beta = profile.beta; 
-            const rm = 0.10; // Expected Market Return (10% is a standard long-term benchmark)
-            const equityRiskPremium = rm - rf;
-            const expectedReturn = rf + (beta * equityRiskPremium);
+            const hurdleRate = rf + (beta * (rm - rf)); // CAPM Formula
             
-            // 3. Define Actual Return Proxy
-            // Note: We use ROIC (Return on Invested Capital) to see how well the business 
-            // uses money vs what the market demands.
-            const actualReturn = (ratios.returnOnInvestedCapitalTTM) || 0;
-            const alpha = actualReturn - expectedReturn;
+            // 2. Define Actual Return Proxy
+            // Note: We use ROIC (Return on Invested Capital) to see how well the business uses money vs what the market demands.
+            const actualReturn = ratios.returnOnInvestedCapitalTTM || 0;
+            const alpha = actualReturn - hurdleRate;
             
-            // 4. Update UI Elements
+            // 3. Update UI Elements
             document.getElementById('betaVal').innerText = beta.toFixed(2);
             document.getElementById('hurdleVal').innerText = (expectedReturn * 100).toFixed(1) + "%";
             document.getElementById('actualReturnVal').innerText = (actualReturn * 100).toFixed(1) + "%";
@@ -498,7 +498,7 @@
             alphaBadge.innerText = (alpha * 100).toFixed(1) + "%";
             alphaBadge.style.color = alpha > 0 ? "#00ff88" : "#ff4d4d";
             
-            // 5. Executive Summary Logic
+            // 4. Executive Summary Logic
             let summ_str = "";
             if (alpha > 0.02) {
                 summ_str = `<strong>Strategic Outperformer:</strong> This asset generates positive Alpha, meaning it delivers returns higher than its risk profile suggests. It is effectively "beating" the market math.`;
@@ -589,3 +589,4 @@
     </script>
 </body>
 </html>
+
