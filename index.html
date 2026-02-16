@@ -141,34 +141,52 @@
 
             <div id="view-strat" style="display:none;">
                 <div class="grid">
-                    <article>
-                        <header>Security Market Line Chart</header>
-                        <div style="height: 200px;"><canvas id="smlChart"></canvas></div>
-                        <footer><small>Risk vs. Return</small></footer>
-                    </article>
-            
-                    <article>
-                        <header>Capital Structure</header>
-                        <div style="height: 200px; display: flex; align-items: center;">
-                            <canvas id="capStructureChart"></canvas>
-                        </div>
-                        <footer>
-                            <small id="waccLabel" style="color: var(--pico-primary);">WACC: --</small>
+                    
+                    <article style="border-top: 2px solid var(--pico-primary);">
+                        <header><strong>Security Market Line</strong></header>
+                        <div style="height: 180px;"><canvas id="smlChart"></canvas></div>
+                        <footer style="font-size: 0.8rem; border-top: 1px solid #333; padding-top: 10px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Beta: <strong id="footerBeta">-</strong></span>
+                                <span>Return: <strong id="footerReturn">-</strong></span>
+                            </div>
                         </footer>
                     </article>
             
-                    <article>
-                        <header>Performance</header>
+                    <article style="border-top: 2px solid var(--pico-primary);">
+                        <header><strong>Capital Structure</strong></header>
+                        <div style="height: 180px; display: flex; align-items: center;">
+                            <canvas id="capStructureChart"></canvas>
+                        </div>
+                        <footer style="border-top: 1px solid #333; padding-top: 10px;">
+                            <small id="waccLabel" style="color: var(--pico-primary); font-weight: bold;">WACC: --</small>
+                        </footer>
+                    </article>
+            
+                    <article style="border-top: 2px solid var(--pico-primary);">
+                        <header><strong>Strategic Performance</strong></header>
                         <table class="condensed" style="margin: 0; font-size: 0.85rem;">
                             <tbody>
-                                <tr><td>Beta</td><td id="tdBeta" style="text-align:right;">-</td></tr>
-                                <tr><td>Hurdle</td><td id="tdHurdle" style="text-align:right;">-</td></tr>
-                                <tr><td>ROIC</td><td id="tdRoic" style="text-align:right;">-</td></tr>
-                                <tr><td style="font-weight:bold;">Alpha</td><td id="tdAlpha" style="text-align:right; font-weight:bold;">-</td></tr>
+                                <tr><td>Market Beta</td><td id="tdBeta" style="text-align:right;">-</td></tr>
+                                <tr><td>Hurdle Rate</td><td id="tdHurdle" style="text-align:right;">-</td></tr>
+                                <tr style="border-bottom: 1px solid #333;"><td>Actual ROIC</td><td id="tdRoic" style="text-align:right;">-</td></tr>
+                                <tr>
+                                    <td style="font-weight:bold; color: #10b981;">Alpha Spread</td>
+                                    <td id="tdAlpha" style="text-align:right; font-weight:bold; color: #10b981;">-</td>
+                                </tr>
                             </tbody>
                         </table>
+                        <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 4px; border-left: 3px solid var(--pico-primary);">
+                            <p id="stratExecutiveSummary" style="font-size: 0.75rem; line-height: 1.4; margin: 0; color: #94a3b8;">
+                                Analysis pending...
+                            </p>
+                        </div>
                     </article>
+                    
                 </div>
+            </div>
+
+            
             
                 <article style="margin-top: 20px;">
                     <header>Strategic Analysis & Recommendations</header>
@@ -504,11 +522,11 @@
             const debtPct = (totalDebt / totalCapital) * 100;
             const equityPct = (totalEquity / totalCapital) * 100;
 
-            let actualReturn = metrics.returnOnInvestedCapital || 0;
+            let actualReturn = metrics.returnOnInvestedCapital;
             if (actualReturn === 0 && inc && bs) {
                 // Manual Calculation Fallback: EBIT / (Debt + Equity)
-                const ebit = inc.operatingIncome || 0;
-                actualReturn = ebit / (totalCap || 1);
+                const ebit = inc.operatingIncome;
+                actualReturn = ebit / totalCap;
             }
 
             const alpha = actualReturn - hurdleRate;
@@ -586,6 +604,9 @@
             });
 
             // A. SML Chart with Zones
+            document.getElementById('footerBeta').innerText = companyBeta.toFixed(2);
+            document.getElementById('footerReturn').innerText = companyReturn.toFixed(1) + '%';
+  
             if (window.smlChart instanceof Chart) {window.smlChart.destroy();}
             window.smlChart = new Chart(document.getElementById('smlChart'), {
                 type: 'scatter',
@@ -658,4 +679,5 @@
     </script>
 </body>
 </html>
+
 
