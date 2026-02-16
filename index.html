@@ -142,35 +142,53 @@
             </div>
 
             <div id="view-strat" style="display:none;">
-                <div class="grid" style="margin-bottom: 1rem;">
-                    <article style="padding: 1rem;">
-                        <header style="margin-bottom: 0.5rem; padding: 0.5rem;"><strong>Strategic Risk vs. Return</strong></header>
+                <div class="grid">
+                    <article>
+                        <header><strong>Strategic Risk vs. Return (SML)</strong></header>
                         <div style="height: 250px;"><canvas id="smlChart"></canvas></div>
+                        <footer><small>Plots Alpha (Outperformance) vs. Beta (Risk)</small></footer>
                     </article>
-                    <article style="padding: 1rem;">
-                        <header style="margin-bottom: 0.5rem; padding: 0.5rem;"><strong>Capital Structure</strong></header>
+            
+                    <article>
+                        <header><strong>Capital Structure & WACC</strong></header>
                         <div style="height: 250px;"><canvas id="capStructureChart"></canvas></div>
+                        <footer style="text-align:center;">
+                            <small id="waccLabel" style="color: var(--pico-primary); font-weight: bold;">Calculating Cost of Capital...</small>
+                        </footer>
                     </article>
                 </div>
             
-                <div class="grid" style="align-items: start;">
-                    <article style="padding: 1rem;">
+                <div class="grid">
+                    <article>
+                        <header><strong>Performance Metrics</strong></header>
                         <table class="condensed" style="margin: 0; font-size: 0.85rem;">
-                            <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
                             <tbody>
-                                <tr><td>Beta</td><td id="tdBeta">-</td></tr>
-                                <tr><td>Hurdle Rate</td><td id="tdHurdle">-</td></tr>
-                                <tr><td>Actual ROIC</td><td id="tdRoic">-</td></tr>
-                                <tr><td><strong>Value Alpha</strong></td><td><mark id="tdAlpha" style="padding: 2px 6px;">-</mark></td></tr>
+                                <tr><td>Market Beta (Systematic Risk)</td><td id="tdBeta">-</td></tr>
+                                <tr><td>Hurdle Rate (Cost of Equity)</td><td id="tdHurdle">-</td></tr>
+                                <tr><td>Actual Return (ROIC)</td><td id="tdRoic">-</td></tr>
+                                <tr style="border-top: 1px solid #444;">
+                                    <td><strong>Value Spread (Alpha)</strong></td>
+                                    <td><mark id="tdAlpha" style="padding: 2px 6px; border-radius: 4px;">-</mark></td>
+                                </tr>
                             </tbody>
                         </table>
                     </article>
-                    <article style="padding: 1rem;">
-                        <div id="stratExecutiveSummary" style="font-size: 0.85rem; border-left: 3px solid var(--pico-primary); padding-left: 1rem;">
-                            </div>
+            
+                    <article>
+                        <header><strong>Executive Strategy Insight</strong></header>
+                        <div id="stratExecutiveSummary" style="font-size: 0.85rem; line-height: 1.6; min-height: 120px;">
+                            Enter a ticker to generate strategic analysis...
+                        </div>
                     </article>
                 </div>
             </div>
+            
             
             <div id="view-risk" style="display:none;">
                 <div class="risk-grid">
@@ -623,4 +641,5 @@
     </script>
 </body>
 </html>
+
 
