@@ -486,7 +486,7 @@
             
             // 2. Define Actual Return Proxy
             // Note: We use ROIC (Return on Invested Capital) to see how well the business uses money vs what the market demands.
-            const actualReturn = ratios.returnOnInvestedCapitalTTM || 0;
+            const actualReturn = metrics.returnOnInvestedCapitalTTM || 0;
             const alpha = actualReturn - hurdleRate;
             
             // 3. Update UI Elements
@@ -589,5 +589,6 @@
     </script>
 </body>
 </html>
+
 
 
