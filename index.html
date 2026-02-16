@@ -142,28 +142,35 @@
             <div id="view-strat" style="display:none;">
                 <div class="dashboard-grid">
                     <article>
-                        <header><strong>Security Market Line (SML)</strong></header>
-                        <div style="height: 350px;">
-                            <canvas id="smlChart"></canvas>
-                        </div>
-                        <footer>
-                            <small>The diagonal line represents the market's "Fair Return" for a given risk level.</small>
-                        </footer>
+                        <header><strong>Security Market Line (Risk vs Reward)</strong></header>
+                        <div style="height: 280px;"><canvas id="smlChart"></canvas></div>
+                        <footer><small>Plots Alpha (Outperformance) vs. Beta (Risk)</small></footer>
                     </article>
-                    
                     <article>
-                        <header><strong>Risk-Adjusted Performance</strong></header>
-                        <div class="sts-card" style="border-top: 4px solid #ff007b;">
-                            <div class="metric-row"><span>Systematic Risk (Beta)</span><strong id="betaVal">-</strong></div>
-                            <div class="metric-row"><span>Required Return (CAPM)</span><strong id="hurdleVal">-</strong></div>
-                            <div class="metric-row"><span>Actual Return Proxy (ROIC)</span><strong id="actualReturnVal">-</strong></div>
-                            <hr>
-                            <div class="metric-row">
-                                <span>Performance Alpha</span>
-                                <mark id="alphaBadge" style="background:none; font-weight:bold;">-</mark>
-                            </div>
-                            <p id="stratExecutiveSummary" style="font-size: 0.85rem; margin-top:15px; color:#ccc;"></p>
-                        </div>
+                        <header><strong>Capital Structure & WACC</strong></header>
+                        <div style="height: 280px;"><canvas id="capStructureChart"></canvas></div>
+                        <footer><small id="waccLabel">Determining the "Price of Capital"</small></footer>
+                    </article>
+                </div>
+            
+                <div class="grid" style="margin-top: 20px;">
+                    <article>
+                        <header><strong>Performance Metrics</strong></header>
+                        <table class="condensed">
+                            <tbody>
+                                <tr><td>Beta (Systematic Risk)</td><td id="tdBeta">-</td></tr>
+                                <tr><td>Hurdle Rate (CAPM)</td><td id="tdHurdle">-</td></tr>
+                                <tr><td>Actual Return (ROIC)</td><td id="tdRoic">-</td></tr>
+                                <tr style="border-top: 2px solid #444;">
+                                    <td><strong>Value Spread (Alpha)</strong></td>
+                                    <td><mark id="tdAlpha">-</mark></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </article>
+                    <article>
+                        <header><strong>Executive Strategy Insight</strong></header>
+                        <p id="stratExecutiveSummary" style="font-size: 0.9rem; line-height: 1.6;"></p>
                     </article>
                 </div>
             </div>
@@ -478,6 +485,7 @@
             document.getElementById('riskSummary').innerText = summary;
 
             // --- PHASE 4: STRATEGIC ANALYSIS (CAPM) ---
+
             //1. CAPM varaibales
             const rf = 0.045; // Hardcoded 4.5% Risk-Free Rate
             const rm = 0.10;  // Standard 10% Market Return benchmark
@@ -489,13 +497,31 @@
             
             const expected = (hurdleRate * 100).toFixed(1);
             const actual = (actualReturn * 100).toFixed(1);
-            const alphaValue = (alpha * 100).toFixed(1);
+            const alphaValue = (alpha * 100).toFixed(1);            
             
+            const marketCap = profile.mktCap || 0;
+            const totalDebt = bs[0].totalDebt || 0;
+            const totalCapital = marketCap + totalDebt;
+            const weightEquity = marketCap / totalCapital;
+            const weightDebt = totalDebt / totalCapital;
+            const costOfDebt = 0.06 * (1 - 0.21); // Tax-adjusted cost of debt (21% tax rate)
+            const wacc = (weightEquity * hurdleRate) + (weightDebt * costOfDebt);
+
+            document.getElementById('tdBeta').innerText = beta.toFixed(2);
+            document.getElementById('tdHurdle').innerText = (hurdleRate * 100).toFixed(1) + "%";
+            document.getElementById('tdRoic').innerText = (actualReturn * 100).toFixed(1) + "%";
+
+            const alphaCell = document.getElementById('tdAlpha');
+            alphaCell.innerText = (alpha * 100).toFixed(1) + "%";
+            alphaCell.style.background = alpha > 0 ? "#004d26" : "#4d0000";
+            
+            document.getElementById('waccLabel').innerHTML = `<strong>WACC: ${(wacc * 100).toFixed(1)}%</strong> | Weighted Average Cost of Capital`;
+
             let storyVerdict = "";
             let colorClass = "";
             
             if (alpha > 0.02) {
-                storyVerdict = `🚀 <strong>Elite Efficiency:</strong> Disney is clearing its ${expected}% hurdle rate by a wide margin. For every unit of market risk taken, management is squeezing out an extra ${alphaValue}% of "pure" profit (Alpha).`;
+                storyVerdict = `🚀 <strong>Elite Efficiency:</strong> ${profile.companyName} is clearing its ${expected}% hurdle rate by a wide margin. For every unit of market risk taken, management is squeezing out an extra ${alphaValue}% of "pure" profit (Alpha).`;
                 colorClass = "#00ff88";
             } else if (alpha < -0.02) {
                 storyVerdict = `⚠️ <strong>The Risk Trap:</strong> While the company is profitable, it isn't profitable <em>enough</em>. It's failing to meet its ${expected}% hurdle. In a market downturn, its high Beta will hurt more than its low returns can help.`;
@@ -547,39 +573,35 @@
                 options: { maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
             });
 
-            if (window.smlChartObj) window.smlChartObj.destroy();
-            window.smlChartObj = new Chart(document.getElementById('smlChart'), {
+            // A. SML Chart with Zones
+            if (window.smlChart) window.smlChart.destroy();
+            window.smlChart = new Chart(document.getElementById('smlChart'), {
                 type: 'scatter',
                 data: {
                     datasets: [
-                        {
-                            label: 'Security Market Line',
-                            data: [{x: 0, y: rf * 100}, {x: 2, y: (rf + 2 * (rm-rf)) * 100}],
-                            type: 'line',
-                            borderColor: '#444',
-                            borderDash: [5, 5],
-                            pointRadius: 0,
-                            showLine: true
-                        },
-                        {
-                            label: ticker,
-                            data: [{x: beta, y: actualReturn * 100}],
-                            backgroundColor: '#ff007b',
-                            pointRadius: 10,
-                            pointHoverRadius: 12
-                        }
+                        { label: 'SML', data: [{x: 0, y: rf*100}, {x: 2, y: (rf+2*(rm-rf))*100}], type: 'line', borderColor: '#888', borderDash: [5,5], pointRadius: 0 },
+                        { label: ticker, data: [{x: beta, y: actualReturn*100}], backgroundColor: '#ff007b', pointRadius: 10 }
                     ]
                 },
-                options: {
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { title: { display: true, text: 'Beta (Risk)' }, min: 0, max: 2 },
-                        y: { title: { display: true, text: 'Expected Return (%)' } }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    }
+                options: { 
+                    maintainAspectRatio: false, 
+                    scales: { x: {title: {display:true, text:'Beta'}, min:0, max:2}, y: {title: {display:true, text:'Return %'}} }
                 }
+            });
+            
+            // B. Capital Structure Doughnut
+            if (window.capChart) window.capChart.destroy();
+            window.capChart = new Chart(document.getElementById('capStructureChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Debt', 'Equity'],
+                    datasets: [{
+                        data: [totalDebt, marketCap],
+                        backgroundColor: ['#ff4d4d', '#00a8e8'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
 
             // Final Step: Show UI and set default tab
@@ -596,10 +618,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
