@@ -491,7 +491,7 @@
             
             // 3. Update UI Elements
             document.getElementById('betaVal').innerText = beta.toFixed(2);
-            document.getElementById('hurdleVal').innerText = (expectedReturn * 100).toFixed(1) + "%";
+            document.getElementById('hurdleVal').innerText = (hurdleRate * 100).toFixed(1) + "%";
             document.getElementById('actualReturnVal').innerText = (actualReturn * 100).toFixed(1) + "%";
             
             const alphaBadge = document.getElementById('alphaBadge');
@@ -589,6 +589,7 @@
     </script>
 </body>
 </html>
+
 
 
 
