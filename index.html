@@ -307,11 +307,11 @@
     strat: `<strong>Phase 4: Market Strategy & Alpha</strong><br>
           • <b>Consensus:</b> Aggregated view of Wall Street analysts.<br>
           • <b>Beta:</b> Market sensitivity. We compare this to the <b>SML</b> to find "Alpha".<br>
-          • <b>The Gap:</b> If analysts say "Buy" but our Z-Score is low, the business faces a "Sentiment Trap."`
+          • <b>The Gap:</b> If analysts say "Buy" but our Z-Score is low, the business faces a Sentiment Trap.`
     };
 
     function switchTab(tabId) {
-        ['view-val', 'view-sts', 'view-risk', 'view-strat"].forEach(v => document.getElementById(v).style.display = 'none');
+        ['view-val', 'view-sts', 'view-risk', 'view-strat'].forEach(v => document.getElementById(v).style.display = 'none');
         const targetView = document.getElementById(`view-${tabId}`);
         targetView.style.display = (tabId === 'sts' || tabId === 'risk') ? 'block' : 'grid';
 
@@ -589,4 +589,5 @@
     </script>
 </body>
 </html>
+
 
