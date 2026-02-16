@@ -30,6 +30,8 @@
         .z-floating-val { background: #2a313d; padding: 5px 15px; border-radius: 8px; border: 1px solid var(--pico-primary); font-family: monospace; font-size: 1.1rem; }
         .range-label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-bottom: 2px; }
         .trend-chart-container { height: 180px; width: 100%; margin-bottom: 15px; background: #1c222d; border-radius: 8px; padding: 10px; }
+        #view-strat .grid {margin-top: 0.5rem !important; }/* Tighten the padding inside the strategy articles */
+        #view-strat article {padding: 0.75rem;  margin-bottom: 0.5rem;  }
     </style>
 </head>
 <body>
@@ -492,19 +494,26 @@
             const beta = profile.beta; 
             const hurdleRate = rf + (beta * (rm - rf)); // CAPM Formula
 
-            const actualReturn = metrics.returnOnInvestedCapital || 0;
+            const marketCap = metrics.marketCap || 0;
+            const totalDebt = bs.totalDebt || 0;
+            const totalCapital = marketCap + totalDebt;
+            const weightEquity = marketCap / totalCapital;
+            const weightDebt = totalDebt / totalCapital;
+            const costOfDebt = 0.06 * (1 - 0.21); // Tax-adjusted cost of debt (21% tax rate)
+
+            let actualReturn = metrics.returnOnInvestedCapital || 0;
+            if (actualReturn === 0 && inc && bs) {
+                // Manual Calculation Fallback: EBIT / (Debt + Equity)
+                const ebit = inc.operatingIncome || 0;
+                actualReturn = ebit / (totalCap || 1);
+            }
+
             const alpha = actualReturn - hurdleRate;
             
             const expected = (hurdleRate * 100).toFixed(1);
             const actual = (actualReturn * 100).toFixed(1);
             const alphaValue = (alpha * 100).toFixed(1);            
             
-            const marketCap = profile.mktCap || 0;
-            const totalDebt = bs.totalDebt || 0;
-            const totalCapital = marketCap + totalDebt;
-            const weightEquity = marketCap / totalCapital;
-            const weightDebt = totalDebt / totalCapital;
-            const costOfDebt = 0.06 * (1 - 0.21); // Tax-adjusted cost of debt (21% tax rate)
             const wacc = (weightEquity * hurdleRate) + (weightDebt * costOfDebt);
 
             document.getElementById('tdBeta').innerText = beta.toFixed(2);
@@ -618,5 +627,3 @@
     </script>
 </body>
 </html>
-
-
