@@ -142,10 +142,10 @@
             <div id="view-strat" style="display:none;">
                 <div class="grid">
                     
-                    <article style="border-top: 2px solid var(--pico-primary);">
+                    <article style="border-top: 2px solid #3b82f6;">
                         <header><strong>Security Market Line</strong></header>
-                        <div style="height: 180px;"><canvas id="smlChart"></canvas></div>
-                        <footer style="font-size: 0.8rem; border-top: 1px solid #333; padding-top: 10px;">
+                        <div style="height: 200px;"><canvas id="smlChart"></canvas></div>
+                        <footer style="font-size: 0.8rem; border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
                             <div style="display: flex; justify-content: space-between;">
                                 <span>Beta: <strong id="footerBeta">-</strong></span>
                                 <span>Return: <strong id="footerReturn">-</strong></span>
@@ -153,17 +153,17 @@
                         </footer>
                     </article>
             
-                    <article style="border-top: 2px solid var(--pico-primary);">
+                    <article style="border-top: 2px solid #3b82f6;">
                         <header><strong>Capital Structure</strong></header>
-                        <div style="height: 180px; display: flex; align-items: center;">
+                        <div style="height: 200px; display: flex; align-items: center;">
                             <canvas id="capStructureChart"></canvas>
                         </div>
-                        <footer style="border-top: 1px solid #333; padding-top: 10px;">
-                            <small id="waccLabel" style="color: var(--pico-primary); font-weight: bold;">WACC: --</small>
+                        <footer style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
+                            <small id="waccLabel" style="color: #3b82f6; font-weight: bold;">WACC: --</small>
                         </footer>
                     </article>
             
-                    <article style="border-top: 2px solid var(--pico-primary);">
+                    <article style="border-top: 2px solid #3b82f6;">
                         <header><strong>Strategic Performance</strong></header>
                         <table class="condensed" style="margin: 0; font-size: 0.85rem;">
                             <tbody>
@@ -176,23 +176,13 @@
                                 </tr>
                             </tbody>
                         </table>
-                        <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 4px; border-left: 3px solid var(--pico-primary);">
+                        <div style="margin-top: 12px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 4px; border-left: 3px solid #3b82f6;">
                             <p id="stratExecutiveSummary" style="font-size: 0.75rem; line-height: 1.4; margin: 0; color: #94a3b8;">
                                 Analysis pending...
                             </p>
                         </div>
                     </article>
-                    
                 </div>
-            </div>
-
-            
-            
-                <article style="margin-top: 20px;">
-                    <header>Strategic Analysis & Recommendations</header>
-                    <div id="stratExecutiveSummary" style="font-size: 0.9rem; line-height: 1.6; color: #cbd5e1;">
-                        </div>
-                </article>
             </div>
             
             <div id="view-risk" style="display:none;">
@@ -606,6 +596,7 @@
             // A. SML Chart with Zones
             document.getElementById('footerBeta').innerText = beta.toFixed(2);
             document.getElementById('footerReturn').innerText = (actualReturn * 100).toFixed(1) + "%";
+            const yMax = Math.max(25, Math.ceil((actualReturn * 100) / 5) * 5 + 10);
   
             if (window.smlChart instanceof Chart) {window.smlChart.destroy();}
             window.smlChart = new Chart(document.getElementById('smlChart'), {
@@ -618,7 +609,7 @@
                 },
                 options: { 
                     maintainAspectRatio: false, 
-                    scales: { x: {title: {display:true, text:'Beta'}, min:0, max:2}, y: {title: {display:true, text:'Return %'}} },
+                    scales: { x: {title: {display:true, text:'Beta'}, min:0, max:2}, y: {min:0, max:yMax, title: {display:true, text:'Return %'}} },
                     plugins: {datalabels: { display: false }, legend: { display: false }}
                 }
             });
@@ -679,6 +670,7 @@
     </script>
 </body>
 </html>
+
 
 
 
