@@ -604,8 +604,8 @@
             });
 
             // A. SML Chart with Zones
-            document.getElementById('footerBeta').innerText = companyBeta.toFixed(2);
-            document.getElementById('footerReturn').innerText = companyReturn.toFixed(1) + '%';
+            document.getElementById('footerBeta').innerText = beta.toFixed(2);
+            document.getElementById('footerReturn').innerText = (actualReturn * 100).toFixed(1) + "%";
   
             if (window.smlChart instanceof Chart) {window.smlChart.destroy();}
             window.smlChart = new Chart(document.getElementById('smlChart'), {
@@ -679,5 +679,6 @@
     </script>
 </body>
 </html>
+
 
 
