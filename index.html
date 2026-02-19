@@ -303,8 +303,7 @@
     let zChart = null;
     let zTrendChart = null;
     const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
-    //const API_KEY = 'ON8k6g7660ONUPRKUMxnzEuBMUTXhLds';      
-    const genAI = new GoogleGenerativeAI(GEM_KEY);    
+    //const API_KEY = 'ON8k6g7660ONUPRKUMxnzEuBMUTXhLds';         
     const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#fff0ff', 'Fintech': '#ffdc00' };
 
     const learnings = {
@@ -501,6 +500,7 @@
     
         try {
             // 2. Setup the model
+            const genAI = new GoogleGenerativeAI(savedKey); 
             const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
     
             // 3. Create a simple, high-level prompt
@@ -875,6 +875,7 @@
     </script>
 </body>
 </html>
+
 
 
 
