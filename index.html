@@ -39,7 +39,6 @@
             <select id="tickerSelect" onchange="runAnalysis(this.value)">
                 <option value="" disabled selected>Select Company to Start Analysis...</option>
                 <option value="XOM">ExxonMobil (Energy)</option>
-                <option value="CVX">Chevron (Energy)</option>
                 <option value="NVDA">NVIDIA (Semiconductors)</option>
                 <option value="MSFT">Microsoft (Software)</option>
                 <option value="GOOGL">Alphabet (Tech)</option>
@@ -57,7 +56,8 @@
                 <button id="btn-val" class="active" onclick="switchTab('val')">Valuation</button>
                 <button id="btn-sts" class="secondary" onclick="switchTab('sts')">Statements</button>
                 <button id="btn-risk" class="secondary" onclick="switchTab('risk')">Resilience</button>
-                <button id="btn-strat" class="secondary" onclick="switchTab('strat')">Strategic Positioning</button>
+                <button id="btn-strat" class="secondary" onclick="switchTab('strat')">Positioning</button>
+                <button id="btn-outlook" class="secondary" onclick="switchTab('outlook')">Outlook</button>
             </div>
 
             <details id="lessonBox" style="background: #1c222d; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
@@ -95,6 +95,33 @@
                     </header>  
                     <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
                 </article>
+            </div>
+
+            <div id="view-outlook" style="display:none;">
+                <div class="grid">
+                    <div style="border-top: 2px solid var(--pico-primary); background: rgba(255,255,255,0.02); padding: 20px; border-radius: 4px;">
+                        <h5 style="color: var(--pico-primary);">Industry Dynamics</h5>
+                        <div id="industryContext" style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px;">
+                            Select a company to see industry context.
+                        </div>
+                        
+                        <hr>
+                        
+                        <h5 style="color: var(--pico-primary);">AI Strategic Consultant</h5>
+                        <p style="font-size: 0.75rem; color: #888;">Ask Gemini for a deep-dive analysis on this company's future.</p>
+                        <textarea id="aiQuery" placeholder="e.g. What are the biggest risks for this company in 2026?" style="font-size: 0.85rem;"></textarea>
+                        <button onclick="askGemini()" class="contrast" id="aiBtn">Generate AI Insight</button>
+                        <div id="aiResponse" style="font-size: 0.85rem; margin-top: 15px; background: #0b0e14; padding: 10px; border-radius: 4px; display: none; border-left: 2px solid gold;"></div>
+                    </div>
+            
+                    <div style="border-top: 2px solid var(--pico-primary); background: rgba(255,255,255,0.02); padding: 20px; border-radius: 4px;">
+                        <h5 style="color: var(--pico-primary);">Alpha Risk Simulation</h5>
+                        <p style="font-size: 0.75rem; color: #888;">1,000-trial Monte Carlo: 95% Confidence Interval for next year's Alpha.</p>
+                        <div style="height: 250px;"><canvas id="monteCarloChart"></canvas></div>
+                        <div id="simulationStats" style="margin-top: 15px; padding: 10px; background: #1c222d; border-radius: 4px; font-size: 0.85rem;">
+                            </div>
+                    </div>
+                </div>
             </div>
 
             <div id="view-sts" style="display:none;">
@@ -269,12 +296,15 @@
     </main>
 
     <script>
+    import { GoogleGenerativeAI } from "@google/generative-ai";    
     Chart.register(ChartDataLabels);
     let priceChart = null;
     let zChart = null;
     let zTrendChart = null;
     //const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
-    const API_KEY = 'ON8k6g7660ONUPRKUMxnzEuBMUTXhLds';    
+    const API_KEY = 'ON8k6g7660ONUPRKUMxnzEuBMUTXhLds'; 
+    const GEM_KEY = 'AIzaSyA-KGh3OqUCKKrnnoTFwXYugXPIdXPTgV4';
+    const genAI = new GoogleGenerativeAI(GEM_KEY);    
     const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#fff0ff', 'Fintech': '#ffdc00' };
 
     const learnings = {
@@ -355,16 +385,112 @@
     };
 
     function switchTab(tabId) {
-        ['view-val', 'view-sts', 'view-risk', 'view-strat'].forEach(v => document.getElementById(v).style.display = 'none');
+        ['view-val', 'view-sts', 'view-risk', 'view-strat', 'view-outlook'].forEach(v => document.getElementById(v).style.display = 'none');
         const targetView = document.getElementById(`view-${tabId}`);
         targetView.style.display = (tabId === 'sts' || tabId === 'risk') ? 'block' : 'grid';
 
-        ['val', 'sts', 'risk', 'strat'].forEach(t => {
+        ['val', 'sts', 'risk', 'strat', 'outlook'].forEach(t => {
             const btn = document.getElementById(`btn-${t}`);
             btn.className = (t === tabId) ? 'active' : 'secondary';
         });
         document.getElementById('lessonContent').innerHTML = (learnings[tabId] || "");
     }
+
+    // 1. Monte Carlo Simulation Logic
+    function runMonteCarlo(currentBeta, currentRoic) {
+        const iterations = 1000;
+        const rf = 0.045; 
+        const rm = 0.10;
+        const results = [];
+        
+        // Simulations assume standard deviations based on market volatility
+        for (let i = 0; i < iterations; i++) {
+            let u = Math.random(), v = Math.random();
+            let normalRand = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+            
+            let simBeta = currentBeta + (normalRand * 0.15); // 0.15 volatility in Beta
+            let simRoic = currentRoic + (normalRand * 0.05); // 0.05 volatility in ROIC
+            let simHurdle = rf + (simBeta * (rm - rf));
+            results.push((simRoic - simHurdle) * 100);
+        }
+    
+        results.sort((a, b) => a - b);
+        const ciLow = results[Math.floor(iterations * 0.025)];
+        const ciHigh = results[Math.floor(iterations * 0.975)];
+        const probSuccess = (results.filter(r => r > 0).length / iterations) * 100;
+    
+        renderMonteCarloChart(results, ciLow, ciHigh);
+        
+        document.getElementById('simulationStats').innerHTML = `
+            <strong>Win Rate:</strong> ${probSuccess.toFixed(1)}% probability of positive Alpha.<br>
+            <strong>95% CI:</strong> [${ciLow.toFixed(2)}% to ${ciHigh.toFixed(2)}%] Alpha range.
+        `;
+    }
+    
+    // 2. Chart Rendering for Monte Carlo (Histogram)
+    function renderMonteCarloChart(data, low, high) {
+        if (window.mcChart) window.mcChart.destroy();
+        
+        // Create bins for histogram
+        const bins = {};
+        data.forEach(v => {
+            const bin = Math.round(v);
+            bins[bin] = (bins[bin] || 0) + 1;
+        });
+    
+        window.mcChart = new Chart(document.getElementById('monteCarloChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(bins),
+                datasets: [{
+                    label: 'Frequency',
+                    data: Object.values(bins),
+                    backgroundColor: Object.keys(bins).map(k => (k >= low && k <= high) ? 'rgba(0, 168, 232, 0.6)' : 'rgba(255, 255, 255, 0.1)')
+                }]
+            },
+            options: { 
+                maintainAspectRatio: false, 
+                plugins: { legend: {display: false}, datalabels: {display: false} },
+                scales: { x: { title: { display: true, text: 'Alpha % Outcome' } } }
+            }
+        });
+    }
+    
+    // 3. Gemini Integration (Ensure you replace API_KEY)
+    async function askGemini() {
+        const btn = document.getElementById('aiBtn');
+        const responseBox = document.getElementById('aiResponse');
+        const query = document.getElementById('aiQuery').value;
+        
+        if(!query) return alert("Please enter a question.");
+        
+        btn.innerText = "Consulting Gemini...";
+        btn.disabled = true;
+    
+        try {
+            // Replace with your logic to call Gemini API
+            // const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            // const result = await model.generateContent(query);
+          const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+          const prompt = `You are a Senior Financial Analyst. Analyze this company data: 
+          EV/EBITDA: ${data.evEbitda}, 
+          Z-Score: ${data.zScore}, 
+          Alpha: ${data.alpha}. 
+          Provide a 3-sentence executive summary for a Senior Data Scientist role.`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+            
+            responseBox.style.display = 'block';
+            responseBox.innerText = "Gemini Response would appear here. (Requires API Key setup)";
+        } catch (e) {
+            responseBox.innerText = "Error connecting to AI.";
+        } finally {
+            btn.innerText = "Generate AI Insight";
+            btn.disabled = false;
+        }
+    }     
 
     async function runAnalysis(ticker) {
         document.getElementById('loader').style.display = 'block';
@@ -589,6 +715,21 @@
                 </div>
             `;
 
+            const industryData = {
+                'Semiconductors': 'Semiconductor companies like NVIDIA design and manufacture chips that power everything from AI to gaming. They earn money through high-margin hardware sales and increasingly through software ecosystems like CUDA.',
+                'Entertainment': 'Entertainment giants like Disney and Netflix generate revenue through content licensing, subscriptions, and theme park experiences, relying heavily on Intellectual Property (IP) and brand loyalty.',
+                'Energy': 'Energy firms like ExxonMobil earn revenue through the exploration, production, and refining of oil and gas, with profits highly sensitive to global commodity prices and capital expenditure cycles.'
+                'Software': 'Software companies like Microsoft operate primarily on high-margin subscription models (SaaS). They benefit from recurring revenue and high scalability, where the cost of adding a new user is near zero, leading to significant operating leverage.',
+                'Tech': 'Tech conglomerates like Alphabet (Google) leverage massive user data to sell targeted advertising or cloud infrastructure. Their business models rely on "Network Effects"—where the service becomes more valuable as more people use it.',
+                'Automotive': 'Automotive firms like Tesla are transitioning from traditional manufacturing to "Software-Defined Vehicles." They earn revenue through hardware sales, but the high-growth story lies in recurring autonomous software subscriptions and energy ecosystem integration.',
+                'Fintech': 'Fintech disruptors like SoFi earn money through a mix of transaction fees, interest spreads (Net Interest Margin), and technology-as-a-service. Success in this sector is driven by lower customer acquisition costs compared to traditional "legacy" banks.'
+            };
+            
+            document.getElementById('industryContext').innerText = industryData[industry] || "Industry analysis currently being updated for this sector.";
+
+            // Run the simulation using the alpha/beta calculated in Phase 4
+            runMonteCarlo(beta, actualReturn);           
+
             // Render Charts
             if (zChart) zChart.destroy();
             zChart = new Chart(document.getElementById('zScoreChart'), {
@@ -697,5 +838,3 @@
     </script>
 </body>
 </html>
-
-
