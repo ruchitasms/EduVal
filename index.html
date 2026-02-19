@@ -303,17 +303,7 @@
     let zChart = null;
     let zTrendChart = null;
     const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
-    //const API_KEY = 'ON8k6g7660ONUPRKUMxnzEuBMUTXhLds'; 
-    //const GEM_KEY = "AIzaSyBh5Gy"+"v30kfkkiB__Hs"+"dy3acl_yBXaX5Ig";
-    const GEM_KEY = localStorage.getItem('MY_DASHBOARD_KEY');
-    if (!GEM_KEY) {
-        // This only shows up for YOU (or your users) in the browser
-        const userKey = prompt("Enter your Gemini API Key to enable AI Features:");
-        if (userKey) {
-            localStorage.setItem('MY_DASHBOARD_KEY', userKey);
-            location.reload(); // Refresh to start using the key
-        }
-    }       
+    //const API_KEY = 'ON8k6g7660ONUPRKUMxnzEuBMUTXhLds';      
     const genAI = new GoogleGenerativeAI(GEM_KEY);    
     const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#fff0ff', 'Fintech': '#ffdc00' };
 
@@ -489,6 +479,7 @@
     
     // 3. Gemini Integration (Ensure you replace API_KEY)
     async function askGemini() {
+        
         const btn = document.getElementById('aiBtn');
         const responseBox = document.getElementById('aiResponse');
         
@@ -496,6 +487,14 @@
         const query = document.getElementById('aiQuery').value;   
         
         if(!query) return alert("Please enter a question.");
+
+        let savedKey = localStorage.getItem('MY_DASHBOARD_KEY');
+        if (!savedKey) {
+            const userKey = prompt("Please enter your Gemini API Key to continue:");
+            if (!userKey) return; // User cancelled
+            localStorage.setItem('MY_DASHBOARD_KEY', userKey.trim());
+            savedKey = userKey.trim();
+        }
     
         btn.innerText = "Consulting Gemini...";
         btn.disabled = true;
@@ -876,6 +875,7 @@
     </script>
 </body>
 </html>
+
 
 
 
