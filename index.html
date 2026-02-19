@@ -460,32 +460,35 @@
     async function askGemini() {
         const btn = document.getElementById('aiBtn');
         const responseBox = document.getElementById('aiResponse');
-        const query = document.getElementById('aiQuery').value;
+        
+        // This is the line you asked about - it captures the user's text
+        const query = document.getElementById('aiQuery').value;   
         
         if(!query) return alert("Please enter a question.");
-        
+    
         btn.innerText = "Consulting Gemini...";
         btn.disabled = true;
     
         try {
-            // Replace with your logic to call Gemini API
-            // const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-            // const result = await model.generateContent(query);
-          const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-          const prompt = `You are a Senior Financial Analyst. Analyze this company data: 
-          EV/EBITDA: ${data.evEbitda}, 
-          Z-Score: ${data.zScore}, 
-          Alpha: ${data.alpha}. 
-          Provide a 3-sentence executive summary for a Senior Data Scientist role.`;
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
+            // 2. Setup the model
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+            // 3. Create a simple, high-level prompt
+            const prompt = `Act as a Senior Financial Analyst. 
+                           The user is looking at a financial dashboard and asks: "${query}". 
+                           Give a brief, 2-3 sentence professional insight.`;
+    
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
             
+            // 4. Show the result in your UI
             responseBox.style.display = 'block';
-            responseBox.innerText = "Gemini Response would appear here. (Requires API Key setup)";
+            responseBox.innerHTML = `<strong>Strategic Insight:</strong><br>${text}`;
         } catch (e) {
-            responseBox.innerText = "Error connecting to AI.";
+            console.error("AI Error:", e);
+            responseBox.style.display = 'block';
+            responseBox.innerText = "Error: Check API key or quota limits.";
         } finally {
             btn.innerText = "Generate AI Insight";
             btn.disabled = false;
@@ -718,7 +721,7 @@
             const industryData = {
                 'Semiconductors': 'Semiconductor companies like NVIDIA design and manufacture chips that power everything from AI to gaming. They earn money through high-margin hardware sales and increasingly through software ecosystems like CUDA.',
                 'Entertainment': 'Entertainment giants like Disney and Netflix generate revenue through content licensing, subscriptions, and theme park experiences, relying heavily on Intellectual Property (IP) and brand loyalty.',
-                'Energy': 'Energy firms like ExxonMobil earn revenue through the exploration, production, and refining of oil and gas, with profits highly sensitive to global commodity prices and capital expenditure cycles.'
+                'Energy': 'Energy firms like ExxonMobil earn revenue through the exploration, production, and refining of oil and gas, with profits highly sensitive to global commodity prices and capital expenditure cycles.',
                 'Software': 'Software companies like Microsoft operate primarily on high-margin subscription models (SaaS). They benefit from recurring revenue and high scalability, where the cost of adding a new user is near zero, leading to significant operating leverage.',
                 'Tech': 'Tech conglomerates like Alphabet (Google) leverage massive user data to sell targeted advertising or cloud infrastructure. Their business models rely on "Network Effects"—where the service becomes more valuable as more people use it.',
                 'Automotive': 'Automotive firms like Tesla are transitioning from traditional manufacturing to "Software-Defined Vehicles." They earn revenue through hardware sales, but the high-growth story lies in recurring autonomous software subscriptions and energy ecosystem integration.',
