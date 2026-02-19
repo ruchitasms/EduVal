@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script type="importmap">  {"imports": {"@google/generative-ai": "https://esm.run/@google/generative-ai"}}</script>
     <style>
         :root { --pico-primary: #00a8e8; --pico-background-color: #0b0e14; --pico-card-background-color: #151921; }
         .nav-tabs { display: flex; gap: 10px; margin-bottom: 1rem; }
@@ -295,8 +296,8 @@
         </div>
     </main>
 
-    <script>
-    import { GoogleGenerativeAI } from "@google/generative-ai";    
+    <script type="module">   
+    import { GoogleGenerativeAI } from "@google/generative-ai";
     Chart.register(ChartDataLabels);
     let priceChart = null;
     let zChart = null;
@@ -672,7 +673,7 @@
             if (actualReturn === 0 && inc && bs) {
                 // Manual Calculation Fallback: EBIT / (Debt + Equity)
                 const ebit = inc.operatingIncome;
-                actualReturn = ebit / totalCap;
+                actualReturn = ebit / totalCapital;
             }
 
             const alpha = actualReturn - hurdleRate;
@@ -838,6 +839,11 @@
             document.getElementById('loader').style.display = 'none'; 
         }
     } // This bracket closes the runAnalysis function
+
+        window.runAnalysis = runAnalysis;
+        window.switchTab = switchTab;
+        window.askGemini = askGemini;
     </script>
 </body>
 </html>
+
