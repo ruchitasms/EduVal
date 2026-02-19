@@ -304,7 +304,7 @@
     let zTrendChart = null;
     //const API_KEY = '1YJOf8Lz9qJUlyPUhgKqc3vpzMflW1mx';
     const API_KEY = 'ON8k6g7660ONUPRKUMxnzEuBMUTXhLds'; 
-    const GEM_KEY = 'AIzaSyA-KGh3OqUCKKrnnoTFwXYugXPIdXPTgV4';
+    const GEM_KEY = 'AIzaSyA7JLUtAppp7rMLgHv_eMIHT56036K9E0c';
     const genAI = new GoogleGenerativeAI(GEM_KEY);    
     const sectorThemes = { 'Energy': '#00e676', 'Semiconductors': '#ff9100', 'Software': '#00d4ff', 'Tech': '#a29bfe', 'Entertainment': '#ff4081', 'Automotive': '#fff0ff', 'Fintech': '#ffdc00' };
 
@@ -382,7 +382,28 @@
             • Hurdle Rate (Cost of Equity): Risk‑Free Rate + Beta × Market Premium<br>
             • ROIC: NOPAT / Invested Capital<br>
             • Alpha Spread: ROIC – Hurdle Rate<br>
-            • WACC: Weighted average cost of debt + equity<br>`
+            • WACC: Weighted average cost of debt + equity<br>`,
+        
+    outlook: `<strong>Outlook: Monte Carlo Simulation</strong><br>
+            <strong>Introduction</strong><br>
+            • Investing isn't about one fixed future; it's about a range of possibilities.  
+            • This tool uses a <strong>Monte Carlo Simulation</strong>—a technique used by NASA and Wall Street—to run 5,000 "what-if" scenarios for this stock.  
+            • It accounts for the fact that revenue growth and profit margins are never a single guaranteed number.<br><br>
+            
+            <strong>Reading the Chart:</strong><br>
+            • <strong>The Bell Curve:</strong> The peak shows the most likely price for the stock. The wider the curve, the more uncertain the future is.  
+            • <strong>Target Price (Current):</strong> This is the blue line representing the price based on current average analyst estimates.  
+            • <strong>Probability Distribution:</strong> 
+            &nbsp;&nbsp;• The simulation varies growth rates and margins based on historical volatility.
+            &nbsp;&nbsp;• If most of the "simulated prices" are higher than the current price, the odds may be in your favor.<br><br>
+            
+            <strong>Key Metrics:</strong><br>
+            • <strong>Expected Value:</strong> The average result of all 5,000 scenarios.  
+            • <strong>Confidence Intervals:</strong> Usually, 95% of the outcomes fall within a specific range. This helps you visualize the "worst-case" and "best-case" scenarios.<br><br>
+            
+            <strong>Formulas & Logic:</strong><br>
+            • <strong>Normal Distribution (Box-Muller):</strong> Used to generate random, realistic fluctuations in growth.  
+            • <strong>Iterative DCF:</strong> The app runs a simplified Discounted Cash Flow 5,000 times, picking a different growth rate each time.`  
     };
 
     function switchTab(tabId) {
@@ -472,7 +493,7 @@
     
         try {
             // 2. Setup the model
-            const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
             // 3. Create a simple, high-level prompt
             const prompt = `Act as a Senior Financial Analyst. 
@@ -846,5 +867,6 @@
     </script>
 </body>
 </html>
+
 
 
